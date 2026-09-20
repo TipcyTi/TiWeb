@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ti">
+  <meta name="description" content="Ti">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="Ti.png">
+  <link rel="apple-touch-startup-image" href="Ti.png">
+  <title>Ti</title>
+  <style>
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent;
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
+          -webkit-text-size-adjust: none;
+      }
+      html {
+          width: 100%;
+          height: 100%;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
+      }
+      body {
+          width: 100%;
+          height: 100%;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
+          overflow: hidden;
+          background: #F1F2ED;
+          font-family: Impact;
+          color: #000000;
+          font-weight: 700;
+          position: relative;
+          touch-action: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+      }
+      :root {
+          --safe-area-inset-top: env(safe-area-inset-top, 0px);
+          --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+          --safe-area-inset-left: env(safe-area-inset-left, 0px);
+          --safe-area-inset-right: env(safe-area-inset-right, 0px);
+          --Ti-image-radius: 50px;
+      }
+      #auth-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: #F1F2ED;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding-top: var(--safe-area-inset-top);
+          padding-bottom: var(--safe-area-inset-bottom);
+          padding-left: var(--safe-area-inset-left);
+          padding-right: var(--safe-area-inset-right);
+          z-index: 100;
+          overflow: hidden;
+          transition: opacity 0.3s ease;
+          box-sizing: border-box;
+      }
+      .auth-button-container {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 20px;
+      }
+      .auth-button {
+          background: none;
+          color: #000000;
+          border: none;
+          border-radius: 0;
+          padding: 20px 15px;
+          font-size: 72px;
+          font-weight: 400;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-family: 'Snell Roundhand', 'Snell Roundhand Black', cursive;
+          position: relative;
+          overflow: hidden;
+          letter-spacing: -1px;
+          line-height: 0.9;
+          text-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+          width: 75%;
+          max-width: 400px;
+      }
+      .auth-button:active {
+          transform: scale(0.95);
+          opacity: 0.7;
+      }
+      .auth-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+      }
+      .auth-button-loading .button-text-container {
+          opacity: 0;
+      }
+      .auth-button-loading::after {
+          content: "";
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          top: 50%;
+          left: 50%;
+          margin-left: -10px;
+          margin-top: -10px;
+          border: 2px solid #000000;
+          border-radius: 50%;
+          border-top-color: transparent;
+          animation: spin 1s ease infinite;
+      }
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+      .button-text-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+      }
+      .button-main-text {
+          font-size: 1em;
+          margin-bottom: 2px;
+          width: 100%;
+          text-align: center;
+      }
+      .button-sub-text {
+          font-size: 0.35em;
+          letter-spacing: 3px;
+          opacity: 0.8;
+          width: 100%;
+          text-align: center;
+      }
+      #content-container {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: transparent;
+          z-index: 50;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          overflow: hidden;
+          padding-top: var(--safe-area-inset-top);
+          padding-bottom: var(--safe-area-inset-bottom);
+          padding-left: var(--safe-area-inset-left);
+          padding-right: var(--safe-area-inset-right);
+          box-sizing: border-box;
+      }
+      #content-container.active {
+          opacity: 1;
+          display: block;
+      }
+      .blur-background {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: url('Ti.png');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          filter: blur(5px) brightness(0.75);
+          z-index: 1;
+          transform: scale(1.2);
+          -webkit-transform: scale(1.2);
+      }
+      .gradient-mask {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 2;
+          pointer-events: none;
+          background: 
+              radial-gradient(
+                  circle at center,
+                  transparent 0%,
+                  transparent 30%,
+                  rgba(241, 242, 237, 0.1) 40%,
+                  rgba(241, 242, 237, 0.3) 50%,
+                  rgba(241, 242, 237, 0.6) 60%,
+                  rgba(241, 242, 237, 0.8) 70%,
+                  rgba(241, 242, 237, 0.9) 80%,
+                  #F1F2ED 100%
+              );
+      }
+      .safe-area-gradient {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 3;
+          pointer-events: none;
+          background: 
+              linear-gradient(
+                  to bottom,
+                  #F1F2ED 0%,
+                  rgba(241, 242, 237, 0.9) calc(var(--safe-area-inset-top) * 0.2),
+                  rgba(241, 242, 237, 0.7) calc(var(--safe-area-inset-top) * 0.4),
+                  rgba(241, 242, 237, 0.4) calc(var(--safe-area-inset-top) * 0.6),
+                  rgba(241, 242, 237, 0.2) calc(var(--safe-area-inset-top) * 0.8),
+                  transparent var(--safe-area-inset-top)
+              ),
+              linear-gradient(
+                  to top,
+                  #F1F2ED 0%,
+                  rgba(241, 242, 237, 0.9) calc(var(--safe-area-inset-bottom) * 0.2),
+                  rgba(241, 242, 237, 0.7) calc(var(--safe-area-inset-bottom) * 0.4),
+                  rgba(241, 242, 237, 0.4) calc(var(--safe-area-inset-bottom) * 0.6),
+                  rgba(241, 242, 237, 0.2) calc(var(--safe-area-inset-bottom) * 0.8),
+                  transparent var(--safe-area-inset-bottom)
+              );
+      }
+      .main-content {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, calc(-50% + 20px));
+          width: 90%;
+          max-width: 700px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 20px 25px;
+          border-radius: 30px;
+          overflow: hidden;
+          background-color: transparent;
+          z-index: 4;
+          max-height: calc(100% - var(--safe-area-inset-top) - var(--safe-area-inset-bottom) - 40px);
+          box-sizing: border-box;
+      }
+      .content-layer {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: auto;
+          background: transparent;
+          isolation: isolate;
+          gap: 15px;
+      }
+      .content-image {
+          width: 92%;
+          aspect-ratio: 1;
+          border-radius: var(--Ti-image-radius);
+          box-shadow: none;
+          transform: none;
+          background: url('Ti.png') center/cover no-repeat;
+          position: relative;
+          flex-shrink: 0;
+          overflow: hidden;
+          max-width: 580px;
+          pointer-events: none;
+          user-select: none;
+          -webkit-user-drag: none;
+      }
+      .content-image::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: none;
+          border-radius: var(--Ti-image-radius);
+          pointer-events: none;
+          z-index: 1;
+      }
+      .content-image::after {
+          content: "";
+          position: absolute;
+          top: -12%;
+          left: -12%;
+          right: -12%;
+          bottom: -12%;
+          background: none;
+          border-radius: calc(var(--Ti-image-radius) + 10px);
+          filter: none;
+          transform: none;
+          z-index: -1;
+          pointer-events: none;
+      }
+      .text-control-container {
+          width: 92%;
+          max-width: 580px;
+          display: flex;
+          align-items: stretch;
+          gap: 12px;
+          justify-content: space-between;
+      }
+      .text-content {
+          flex: 1;
+          text-align: left;
+          cursor: default;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+      }
+      .text-edit-trigger {
+          font-family: 'Snell Roundhand', 'Snell Roundhand Black', cursive;
+          font-weight: 700;
+          color: rgba(0, 0, 0, 0.65);
+          font-size: 45px;
+          width: auto;
+          align-self: stretch;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          mix-blend-mode: screen;
+          border-radius: 8px;
+          flex-shrink: 0;
+          padding-left: 10px;
+          padding-right: 10px;
+          white-space: nowrap;
+          overflow: visible;
+          min-width: max-content;
+      }
+      .text-edit-trigger:active {
+          transform: scale(0.92);
+      }
+      .text-line {
+          font-family: Impact;
+          font-weight: 700;
+          width: 100%;
+          line-height: 1.1;
+          mix-blend-mode: overlay;
+          text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+      }
+      .text-line:first-child {
+          color: rgba(0, 0, 0, 0.85);
+          font-size: 26px;
+          margin-bottom: 6px;
+          text-shadow: 0 0 1px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+      .text-line:last-child {
+          color: rgba(0, 0, 0, 0.7);
+          font-size: 22px;
+          opacity: 0.9;
+      }
+      .modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(241, 242, 237, 0.85);
+          z-index: 200;
+          justify-content: center;
+          align-items: center;
+          backdrop-filter: blur(5px);
+      }
+      .modal-overlay.active {
+          display: flex;
+      }
+      .modal-content {
+          background-color: #E8E9E4;
+          width: 90%;
+          max-width: 500px;
+          border-radius: 20px;
+          padding: 30px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+          color: #000000;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+      }
+      .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+      }
+      .modal-title {
+          font-size: 24px;
+          font-weight: 700;
+          font-family: Impact;
+      }
+      .modal-close {
+          background: none;
+          border: none;
+          color: #000000;
+          font-size: 28px;
+          cursor: pointer;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 50%;
+          transition: background-color 0.3s ease;
+          font-family: Impact;
+      }
+      .modal-close:hover {
+          background-color: rgba(0, 0, 0, 0.1);
+      }
+      .modal-section {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+      }
+      .section-title {
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 5px;
+          font-family: Impact;
+      }
+      .image-preview-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+      }
+      .image-preview {
+          width: 150px;
+          height: 150px;
+          background: #D8D9D4 url('Ti.png') center/cover no-repeat;
+          border-radius: 15px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+          overflow: hidden;
+      }
+      .file-input-wrapper {
+          position: relative;
+          overflow: hidden;
+          display: inline-block;
+          width: 100%;
+      }
+      .file-input-button {
+          background-color: #D0D1CC;
+          color: #000000;
+          padding: 12px 20px;
+          border-radius: 10px;
+          cursor: pointer;
+          text-align: center;
+          font-weight: 600;
+          transition: background-color 0.3s ease;
+          width: 100%;
+          font-family: Impact;
+      }
+      .file-input-button:hover {
+          background-color: #B8B9B4;
+      }
+      .file-input {
+          position: absolute;
+          left: 0;
+          top: 0;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+      }
+      .text-input-container {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          margin-top: 15px;
+      }
+      .text-input {
+          background-color: #DCDDD8;
+          border: 2px solid #C8C9C4;
+          border-radius: 10px;
+          padding: 12px 15px;
+          color: #000000;
+          font-size: 16px;
+          font-family: Impact;
+          transition: border-color 0.3s ease;
+          width: 100%;
+      }
+      .text-input:focus {
+          outline: none;
+          border-color: #5a5a5a;
+      }
+      .text-input::placeholder {
+          color: rgba(0, 0, 0, 0.5);
+      }
+      .modal-buttons {
+          display: flex;
+          gap: 15px;
+          margin-top: 10px;
+      }
+      .modal-button {
+          flex: 1;
+          padding: 12px 20px;
+          border-radius: 10px;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-family: Impact;
+      }
+      .modal-button.save {
+          background-color: #4CAF50;
+          color: white;
+      }
+      .modal-button.save:hover {
+          background-color: #45a049;
+      }
+      .modal-button.cancel {
+          background-color: #B0B1AC;
+          color: #000000;
+      }
+      .modal-button.cancel:hover {
+          background-color: #A8A9A4;
+      }
+      @media (max-width: 768px) {
+          :root {
+              --Ti-image-radius: 40px;
+          }
+          .content-image {
+              width: 90%;
+              max-width: 450px;
+              box-shadow: none;
+              transform: none;
+          }
+          
+          .text-control-container {
+              width: 90%;
+              max-width: 450px;
+              gap: 10px;
+          }
+          
+          .text-edit-trigger {
+              width: auto;
+              font-size: 45px;
+              border-radius: 7px;
+              padding-left: 10px;
+              padding-right: 10px;
+          }
+          
+          .text-line:first-child {
+              font-size: 24px;
+          }
+          
+          .text-line:last-child {
+              font-size: 20px;
+          }
+      }
+      @media (max-width: 430px) {
+          :root {
+              --Ti-image-radius: 35px;
+          }
+          .content-image {
+              width: 92%;
+              max-width: 395px;
+              box-shadow: none;
+              transform: none;
+          }
+          
+          .text-control-container {
+              width: 92%;
+              max-width: 395px;
+              gap: 8px;
+          }
+          
+          .text-edit-trigger {
+              width: auto;
+              font-size: 26px;
+              border-radius: 6px;
+              padding-left: 8px;
+              padding-right: 8px;
+          }
+          
+          .text-line:first-child {
+              font-size: 22px;
+          }
+          
+          .text-line:last-child {
+              font-size: 18px;
+          }
+      }
+      @media (max-width: 390px) {
+          :root {
+              --Ti-image-radius: 32px;
+          }
+          .content-image {
+              width: 90%;
+              max-width: 351px;
+              box-shadow: none;
+              transform: none;
+          }
+          
+          .text-control-container {
+              width: 90%;
+              max-width: 351px;
+              gap: 8px;
+          }
+          
+          .text-edit-trigger {
+              width: auto;
+              font-size: 24px;
+              border-radius: 6px;
+              padding-left: 8px;
+              padding-right: 8px;
+          }
+          
+          .text-line:first-child {
+              font-size: 20px;
+          }
+          
+          .text-line:last-child {
+              font-size: 16px;
+          }
+      }
+      @supports (-webkit-touch-callout: none) {
+          html, body {
+              min-height: -webkit-fill-available;
+          }
+          
+          .main-content {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, calc(-50% + 20px));
+              max-height: calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 40px);
+          }
+      }
+      @media (max-width: 375px) and (max-height: 667px) {
+          :root {
+              --Ti-image-radius: 28px;
+          }
+          .main-content {
+              padding: 15px 20px;
+              transform: translate(-50%, calc(-50% + 12px));
+          }
+          
+          .content-image {
+              max-width: 300px;
+          }
+          
+          .text-line:first-child {
+              font-size: 18px;
+          }
+          
+          .text-line:last-child {
+              font-size: 14px;
+          }
+          
+          .text-edit-trigger {
+              width: auto;
+              font-size: 22px;
+              padding-left: 6px;
+              padding-right: 6px;
+          }
+      }
+      .no-scroll {
+          overflow: hidden;
+      }
+      
+      @supports not (top: env(safe-area-inset-top)) {
+          :root {
+              --safe-area-inset-top: constant(safe-area-inset-top, 0px);
+              --safe-area-inset-top: constant(safe-area-inset-top, 0px);
+              --safe-area-inset-bottom: constant(safe-area-inset-bottom, 0px);
+              --safe-area-inset-left: constant(safe-area-inset-left, 0px);
+              --safe-area-inset-right: constant(safe-area-inset-right, 0px);
+          }
+      }
+  </style>
+</head>
+<body class="no-scroll">
+  <div id="auth-container">
+      <div class="auth-button-container">
+          <button class="auth-button" id="authButton">
+              <div class="button-text-container">
+                  <div class="button-main-text">Ti</div>
+              </div>
+          </button>
+      </div>
+  </div>
+  <div id="content-container">
+      <div class="main-content">
+          <div class="content-layer">
+              <div class="content-image" role="img" aria-label="Ti Logo"></div>
+              <div class="text-control-container">
+                  <div class="text-content">
+                      <div class="text-line">Ti</div>
+                      <div class="text-line">Ti</div>
+                  </div>
+                  <div class="text-edit-trigger" title="Settings">Ti</div>
+              </div>
+          </div>
+      </div>
+  </div>
+  <div class="blur-background"></div>
+  
+  <div class="gradient-mask"></div>
+  
+  <div class="safe-area-gradient"></div>
+  <div class="modal-overlay" id="modalOverlay">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 class="modal-title">Settings</h2>
+              <button class="modal-close" id="modalClose">&times;</button>
+          </div>
+          
+          <div class="modal-section">
+              <h3 class="section-title">Change Texts</h3>
+              <div class="text-input-container">
+                  <input type="text" class="text-input" id="textInput1" placeholder="Ti" maxlength="25">
+                  <input type="text" class="text-input" id="textInput2" placeholder="Ti" maxlength="25">
+              </div>
+          </div>
+          
+          <div class="modal-section">
+              <h3 class="section-title">Change Picture</h3>
+              <div class="image-preview-container">
+                  <div class="image-preview" id="imagePreview"></div>
+                  <div class="file-input-wrapper">
+                      <div class="file-input-button">Select Picture</div>
+                      <input type="file" class="file-input" id="imageInput" accept="image/*">
+                  </div>
+              </div>
+          </div>
+          
+          <div class="modal-buttons">
+              <button class="modal-button cancel" id="cancelButton">Cancel</button>
+              <button class="modal-button save" id="saveButton">Save</button>
+          </div>
+      </div>
+  </div>
+  <script>
+      const CONFIG = {
+          webauthn: {
+              rpName: "Ti",
+              userName: "Ti",
+              userDisplayName: "'Ti'",
+              timeout: 60000
+          },
+          
+          defaultTexts: {
+              line1: "Ti",
+              line2: "Ti"
+          }
+      };
+      
+      const AppState = {
+          isAuthenticated: false,
+          credentialId: null,
+          customImage: null,
+          customTexts: { ...CONFIG.defaultTexts }
+      };
+      
+      const DOM = {
+          authContainer: document.getElementById('auth-container'),
+          contentContainer: document.getElementById('content-container'),
+          contentImage: document.querySelector('.content-image'),
+          textContent: document.querySelector('.text-content'),
+          textLine1: document.querySelector('.text-line:first-child'),
+          textLine2: document.querySelector('.text-line:last-child'),
+          textEditTrigger: document.querySelector('.text-edit-trigger'),
+          authButton: document.getElementById('authButton'),
+          modalOverlay: document.getElementById('modalOverlay'),
+          modalClose: document.getElementById('modalClose'),
+          imageInput: document.getElementById('imageInput'),
+          imagePreview: document.getElementById('imagePreview'),
+          textInput1: document.getElementById('textInput1'),
+          textInput2: document.getElementById('textInput2'),
+          saveButton: document.getElementById('saveButton'),
+          cancelButton: document.getElementById('cancelButton'),
+          blurBackground: document.querySelector('.blur-background'),
+          gradientMask: document.querySelector('.gradient-mask'),
+          safeAreaGradient: document.querySelector('.safe-area-gradient')
+      };
+      
+      const ModalManager = {
+          init: function() {
+              DOM.textEditTrigger.addEventListener('click', () => this.showModal());
+              DOM.modalClose.addEventListener('click', () => this.hideModal());
+              DOM.cancelButton.addEventListener('click', () => this.hideModal());
+              DOM.saveButton.addEventListener('click', () => this.saveChanges());
+              DOM.imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
+              
+              DOM.modalOverlay.addEventListener('click', (e) => {
+                  if (e.target === DOM.modalOverlay) {
+                      this.hideModal();
+                  }
+              });
+              
+              this.loadSavedContent();
+          },
+          
+          showModal: function() {
+              if (AppState.customImage) {
+                  DOM.imagePreview.style.backgroundImage = `url(${AppState.customImage})`;
+              } else {
+                  DOM.imagePreview.style.backgroundImage = "url('Ti.png')";
+              }
+              
+              DOM.textInput1.value = AppState.customTexts.line1 || '';
+              DOM.textInput2.value = AppState.customTexts.line2 || '';
+              
+              DOM.modalOverlay.classList.add('active');
+              document.body.classList.add('no-scroll');
+          },
+          
+          hideModal: function() {
+              DOM.modalOverlay.classList.remove('active');
+              document.body.classList.remove('no-scroll');
+          },
+          
+          handleImageUpload: function(event) {
+              const file = event.target.files[0];
+              if (file) {
+                  const reader = new FileReader();
+                  reader.onload = function(e) {
+                      DOM.imagePreview.style.backgroundImage = `url(${e.target.result})`;
+                      AppState.tempImage = e.target.result;
+                  };
+                  reader.readAsDataURL(file);
+              }
+          },
+          
+          saveChanges: function() {
+              if (AppState.tempImage) {
+                  AppState.customImage = AppState.tempImage;
+                  this.updateImages();
+                  AppState.tempImage = null;
+              }
+              
+              AppState.customTexts.line1 = DOM.textInput1.value || CONFIG.defaultTexts.line1;
+              AppState.customTexts.line2 = DOM.textInput2.value || CONFIG.defaultTexts.line2;
+              DOM.textLine1.textContent = AppState.customTexts.line1;
+              DOM.textLine2.textContent = AppState.customTexts.line2;
+              
+              this.saveContent();
+              this.hideModal();
+          },
+          
+          updateImages: function() {
+              const images = [
+                  DOM.contentImage,
+                  DOM.blurBackground,
+                  DOM.imagePreview
+              ];
+              
+              images.forEach(img => {
+                  if (img) {
+                      img.style.backgroundImage = `url(${AppState.customImage})`;
+                      img.style.backgroundSize = 'cover';
+                      img.style.backgroundPosition = 'center';
+                      img.style.backgroundRepeat = 'no-repeat';
+                  }
+              });
+          },
+          
+          saveContent: function() {
+              try {
+                  const content = {
+                      customImage: AppState.customImage,
+                      customTexts: AppState.customTexts
+                  };
+                  localStorage.setItem('Ti_content', JSON.stringify(content));
+              } catch (e) {
+                  console.error("OX[Q[1Y%:", e);
+              }
+          },
+          
+          loadSavedContent: function() {
+              try {
+                  const savedContent = localStorage.getItem('Ti_content');
+                  if (savedContent) {
+                      const content = JSON.parse(savedContent);
+                      if (content.customImage) {
+                          AppState.customImage = content.customImage;
+                          this.updateImages();
+                      }
+                      if (content.customTexts) {
+                          AppState.customTexts = content.customTexts;
+                          DOM.textLine1.textContent = AppState.customTexts.line1;
+                          DOM.textLine2.textContent = AppState.customTexts.line2;
+                      }
+                  }
+              } catch (e) {
+                  console.error("R}OX[Q[1Y%:", e);
+              }
+          },
+          
+          ensureImageCover: function() {
+              const images = [
+                  DOM.contentImage,
+                  DOM.blurBackground,
+                  DOM.imagePreview
+              ];
+              
+              images.forEach(img => {
+                  if (img) {
+                      img.style.backgroundSize = 'cover';
+                      img.style.backgroundPosition = 'center';
+                      img.style.backgroundRepeat = 'no-repeat';
+                  }
+              });
+          }
+      };
+      
+      const AuthManager = {
+          init: function() {
+              if (!window.PublicKeyCredential) {
+                  DOM.authButton.disabled = true;
+                  return;
+              }
+              
+              this.checkExistingCredentials();
+              DOM.authButton.addEventListener('click', () => this.startAuthentication());
+              this.preventScroll();
+          },
+          
+          preventScroll: function() {
+              document.body.addEventListener('touchmove', function(e) {
+                  e.preventDefault();
+              }, { passive: false });
+              
+              document.addEventListener('scroll', function(e) {
+                  e.preventDefault();
+                  window.scrollTo(0, 0);
+              });
+          },
+          
+          checkExistingCredentials: function() {
+              try {
+                  const savedCredentialId = localStorage.getItem('webauthn_credential_id');
+                  
+                  if (savedCredentialId) {
+                      AppState.credentialId = Uint8Array.from(savedCredentialId.split(',').map(Number));
+                  }
+              } catch (error) {
+                  console.error("hg]OX[QeQ:", error);
+                  this.clearInvalidCredential();
+              }
+          },
+          clearInvalidCredential: function() {
+              localStorage.removeItem('webauthn_credential_id');
+              AppState.credentialId = null;
+          },
+          resetAuthButtonState: function() {
+              DOM.authButton.disabled = false;
+              DOM.authButton.classList.remove('auth-button-loading');
+          },
+          
+          startAuthentication: async function() {
+              try {
+                  DOM.authButton.disabled = true;
+                  DOM.authButton.classList.add('auth-button-loading');
+                  
+                  if (AppState.credentialId) {
+                      await this.authenticateWithCredential();
+                  } else {
+                      await this.registerNewCredential();
+                  }
+              } catch (error) {
+                  console.error("Auth error:", error);
+                  this.clearInvalidCredential();
+                  this.resetAuthButtonState();
+              }
+          },
+          
+          registerNewCredential: async function() {
+              const challenge = new Uint8Array(32);
+              crypto.getRandomValues(challenge);
+              
+              const publicKey = {
+                  challenge: challenge,
+                  rp: { 
+                      id: window.location.hostname, 
+                      name: CONFIG.webauthn.rpName
+                  },
+                  user: {
+                      id: new Uint8Array(16),
+                      name: CONFIG.webauthn.userName,
+                      displayName: CONFIG.webauthn.userDisplayName
+                  },
+                  pubKeyCredParams: [
+                      { type: "public-key", alg: -7 }
+                  ],
+                  authenticatorSelection: {
+                      userVerification: "required",
+                      requireResidentKey: false
+                  },
+                  timeout: CONFIG.webauthn.timeout,
+                  attestation: "none"
+              };
+              
+              const credential = await navigator.credentials.create({ publicKey });
+              
+              if (credential && credential.rawId) {
+                  AppState.credentialId = new Uint8Array(credential.rawId);
+                  localStorage.setItem('webauthn_credential_id', Array.from(AppState.credentialId).join(','));
+              }
+              
+              this.onAuthenticationSuccess();
+          },
+          
+          authenticateWithCredential: async function() {
+              const challenge = new Uint8Array(32);
+              crypto.getRandomValues(challenge);
+              
+              const publicKey = {
+                  challenge: challenge,
+                  rpId: window.location.hostname,
+                  allowCredentials: [
+                      {
+                          type: "public-key",
+                          id: AppState.credentialId,
+                          transports: ["internal"]
+                      }
+                  ],
+                  userVerification: "required",
+                  timeout: CONFIG.webauthn.timeout
+              };
+              
+              const assertion = await navigator.credentials.get({ publicKey });
+              
+              if (assertion) {
+                  this.onAuthenticationSuccess();
+              } else {
+                  throw new Error("Authentication failed");
+              }
+          },
+          
+          onAuthenticationSuccess: function() {
+              AppState.isAuthenticated = true;
+              UI.showContent();
+          }
+      };
+      
+      const UI = {
+          showContent: function() {
+              DOM.authContainer.style.opacity = "0";
+              
+              setTimeout(() => {
+                  DOM.authContainer.style.display = "none";
+                  DOM.contentContainer.style.display = "block";
+                  DOM.contentContainer.offsetHeight;
+                  
+                  setTimeout(() => {
+                      DOM.contentContainer.classList.add('active');
+                      ModalManager.ensureImageCover();
+                  }, 50);
+              }, 300);
+          }
+      };
+      
+      function initApp() {
+          AuthManager.init();
+          ModalManager.init();
+      }
+      
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initApp);
+      } else {
+          initApp();
+      }
+      
+      window.addEventListener('scroll', preventScroll, { passive: false });
+      window.addEventListener('touchmove', preventScroll, { passive: false });
+      
+      function preventScroll(e) {
+          e.preventDefault();
+          window.scrollTo(0, 0);
+          return false;
+      }
+  </script>
+</body>
+</html>
