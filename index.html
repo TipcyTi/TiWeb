@@ -395,6 +395,36 @@
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.10);
           text-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
       }
+      #bgUploadButton {
+          position: fixed;
+          left: calc(var(--safe-area-inset-left) + 18px);
+          bottom: calc(var(--safe-area-inset-bottom) + 18px);
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(20px) saturate(160%);
+          -webkit-backdrop-filter: blur(20px) saturate(160%);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+          color: #000000;
+          cursor: pointer;
+          z-index: 5;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0;
+          transition: transform 0.2s ease, background-color 0.2s ease;
+      }
+      #bgUploadButton:active {
+          transform: scale(0.92);
+          background: rgba(255, 255, 255, 0.8);
+      }
+      #bgUploadButton svg {
+          width: 20px;
+          height: 20px;
+          display: block;
+      }
 
       /* ===== 页面列表 ===== */
       .page-list {
@@ -499,6 +529,13 @@
                   <div class="button-sub-text">选择页面</div>
               </div>
           </button>
+          <button id="bgUploadButton" aria-label="上传背景图片">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+              </svg>
+          </button>
       </div>
 
       <div id="page-view">
@@ -580,7 +617,8 @@
           backButton: document.getElementById('back-button'),
           bgImage: document.getElementById('bg-image'),
           bgInput: document.getElementById('bgInput'),
-          bgResetButton: document.getElementById('bgResetButton')
+          bgResetButton: document.getElementById('bgResetButton'),
+          bgUploadButton: document.getElementById('bgUploadButton')
       };
 
       const ModalManager = {
@@ -812,6 +850,10 @@
               this.apply();
               DOM.bgInput.addEventListener('change', (e) => this.save(e));
               DOM.bgResetButton.addEventListener('click', () => this.reset());
+              DOM.bgUploadButton.addEventListener('click', () => {
+                  DOM.bgInput.value = '';
+                  DOM.bgInput.click();
+              });
           },
           apply: function() {
               const data = localStorage.getItem(this.key);
