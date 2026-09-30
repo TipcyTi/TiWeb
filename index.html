@@ -171,203 +171,6 @@
           opacity: 1;
           display: block;
       }
-      .blur-background {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-image: url('Ti.png');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          filter: blur(5px) brightness(0.75);
-          z-index: 1;
-          transform: scale(1.2);
-          -webkit-transform: scale(1.2);
-      }
-      .gradient-mask {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 2;
-          pointer-events: none;
-          background: 
-              radial-gradient(
-                  circle at center,
-                  transparent 0%,
-                  transparent 30%,
-                  rgba(241, 242, 237, 0.1) 40%,
-                  rgba(241, 242, 237, 0.3) 50%,
-                  rgba(241, 242, 237, 0.6) 60%,
-                  rgba(241, 242, 237, 0.8) 70%,
-                  rgba(241, 242, 237, 0.9) 80%,
-                  #F1F2ED 100%
-              );
-      }
-      .safe-area-gradient {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 3;
-          pointer-events: none;
-          background: 
-              linear-gradient(
-                  to bottom,
-                  #F1F2ED 0%,
-                  rgba(241, 242, 237, 0.9) calc(var(--safe-area-inset-top) * 0.2),
-                  rgba(241, 242, 237, 0.7) calc(var(--safe-area-inset-top) * 0.4),
-                  rgba(241, 242, 237, 0.4) calc(var(--safe-area-inset-top) * 0.6),
-                  rgba(241, 242, 237, 0.2) calc(var(--safe-area-inset-top) * 0.8),
-                  transparent var(--safe-area-inset-top)
-              ),
-              linear-gradient(
-                  to top,
-                  #F1F2ED 0%,
-                  rgba(241, 242, 237, 0.9) calc(var(--safe-area-inset-bottom) * 0.2),
-                  rgba(241, 242, 237, 0.7) calc(var(--safe-area-inset-bottom) * 0.4),
-                  rgba(241, 242, 237, 0.4) calc(var(--safe-area-inset-bottom) * 0.6),
-                  rgba(241, 242, 237, 0.2) calc(var(--safe-area-inset-bottom) * 0.8),
-                  transparent var(--safe-area-inset-bottom)
-              );
-      }
-      .main-content {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, calc(-50% + 20px));
-          width: 90%;
-          max-width: 700px;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 20px 25px;
-          border-radius: 30px;
-          overflow: hidden;
-          background-color: transparent;
-          z-index: 4;
-          max-height: calc(100% - var(--safe-area-inset-top) - var(--safe-area-inset-bottom) - 40px);
-          box-sizing: border-box;
-      }
-      .content-layer {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: auto;
-          background: transparent;
-          isolation: isolate;
-          gap: 15px;
-      }
-      .content-image {
-          width: 92%;
-          aspect-ratio: 1;
-          border-radius: var(--Ti-image-radius);
-          box-shadow: none;
-          transform: none;
-          background: url('Ti.png') center/cover no-repeat;
-          position: relative;
-          flex-shrink: 0;
-          overflow: hidden;
-          max-width: 580px;
-          pointer-events: none;
-          user-select: none;
-          -webkit-user-drag: none;
-      }
-      .content-image::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: none;
-          border-radius: var(--Ti-image-radius);
-          pointer-events: none;
-          z-index: 1;
-      }
-      .content-image::after {
-          content: "";
-          position: absolute;
-          top: -12%;
-          left: -12%;
-          right: -12%;
-          bottom: -12%;
-          background: none;
-          border-radius: calc(var(--Ti-image-radius) + 10px);
-          filter: none;
-          transform: none;
-          z-index: -1;
-          pointer-events: none;
-      }
-      .text-control-container {
-          width: 92%;
-          max-width: 580px;
-          display: flex;
-          align-items: stretch;
-          gap: 12px;
-          justify-content: space-between;
-      }
-      .text-content {
-          flex: 1;
-          text-align: left;
-          cursor: default;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-      }
-      .text-edit-trigger {
-          font-family: 'Snell Roundhand', 'Snell Roundhand Black', cursive;
-          font-weight: 700;
-          color: rgba(0, 0, 0, 0.65);
-          font-size: 45px;
-          width: auto;
-          align-self: stretch;
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          mix-blend-mode: screen;
-          border-radius: 8px;
-          flex-shrink: 0;
-          padding-left: 10px;
-          padding-right: 10px;
-          white-space: nowrap;
-          overflow: visible;
-          min-width: max-content;
-      }
-      .text-edit-trigger:active {
-          transform: scale(0.92);
-      }
-      .text-line {
-          font-family: Impact;
-          font-weight: 700;
-          width: 100%;
-          line-height: 1.1;
-          mix-blend-mode: overlay;
-          text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
-      }
-      .text-line:first-child {
-          color: rgba(0, 0, 0, 0.85);
-          font-size: 26px;
-          margin-bottom: 6px;
-          text-shadow: 0 0 1px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
-      }
-      .text-line:last-child {
-          color: rgba(0, 0, 0, 0.7);
-          font-size: 22px;
-          opacity: 0.9;
-      }
       .modal-overlay {
           display: none;
           position: fixed;
@@ -533,150 +336,9 @@
       .modal-button.cancel:hover {
           background-color: #A8A9A4;
       }
-      @media (max-width: 768px) {
-          :root {
-              --Ti-image-radius: 40px;
-          }
-          .content-image {
-              width: 90%;
-              max-width: 450px;
-              box-shadow: none;
-              transform: none;
-          }
-          
-          .text-control-container {
-              width: 90%;
-              max-width: 450px;
-              gap: 10px;
-          }
-          
-          .text-edit-trigger {
-              width: auto;
-              font-size: 45px;
-              border-radius: 7px;
-              padding-left: 10px;
-              padding-right: 10px;
-          }
-          
-          .text-line:first-child {
-              font-size: 24px;
-          }
-          
-          .text-line:last-child {
-              font-size: 20px;
-          }
-      }
-      @media (max-width: 430px) {
-          :root {
-              --Ti-image-radius: 35px;
-          }
-          .content-image {
-              width: 92%;
-              max-width: 395px;
-              box-shadow: none;
-              transform: none;
-          }
-          
-          .text-control-container {
-              width: 92%;
-              max-width: 395px;
-              gap: 8px;
-          }
-          
-          .text-edit-trigger {
-              width: auto;
-              font-size: 26px;
-              border-radius: 6px;
-              padding-left: 8px;
-              padding-right: 8px;
-          }
-          
-          .text-line:first-child {
-              font-size: 22px;
-          }
-          
-          .text-line:last-child {
-              font-size: 18px;
-          }
-      }
-      @media (max-width: 390px) {
-          :root {
-              --Ti-image-radius: 32px;
-          }
-          .content-image {
-              width: 90%;
-              max-width: 351px;
-              box-shadow: none;
-              transform: none;
-          }
-          
-          .text-control-container {
-              width: 90%;
-              max-width: 351px;
-              gap: 8px;
-          }
-          
-          .text-edit-trigger {
-              width: auto;
-              font-size: 24px;
-              border-radius: 6px;
-              padding-left: 8px;
-              padding-right: 8px;
-          }
-          
-          .text-line:first-child {
-              font-size: 20px;
-          }
-          
-          .text-line:last-child {
-              font-size: 16px;
-          }
-      }
-      @supports (-webkit-touch-callout: none) {
-          html, body {
-              min-height: -webkit-fill-available;
-          }
-          
-          .main-content {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, calc(-50% + 20px));
-              max-height: calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 40px);
-          }
-      }
-      @media (max-width: 375px) and (max-height: 667px) {
-          :root {
-              --Ti-image-radius: 28px;
-          }
-          .main-content {
-              padding: 15px 20px;
-              transform: translate(-50%, calc(-50% + 12px));
-          }
-          
-          .content-image {
-              max-width: 300px;
-          }
-          
-          .text-line:first-child {
-              font-size: 18px;
-          }
-          
-          .text-line:last-child {
-              font-size: 14px;
-          }
-          
-          .text-edit-trigger {
-              width: auto;
-              font-size: 22px;
-              padding-left: 6px;
-              padding-right: 6px;
-          }
-      }
       .no-scroll {
           overflow: hidden;
       }
-      
       @supports not (top: env(safe-area-inset-top)) {
           :root {
               --safe-area-inset-top: constant(safe-area-inset-top, 0px);
@@ -685,6 +347,100 @@
               --safe-area-inset-left: constant(safe-area-inset-left, 0px);
               --safe-area-inset-right: constant(safe-area-inset-right, 0px);
           }
+      }
+
+      /* ===== 新增：主页面 ===== */
+      #home-view {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+      }
+      .home-button {
+          font-size: 56px;
+      }
+      /* ===== 新增：页面列表 ===== */
+      .page-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          max-height: 55vh;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+      }
+      .page-item {
+          background-color: #DCDDD8;
+          border: 2px solid #C8C9C4;
+          border-radius: 10px;
+          padding: 14px 16px;
+          font-family: Impact;
+          font-size: 16px;
+          letter-spacing: 1px;
+          text-align: center;
+          cursor: pointer;
+          transition: background-color 0.2s ease, transform 0.2s ease;
+          word-break: break-all;
+      }
+      .page-item:active {
+          transform: scale(0.97);
+          background-color: #C8C9C4;
+      }
+      .page-empty {
+          text-align: center;
+          opacity: 0.6;
+          font-size: 14px;
+          padding: 12px;
+          font-family: Impact;
+      }
+      /* ===== 新增：页面承载 ===== */
+      #page-view {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 60;
+          background: #F1F2ED;
+      }
+      #page-view.active {
+          display: block;
+      }
+      #stage {
+          width: 100%;
+          height: 100%;
+          border: 0;
+          display: block;
+          background: #F1F2ED;
+      }
+      #back-button {
+          position: fixed;
+          top: calc(var(--safe-area-inset-top) + 14px);
+          left: calc(var(--safe-area-inset-left) + 14px);
+          width: 44px;
+          height: 44px;
+          border: none;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: #000000;
+          font-family: Impact;
+          font-size: 20px;
+          line-height: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          z-index: 70;
+          transition: transform 0.2s ease, background-color 0.2s ease;
+      }
+      #back-button:active {
+          transform: scale(0.92);
+          background: rgba(0, 0, 0, 0.16);
       }
   </style>
 </head>
@@ -699,39 +455,37 @@
       </div>
   </div>
   <div id="content-container">
-      <div class="main-content">
-          <div class="content-layer">
-              <div class="content-image" role="img" aria-label="Ti Logo"></div>
-              <div class="text-control-container">
-                  <div class="text-content">
-                      <div class="text-line">Ti</div>
-                      <div class="text-line">Ti</div>
-                  </div>
-                  <div class="text-edit-trigger" title="Settings">Ti</div>
+      <div id="home-view">
+          <button class="auth-button home-button" id="pageButton">
+              <div class="button-text-container">
+                  <div class="button-main-text">Pages</div>
+                  <div class="button-sub-text">选择页面</div>
               </div>
-          </div>
+          </button>
+      </div>
+
+      <div id="page-view">
+          <iframe id="stage" title="page"></iframe>
+          <button id="back-button">&#8592;</button>
       </div>
   </div>
-  <div class="blur-background"></div>
-  
-  <div class="gradient-mask"></div>
-  
-  <div class="safe-area-gradient"></div>
+
+  <div class="modal-overlay" id="pageListOverlay">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 class="modal-title">Pages</h2>
+              <button class="modal-close" id="pageListClose">&times;</button>
+          </div>
+          <div class="page-list" id="pageList"></div>
+      </div>
+  </div>
+
   <div class="modal-overlay" id="modalOverlay">
       <div class="modal-content">
           <div class="modal-header">
               <h2 class="modal-title">Settings</h2>
               <button class="modal-close" id="modalClose">&times;</button>
           </div>
-          
-          <div class="modal-section">
-              <h3 class="section-title">Change Texts</h3>
-              <div class="text-input-container">
-                  <input type="text" class="text-input" id="textInput1" placeholder="Ti" maxlength="25">
-                  <input type="text" class="text-input" id="textInput2" placeholder="Ti" maxlength="25">
-              </div>
-          </div>
-          
           <div class="modal-section">
               <h3 class="section-title">Change Picture</h3>
               <div class="image-preview-container">
@@ -742,7 +496,6 @@
                   </div>
               </div>
           </div>
-          
           <div class="modal-buttons">
               <button class="modal-button cancel" id="cancelButton">Cancel</button>
               <button class="modal-button save" id="saveButton">Save</button>
@@ -756,205 +509,90 @@
               userName: "Ti",
               userDisplayName: "'Ti'",
               timeout: 60000
-          },
-          
-          defaultTexts: {
-              line1: "Ti",
-              line2: "Ti"
           }
       };
-      
       const AppState = {
           isAuthenticated: false,
-          credentialId: null,
-          customImage: null,
-          customTexts: { ...CONFIG.defaultTexts }
+          credentialId: null
       };
-      
       const DOM = {
           authContainer: document.getElementById('auth-container'),
           contentContainer: document.getElementById('content-container'),
-          contentImage: document.querySelector('.content-image'),
-          textContent: document.querySelector('.text-content'),
-          textLine1: document.querySelector('.text-line:first-child'),
-          textLine2: document.querySelector('.text-line:last-child'),
-          textEditTrigger: document.querySelector('.text-edit-trigger'),
           authButton: document.getElementById('authButton'),
           modalOverlay: document.getElementById('modalOverlay'),
           modalClose: document.getElementById('modalClose'),
           imageInput: document.getElementById('imageInput'),
           imagePreview: document.getElementById('imagePreview'),
-          textInput1: document.getElementById('textInput1'),
-          textInput2: document.getElementById('textInput2'),
           saveButton: document.getElementById('saveButton'),
           cancelButton: document.getElementById('cancelButton'),
-          blurBackground: document.querySelector('.blur-background'),
-          gradientMask: document.querySelector('.gradient-mask'),
-          safeAreaGradient: document.querySelector('.safe-area-gradient')
+          pageButton: document.getElementById('pageButton'),
+          pageListOverlay: document.getElementById('pageListOverlay'),
+          pageListClose: document.getElementById('pageListClose'),
+          pageList: document.getElementById('pageList'),
+          pageView: document.getElementById('page-view'),
+          stage: document.getElementById('stage'),
+          backButton: document.getElementById('back-button')
       };
-      
       const ModalManager = {
           init: function() {
-              DOM.textEditTrigger.addEventListener('click', () => this.showModal());
               DOM.modalClose.addEventListener('click', () => this.hideModal());
               DOM.cancelButton.addEventListener('click', () => this.hideModal());
               DOM.saveButton.addEventListener('click', () => this.saveChanges());
               DOM.imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
-              
               DOM.modalOverlay.addEventListener('click', (e) => {
                   if (e.target === DOM.modalOverlay) {
                       this.hideModal();
                   }
               });
-              
-              this.loadSavedContent();
           },
-          
           showModal: function() {
-              if (AppState.customImage) {
-                  DOM.imagePreview.style.backgroundImage = `url(${AppState.customImage})`;
-              } else {
-                  DOM.imagePreview.style.backgroundImage = "url('Ti.png')";
-              }
-              
-              DOM.textInput1.value = AppState.customTexts.line1 || '';
-              DOM.textInput2.value = AppState.customTexts.line2 || '';
-              
               DOM.modalOverlay.classList.add('active');
               document.body.classList.add('no-scroll');
           },
-          
           hideModal: function() {
               DOM.modalOverlay.classList.remove('active');
               document.body.classList.remove('no-scroll');
           },
-          
           handleImageUpload: function(event) {
               const file = event.target.files[0];
               if (file) {
                   const reader = new FileReader();
                   reader.onload = function(e) {
                       DOM.imagePreview.style.backgroundImage = `url(${e.target.result})`;
-                      AppState.tempImage = e.target.result;
                   };
                   reader.readAsDataURL(file);
               }
           },
-          
           saveChanges: function() {
-              if (AppState.tempImage) {
-                  AppState.customImage = AppState.tempImage;
-                  this.updateImages();
-                  AppState.tempImage = null;
-              }
-              
-              AppState.customTexts.line1 = DOM.textInput1.value || CONFIG.defaultTexts.line1;
-              AppState.customTexts.line2 = DOM.textInput2.value || CONFIG.defaultTexts.line2;
-              DOM.textLine1.textContent = AppState.customTexts.line1;
-              DOM.textLine2.textContent = AppState.customTexts.line2;
-              
-              this.saveContent();
               this.hideModal();
-          },
-          
-          updateImages: function() {
-              const images = [
-                  DOM.contentImage,
-                  DOM.blurBackground,
-                  DOM.imagePreview
-              ];
-              
-              images.forEach(img => {
-                  if (img) {
-                      img.style.backgroundImage = `url(${AppState.customImage})`;
-                      img.style.backgroundSize = 'cover';
-                      img.style.backgroundPosition = 'center';
-                      img.style.backgroundRepeat = 'no-repeat';
-                  }
-              });
-          },
-          
-          saveContent: function() {
-              try {
-                  const content = {
-                      customImage: AppState.customImage,
-                      customTexts: AppState.customTexts
-                  };
-                  localStorage.setItem('Ti_content', JSON.stringify(content));
-              } catch (e) {
-                  console.error("OX[Q[1Y%:", e);
-              }
-          },
-          
-          loadSavedContent: function() {
-              try {
-                  const savedContent = localStorage.getItem('Ti_content');
-                  if (savedContent) {
-                      const content = JSON.parse(savedContent);
-                      if (content.customImage) {
-                          AppState.customImage = content.customImage;
-                          this.updateImages();
-                      }
-                      if (content.customTexts) {
-                          AppState.customTexts = content.customTexts;
-                          DOM.textLine1.textContent = AppState.customTexts.line1;
-                          DOM.textLine2.textContent = AppState.customTexts.line2;
-                      }
-                  }
-              } catch (e) {
-                  console.error("R}OX[Q[1Y%:", e);
-              }
-          },
-          
-          ensureImageCover: function() {
-              const images = [
-                  DOM.contentImage,
-                  DOM.blurBackground,
-                  DOM.imagePreview
-              ];
-              
-              images.forEach(img => {
-                  if (img) {
-                      img.style.backgroundSize = 'cover';
-                      img.style.backgroundPosition = 'center';
-                      img.style.backgroundRepeat = 'no-repeat';
-                  }
-              });
           }
       };
-      
       const AuthManager = {
           init: function() {
               if (!window.PublicKeyCredential) {
                   DOM.authButton.disabled = true;
                   return;
               }
-              
               this.checkExistingCredentials();
               DOM.authButton.addEventListener('click', () => this.startAuthentication());
               this.preventScroll();
           },
-          
           preventScroll: function() {
               document.body.addEventListener('touchmove', function(e) {
                   e.preventDefault();
               }, { passive: false });
-              
               document.addEventListener('scroll', function(e) {
                   e.preventDefault();
                   window.scrollTo(0, 0);
               });
           },
-          
           checkExistingCredentials: function() {
               try {
                   const savedCredentialId = localStorage.getItem('webauthn_credential_id');
-                  
                   if (savedCredentialId) {
                       AppState.credentialId = Uint8Array.from(savedCredentialId.split(',').map(Number));
                   }
               } catch (error) {
-                  console.error("hg]OX[QeQ:", error);
                   this.clearInvalidCredential();
               }
           },
@@ -966,32 +604,27 @@
               DOM.authButton.disabled = false;
               DOM.authButton.classList.remove('auth-button-loading');
           },
-          
           startAuthentication: async function() {
               try {
                   DOM.authButton.disabled = true;
                   DOM.authButton.classList.add('auth-button-loading');
-                  
                   if (AppState.credentialId) {
                       await this.authenticateWithCredential();
                   } else {
                       await this.registerNewCredential();
                   }
               } catch (error) {
-                  console.error("Auth error:", error);
                   this.clearInvalidCredential();
                   this.resetAuthButtonState();
               }
           },
-          
           registerNewCredential: async function() {
               const challenge = new Uint8Array(32);
               crypto.getRandomValues(challenge);
-              
               const publicKey = {
                   challenge: challenge,
-                  rp: { 
-                      id: window.location.hostname, 
+                  rp: {
+                      id: window.location.hostname,
                       name: CONFIG.webauthn.rpName
                   },
                   user: {
@@ -1009,21 +642,16 @@
                   timeout: CONFIG.webauthn.timeout,
                   attestation: "none"
               };
-              
               const credential = await navigator.credentials.create({ publicKey });
-              
               if (credential && credential.rawId) {
                   AppState.credentialId = new Uint8Array(credential.rawId);
                   localStorage.setItem('webauthn_credential_id', Array.from(AppState.credentialId).join(','));
               }
-              
               this.onAuthenticationSuccess();
           },
-          
           authenticateWithCredential: async function() {
               const challenge = new Uint8Array(32);
               crypto.getRandomValues(challenge);
-              
               const publicKey = {
                   challenge: challenge,
                   rpId: window.location.hostname,
@@ -1037,54 +665,108 @@
                   userVerification: "required",
                   timeout: CONFIG.webauthn.timeout
               };
-              
               const assertion = await navigator.credentials.get({ publicKey });
-              
               if (assertion) {
                   this.onAuthenticationSuccess();
               } else {
                   throw new Error("Authentication failed");
               }
           },
-          
           onAuthenticationSuccess: function() {
               AppState.isAuthenticated = true;
               UI.showContent();
           }
       };
-      
       const UI = {
           showContent: function() {
               DOM.authContainer.style.opacity = "0";
-              
               setTimeout(() => {
                   DOM.authContainer.style.display = "none";
                   DOM.contentContainer.style.display = "block";
                   DOM.contentContainer.offsetHeight;
-                  
                   setTimeout(() => {
                       DOM.contentContainer.classList.add('active');
-                      ModalManager.ensureImageCover();
                   }, 50);
               }, 300);
           }
       };
-      
+
+      /* ===== 新增：页面选择与替换 ===== */
+      const Pages = {
+          loaded: false,
+          files: [],
+          init: function() {
+              DOM.pageButton.addEventListener('click', () => this.showList());
+              DOM.pageListClose.addEventListener('click', () => this.hideList());
+              DOM.backButton.addEventListener('click', () => this.goHome());
+              DOM.pageListOverlay.addEventListener('click', (e) => {
+                  if (e.target === DOM.pageListOverlay) {
+                      this.hideList();
+                  }
+              });
+          },
+          showList: async function() {
+              DOM.pageListOverlay.classList.add('active');
+              await this.load();
+          },
+          hideList: function() {
+              DOM.pageListOverlay.classList.remove('active');
+          },
+          load: async function() {
+              if (this.loaded) return;
+              this.loaded = true;
+              try {
+                  const res = await fetch('./pages.json', { cache: 'no-store' });
+                  if (!res.ok) throw new Error('pages.json not found');
+                  const data = await res.json();
+                  this.files = Array.isArray(data) ? data : [];
+              } catch (err) {
+                  this.files = [];
+              }
+              this.render();
+          },
+          render: function() {
+              DOM.pageList.innerHTML = '';
+              if (!this.files.length) {
+                  const empty = document.createElement('div');
+                  empty.className = 'page-empty';
+                  empty.textContent = 'No pages found';
+                  DOM.pageList.appendChild(empty);
+                  return;
+              }
+              this.files.forEach((name) => {
+                  const item = document.createElement('div');
+                  item.className = 'page-item';
+                  item.textContent = name.replace(/\.html$/i, '');
+                  item.addEventListener('click', () => this.open(name));
+                  DOM.pageList.appendChild(item);
+              });
+          },
+          open: function(name) {
+              this.hideList();
+              DOM.stage.src = 'folder/' + encodeURIComponent(name);
+              DOM.pageView.classList.add('active');
+          },
+          goHome: function() {
+              DOM.pageView.classList.remove('active');
+              DOM.stage.src = 'about:blank';
+          }
+      };
+
       function initApp() {
           AuthManager.init();
           ModalManager.init();
+          Pages.init();
       }
-      
       if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', initApp);
       } else {
           initApp();
       }
-      
       window.addEventListener('scroll', preventScroll, { passive: false });
       window.addEventListener('touchmove', preventScroll, { passive: false });
-      
       function preventScroll(e) {
+          if (e.target && e.target.closest && e.target.closest('.page-list')) return;
           e.preventDefault();
           window.scrollTo(0, 0);
           return false;
