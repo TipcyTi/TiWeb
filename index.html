@@ -364,7 +364,7 @@
           left: 0;
           right: 0;
           top: calc(var(--safe-area-inset-top) + 32px);
-          bottom: 0;
+          bottom: calc(-1 * var(--safe-area-inset-bottom));
           background-color: transparent;
           background-size: cover;
           background-position: center bottom;
@@ -865,7 +865,6 @@
               reader.onload = (e) => {
                   const img = new Image();
                   img.onload = () => {
-                      // 目标宽度：至少铺满视口，或保持原图宽度，上限 1600
                       const capW = 1600;
                       const targetW = Math.min(capW, Math.max(window.innerWidth, img.width));
                       const scale = targetW / img.width;
