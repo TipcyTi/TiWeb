@@ -107,13 +107,14 @@
       }
 
       /* ==========================================================
-         ★ 底部唯一操作条 —— Background
+         ★ 顶部操作条 —— Background（已移动到顶部）
          ========================================================== */
       #bg-toggle {
           position: fixed;
-          bottom: calc(var(--safe-area-inset-bottom) + var(--corner-gap));
+          top: calc(var(--safe-area-inset-top) + var(--corner-gap));
           left: calc(var(--safe-area-inset-left) + var(--corner-gap));
           right: calc(var(--safe-area-inset-right) + var(--corner-gap));
+          bottom: auto;
           height: 60px;
           display: flex;
           align-items: center;
@@ -382,7 +383,7 @@
   <!-- 背景层 -->
   <div id="bg-layer"></div>
 
-  <!-- 底部唯一操作条 -->
+  <!-- 顶部唯一操作条 -->
   <button id="bg-toggle" aria-label="Change Background">
       <span class="action-label">Background</span>
       <span class="action-arrow">&#8250;</span>
@@ -420,8 +421,9 @@
          ★ 可配置项
          ========================================================== */
       const CONFIG = {
-          // 背景图存储键（同一目录下所有子页面共用同一张背景）
-          bgKey: 'page_bg_image',
+          // ★ 背景图存储键 —— 已加入 "WallPaper" 字段以便辨识
+          // 与主页面的 'home_bg_image' 不冲突，互不影响
+          bgKey: 'page_WallPaper_image',
           // 压缩后最大宽度
           maxBgWidth: 1600,
           // JPEG 输出质量
@@ -446,7 +448,7 @@
          优先级：URL 参数 → postMessage → 系统偏好
          ========================================================== */
       const ThemeReceiver = {
-          locked: false,   // 是否已被父页面 / URL 接管
+          locked: false,
           mq: null,
 
           init: function() {
@@ -454,7 +456,6 @@
                   ? window.matchMedia('(prefers-color-scheme: dark)')
                   : null;
 
-              // 1) URL 参数（父页面首屏拼接的）
               let urlTheme = null;
               try {
                   urlTheme = new URLSearchParams(window.location.search).get('theme');
@@ -466,11 +467,9 @@
                   this.locked = true;
                   this.apply(urlTheme);
               } else {
-                  // 2) 无参数 → 先跟随系统
                   this.apply(this.systemDark() ? 'dark' : 'light');
               }
 
-              // 3) postMessage（父页面动态切换时推送）
               window.addEventListener('message', (e) => {
                   const data = e.data;
                   if (!data || typeof data !== 'object') return;
@@ -480,7 +479,6 @@
                   this.apply(data.theme);
               });
 
-              // 4) 系统主题变化（仅在未被接管时生效）
               if (this.mq) {
                   const onChange = (ev) => {
                       if (this.locked) return;
@@ -561,7 +559,6 @@
               DOM.bgFileInput.addEventListener('change', (e) => this.handleUpload(e));
           },
 
-          /* ---------- 应用 ---------- */
           apply: function() {
               const data = localStorage.getItem(this.key);
               if (data) {
@@ -571,7 +568,6 @@
               }
           },
 
-          /* ---------- 打开弹窗 ---------- */
           showModal: function() {
               this.pending = localStorage.getItem(this.key) || null;
               this.pendingReset = false;
@@ -579,7 +575,6 @@
               ModalAnim.show(DOM.bgOverlay);
           },
 
-          /* ---------- 关闭弹窗 ---------- */
           hideModal: function() {
               this.pending = null;
               this.pendingReset = false;
@@ -587,7 +582,6 @@
               ModalAnim.hide(DOM.bgOverlay);
           },
 
-          /* ---------- 预览 ---------- */
           updatePreview: function() {
               if (this.pendingReset || !this.pending) {
                   DOM.bgPreview.style.backgroundImage = '';
@@ -596,14 +590,12 @@
               }
           },
 
-          /* ---------- 重置（暂存，未保存） ---------- */
           resetPending: function() {
               this.pending = null;
               this.pendingReset = true;
               this.updatePreview();
           },
 
-          /* ---------- 选择图片并压缩 ---------- */
           handleUpload: function(event) {
               const file = event.target.files && event.target.files[0];
               if (!file) return;
@@ -635,7 +627,6 @@
               event.target.value = '';
           },
 
-          /* ---------- 保存 ---------- */
           saveChanges: function() {
               if (this.pending && !this.pendingReset) {
                   try {
