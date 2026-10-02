@@ -137,47 +137,8 @@
           align-items: center;
           z-index: 100;
           overflow: hidden;
-          transition: background-color 0.25s ease;
-          will-change: opacity, transform, filter;
-          /* ★ 进入认证界面的丝滑动画 */
-          animation: authEnter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+          transition: opacity 0.3s ease, background-color 0.25s ease;
       }
-
-      @keyframes authEnter {
-          0% {
-              opacity: 0;
-              filter: blur(10px);
-              transform: scale(1.03);
-          }
-          60% {
-              opacity: 1;
-              filter: blur(0);
-          }
-          100% {
-              opacity: 1;
-              filter: blur(0);
-              transform: scale(1);
-          }
-      }
-
-      /* ★ 认证界面离场动画（点击认证按钮后触发） */
-      #auth-container.leaving {
-          animation: authLeave 0.55s cubic-bezier(0.4, 0, 0.6, 1) both;
-      }
-
-      @keyframes authLeave {
-          0% {
-              opacity: 1;
-              filter: blur(0);
-              transform: scale(1);
-          }
-          100% {
-              opacity: 0;
-              filter: blur(8px);
-              transform: scale(1.05);
-          }
-      }
-
       .auth-button-container {
           width: 100%;
           display: flex;
@@ -265,33 +226,13 @@
           background: transparent;
           z-index: var(--z-content);
           opacity: 0;
+          transition: opacity 0.3s ease;
           pointer-events: none;
-          will-change: opacity, transform, filter;
       }
       #content-container.active {
+          opacity: 1;
           display: block;
-          pointer-events: auto;
-          /* ★ 进入主页面的丝滑动画 */
-          animation: contentEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
-
-      @keyframes contentEnter {
-          0% {
-              opacity: 0;
-              filter: blur(14px);
-              transform: translateY(26px) scale(0.98);
-          }
-          55% {
-              opacity: 1;
-              filter: blur(0);
-          }
-          100% {
-              opacity: 1;
-              filter: blur(0);
-              transform: translateY(0) scale(1);
-          }
-      }
-
       #home-view {
           width: 100%;
           height: 100%;
@@ -715,11 +656,6 @@
           .modal-overlay.active.closing .modal-content {
               animation: none;
           }
-          #auth-container,
-          #auth-container.leaving,
-          #content-container.active {
-              animation: none;
-          }
       }
 
       .modal-content {
@@ -1028,6 +964,8 @@
           border: 0;
           display: block;
           background: var(--c-bg);
+          /* ★ 关键：给 iframe 设置 color-scheme，让子页面里的
+             prefers-color-scheme 也能跟随 */
           color-scheme: light;
       }
       html.dark #stage {
@@ -1035,7 +973,7 @@
       }
 
       /* ==========================================================
-         ★ 返回按钮
+         ★ 返回按钮 —— 底部居中，长条形，半透明模糊
          ========================================================== */
       #back-button {
           position: fixed;
@@ -1280,18 +1218,22 @@
 
       /* ==========================================================
          ★ 主题同步器 —— 把当前主题推送给 iframe
+         双保险：URL 参数（首屏）+ postMessage（动态切换）
          ========================================================== */
       const ThemeBridge = {
+          // 读取当前是否深色
           isDark: function() {
               return document.documentElement.classList.contains('dark');
           },
 
+          // 给子页面 URL 拼接 theme 参数
           decorateURL: function(url) {
               const theme = this.isDark() ? 'dark' : 'light';
               const sep = url.indexOf('?') === -1 ? '?' : '&';
               return url + sep + 'theme=' + theme;
           },
 
+          // 通过 postMessage 把主题推给 iframe
           push: function() {
               const frame = DOM.stage;
               if (!frame || !frame.contentWindow) return;
@@ -1406,6 +1348,7 @@
                   meta.setAttribute('content', on ? '#000000' : '#F1F2ED');
               }
               this.updateUI();
+              // ★ 主题变化时，立刻通知 iframe
               ThemeBridge.push();
           },
 
@@ -1592,20 +1535,15 @@
 
       const UI = {
           showContent: function() {
-              // ★ 认证界面播放离场动画（交给 CSS，不再手动改 opacity）
-              DOM.authContainer.classList.add('leaving');
-
-              const reduce = window.matchMedia &&
-                             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-              const leaveMs = reduce ? 0 : 550;
-
+              DOM.authContainer.style.opacity = "0";
               setTimeout(() => {
                   DOM.authContainer.style.display = "none";
                   DOM.contentContainer.style.display = "block";
-                  // 强制一次重排，确保 contentEnter 动画能被触发
-                  void DOM.contentContainer.offsetHeight;
-                  DOM.contentContainer.classList.add('active');
-              }, leaveMs);
+                  DOM.contentContainer.offsetHeight;
+                  setTimeout(() => {
+                      DOM.contentContainer.classList.add('active');
+                  }, 50);
+              }, 300);
           }
       };
 
@@ -1627,6 +1565,8 @@
                   }
               });
 
+              // iframe 每次加载完成后，再推一次主题
+              // 覆盖子页面首次渲染时的时序问题
               DOM.stage.addEventListener('load', () => {
                   if (DOM.pageView.classList.contains('active')) {
                       ThemeBridge.push();
@@ -1683,6 +1623,7 @@
               this.hideList();
               DOM.pageView.classList.remove('closing');
 
+              // ★ 关键：把当前主题以 URL 参数拼接到子页面地址
               const rawURL = 'folder/' + encodeURIComponent(name);
               DOM.stage.src = ThemeBridge.decorateURL(rawURL);
 
