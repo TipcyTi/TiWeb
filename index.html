@@ -844,7 +844,9 @@
           overflow: hidden;
       }
 
-      /* ===== 页面列表 ===== */
+      /* ==========================================================
+         ★ 页面列表 —— 每一项依次错落淡入
+         ========================================================== */
       .page-list {
           display: flex;
           flex-direction: column;
@@ -869,21 +871,37 @@
           transition: background-color 0.2s ease, transform 0.2s ease,
                       border-color 0.25s ease;
           word-break: break-all;
+          animation: pageItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
       .page-item:active {
           transform: scale(0.97);
           background-color: var(--c-surface-border);
       }
+
+      @keyframes pageItemIn {
+          0% {
+              opacity: 0;
+              transform: translateY(14px);
+              filter: blur(3px);
+          }
+          100% {
+              opacity: 1;
+              transform: translateY(0);
+              filter: blur(0);
+          }
+      }
+
       .page-empty {
           text-align: center;
           opacity: 0.6;
           font-size: 14px;
           padding: 12px;
           font-family: Impact;
+          animation: pageItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
 
       /* ==========================================================
-         ★ 页面承载
+         ★ 页面承载 —— 进入 / 退出 双向动画
          ========================================================== */
       #page-view {
           display: none;
@@ -895,10 +913,53 @@
           z-index: var(--z-pageview);
           background: var(--c-bg);
           transition: background-color 0.25s ease;
+          will-change: opacity, transform;
       }
       #page-view.active {
           display: block;
+          animation: pageViewIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
+      #page-view.active.closing {
+          animation: pageViewOut 0.26s cubic-bezier(0.4, 0, 1, 1) both;
+          pointer-events: none;
+      }
+
+      @keyframes pageViewIn {
+          0% {
+              opacity: 0;
+              transform: translateY(20px) scale(0.985);
+              filter: blur(3px);
+          }
+          100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              filter: blur(0);
+          }
+      }
+      @keyframes pageViewOut {
+          0% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              filter: blur(0);
+          }
+          100% {
+              opacity: 0;
+              transform: translateY(16px) scale(0.985);
+              filter: blur(3px);
+          }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+          .page-item,
+          .page-empty {
+              animation: none;
+          }
+          #page-view.active,
+          #page-view.active.closing {
+              animation: none;
+          }
+      }
+
       #stage {
           width: 100%;
           height: 100%;
@@ -928,7 +989,6 @@
           font-size: 16px;
           font-weight: 700;
           letter-spacing: 1.5px;
-          text-transform: uppercase;
           line-height: 1;
           display: flex;
           justify-content: center;
@@ -1450,11 +1510,13 @@
       };
 
       /* ==========================================================
-         ★ 页面列表
+         ★ 页面列表（列表项错落淡入 + 页面视图进入/退出动画）
          ========================================================== */
       const Pages = {
           loaded: false,
           files: [],
+          PAGE_EXIT_MS: 260,   // 与 CSS 中 pageViewOut 时长保持一致
+
           init: function() {
               DOM.pagesToggle.addEventListener('click', () => this.showList());
               DOM.pageListClose.addEventListener('click', () => this.hideList());
@@ -1465,16 +1527,21 @@
                   }
               });
           },
+
           showList: async function() {
               ModalAnim.show(DOM.pageListOverlay);
               document.body.classList.add('no-scroll');
               await this.load();
+              // 每次打开都重新渲染，以重新触发列表项动画
+              this.render();
           },
+
           hideList: function() {
               ModalAnim.hide(DOM.pageListOverlay, () => {
                   document.body.classList.remove('no-scroll');
               });
           },
+
           load: async function() {
               if (this.loaded) return;
               this.loaded = true;
@@ -1486,8 +1553,8 @@
               } catch (err) {
                   this.files = [];
               }
-              this.render();
           },
+
           render: function() {
               DOM.pageList.innerHTML = '';
               if (!this.files.length) {
@@ -1497,22 +1564,41 @@
                   DOM.pageList.appendChild(empty);
                   return;
               }
-              this.files.forEach((name) => {
+              this.files.forEach((name, i) => {
                   const item = document.createElement('div');
                   item.className = 'page-item';
                   item.textContent = name.replace(/\.html$/i, '');
+                  // 依次错落入场：每项延迟 40ms，最多延迟到 400ms
+                  item.style.animationDelay = Math.min(i * 40, 400) + 'ms';
                   item.addEventListener('click', () => this.open(name));
                   DOM.pageList.appendChild(item);
               });
           },
+
           open: function(name) {
               this.hideList();
+              // 若上一次退出动画残留，先清理
+              DOM.pageView.classList.remove('closing');
               DOM.stage.src = 'folder/' + encodeURIComponent(name);
               DOM.pageView.classList.add('active');
           },
+
           goHome: function() {
-              DOM.pageView.classList.remove('active');
-              DOM.stage.src = 'about:blank';
+              if (!DOM.pageView.classList.contains('active')) return;
+              if (DOM.pageView.classList.contains('closing')) return;
+
+              DOM.pageView.classList.add('closing');
+
+              const reduce = window.matchMedia &&
+                             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              const delay = reduce ? 0 : this.PAGE_EXIT_MS;
+
+              clearTimeout(DOM.pageView._exitTimer);
+              DOM.pageView._exitTimer = setTimeout(() => {
+                  DOM.pageView.classList.remove('active');
+                  DOM.pageView.classList.remove('closing');
+                  DOM.stage.src = 'about:blank';
+              }, delay);
           }
       };
 
