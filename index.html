@@ -466,7 +466,7 @@
           font-family: Impact;
       }
 
-      /* ===== Mode 栏（现在位于最底部） ===== */
+      /* ===== Mode 栏 ===== */
       #mode-bar {
           cursor: default;
       }
@@ -479,9 +479,7 @@
           gap: 10px;
       }
 
-      /* ==========================================================
-         ★ Auto —— 内嵌式胶囊按钮（柔和填充）
-         ========================================================== */
+      /* ===== Auto 胶囊按钮 ===== */
       .auto-toggle {
           display: inline-flex;
           align-items: center;
@@ -526,7 +524,6 @@
           opacity: 0.75;
       }
 
-      /* 主开关（滑动） */
       .theme-toggle-btn {
           background: none;
           border: none;
@@ -586,7 +583,7 @@
       }
 
       /* ==========================================================
-         ★ 弹层 —— 打开 & 关闭 双向动画
+         ★ 弹层
          ========================================================== */
       .modal-overlay {
           display: none;
@@ -885,7 +882,9 @@
           font-family: Impact;
       }
 
-      /* ===== 页面承载 ===== */
+      /* ==========================================================
+         ★ 页面承载
+         ========================================================== */
       #page-view {
           display: none;
           position: fixed;
@@ -907,28 +906,42 @@
           display: block;
           background: var(--c-bg);
       }
+
+      /* ==========================================================
+         ★ 返回按钮 —— 底部居中，长条形，半透明模糊
+         ========================================================== */
       #back-button {
           position: fixed;
-          top: calc(var(--safe-area-inset-top) + 14px);
-          left: calc(var(--safe-area-inset-left) + 14px);
-          width: 44px;
-          height: 44px;
-          border: none;
-          border-radius: 50%;
-          background: var(--c-bg);
+          bottom: calc(var(--safe-area-inset-bottom) + var(--corner-gap));
+          left: calc(var(--safe-area-inset-left) + var(--corner-gap));
+          right: calc(var(--safe-area-inset-right) + var(--corner-gap));
+          top: auto;
+          width: auto;
+          height: 60px;
+          border: 1px solid var(--c-mode-border);
+          border-radius: 999px;
+          background: rgba(var(--c-veil), 0.55);
+          -webkit-backdrop-filter: blur(14px) saturate(140%);
+          backdrop-filter: blur(14px) saturate(140%);
           color: var(--c-text);
-          font-family: Impact;
-          font-size: 20px;
+          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
           line-height: 1;
           display: flex;
           justify-content: center;
           align-items: center;
           cursor: pointer;
           z-index: calc(var(--z-pageview) + 10);
-          transition: background-color 0.2s ease, color 0.25s ease;
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.25s ease, color 0.25s ease,
+                      border-color 0.25s ease, transform 0.2s ease;
       }
       #back-button:active {
-          background: var(--c-surface);
+          transform: scale(0.985);
+          background-color: rgba(var(--c-veil), 0.75);
       }
   </style>
 </head>
@@ -963,7 +976,6 @@
           <span class="action-arrow">&#8250;</span>
       </button>
 
-      <!-- Mode 移到最后 -->
       <div id="mode-bar" class="action-bar">
           <span class="action-label">Mode</span>
           <div class="mode-controls">
@@ -996,7 +1008,7 @@
 
   <div id="page-view">
       <iframe id="stage" title="page"></iframe>
-      <button id="back-button">&#8592;</button>
+      <button id="back-button">Back</button>
   </div>
 
   <!-- Pages 弹窗 -->
