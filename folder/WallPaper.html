@@ -45,6 +45,7 @@
           --safe-area-inset-right: env(safe-area-inset-right, 0px);
 
           --z-bg: 1;
+          --z-veil: 2;
           --z-ui: 5;
           --z-modal: 200;
 
@@ -107,7 +108,92 @@
       }
 
       /* ==========================================================
-         ★ 顶部操作条 —— Background（已移动到顶部）
+         ★ 背景标记容器（仅供 CSS 选择器使用，不渲染）
+         ========================================================== */
+      #bg-marker {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 0;
+          height: 0;
+          z-index: var(--z-bg);
+          pointer-events: none;
+          overflow: hidden;
+      }
+
+      /* ==========================================================
+         ★ 顶部大面积柔化层 —— 回归的过度效果
+         ========================================================== */
+      #top-veil {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: calc(var(--safe-area-inset-top) + 730px);
+          z-index: var(--z-veil);
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.45s ease;
+
+          background: linear-gradient(
+              to bottom,
+              rgba(var(--c-veil), 0.95) 0%,
+              rgba(var(--c-veil), 0.88) calc(var(--safe-area-inset-top) + 60px),
+              rgba(var(--c-veil), 0.78) calc(var(--safe-area-inset-top) + 150px),
+              rgba(var(--c-veil), 0.66) calc(var(--safe-area-inset-top) + 250px),
+              rgba(var(--c-veil), 0.53) calc(var(--safe-area-inset-top) + 350px),
+              rgba(var(--c-veil), 0.41) calc(var(--safe-area-inset-top) + 440px),
+              rgba(var(--c-veil), 0.30) calc(var(--safe-area-inset-top) + 520px),
+              rgba(var(--c-veil), 0.20) calc(var(--safe-area-inset-top) + 590px),
+              rgba(var(--c-veil), 0.11) calc(var(--safe-area-inset-top) + 650px),
+              rgba(var(--c-veil), 0.04) calc(var(--safe-area-inset-top) + 690px),
+              rgba(var(--c-veil), 0) 100%
+          );
+
+          -webkit-backdrop-filter: blur(12px) saturate(110%);
+          backdrop-filter: blur(12px) saturate(110%);
+
+          -webkit-mask-image: linear-gradient(
+              to bottom,
+              #000 0%,
+              rgba(0, 0, 0, 0.95) calc(var(--safe-area-inset-top) + 50px),
+              rgba(0, 0, 0, 0.88) calc(var(--safe-area-inset-top) + 140px),
+              rgba(0, 0, 0, 0.79) calc(var(--safe-area-inset-top) + 240px),
+              rgba(0, 0, 0, 0.68) calc(var(--safe-area-inset-top) + 340px),
+              rgba(0, 0, 0, 0.56) calc(var(--safe-area-inset-top) + 430px),
+              rgba(0, 0, 0, 0.43) calc(var(--safe-area-inset-top) + 515px),
+              rgba(0, 0, 0, 0.31) calc(var(--safe-area-inset-top) + 585px),
+              rgba(0, 0, 0, 0.19) calc(var(--safe-area-inset-top) + 645px),
+              rgba(0, 0, 0, 0.09) calc(var(--safe-area-inset-top) + 685px),
+              rgba(0, 0, 0, 0.03) calc(var(--safe-area-inset-top) + 715px),
+              transparent 100%
+          );
+          mask-image: linear-gradient(
+              to bottom,
+              #000 0%,
+              rgba(0, 0, 0, 0.95) calc(var(--safe-area-inset-top) + 50px),
+              rgba(0, 0, 0, 0.88) calc(var(--safe-area-inset-top) + 140px),
+              rgba(0, 0, 0, 0.79) calc(var(--safe-area-inset-top) + 240px),
+              rgba(0, 0, 0, 0.68) calc(var(--safe-area-inset-top) + 340px),
+              rgba(0, 0, 0, 0.56) calc(var(--safe-area-inset-top) + 430px),
+              rgba(0, 0, 0, 0.43) calc(var(--safe-area-inset-top) + 515px),
+              rgba(0, 0, 0, 0.31) calc(var(--safe-area-inset-top) + 585px),
+              rgba(0, 0, 0, 0.19) calc(var(--safe-area-inset-top) + 645px),
+              rgba(0, 0, 0, 0.09) calc(var(--safe-area-inset-top) + 685px),
+              rgba(0, 0, 0, 0.03) calc(var(--safe-area-inset-top) + 715px),
+              transparent 100%
+          );
+          -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+      }
+
+      /* 当存在背景图时，柔化层淡入 */
+      #bg-marker.has-image ~ #top-veil {
+          opacity: 1;
+      }
+
+      /* ==========================================================
+         ★ 顶部操作条 —— Background（保持在顶部）
          ========================================================== */
       #bg-toggle {
           position: fixed;
@@ -380,10 +466,16 @@
 </head>
 <body>
 
+  <!-- 背景标记（用于触发柔化层） -->
+  <div id="bg-marker"></div>
+
   <!-- 背景层 -->
   <div id="bg-layer"></div>
 
-  <!-- 顶部唯一操作条 -->
+  <!-- 顶部大面积柔化层 -->
+  <div id="top-veil"></div>
+
+  <!-- 顶部操作条 -->
   <button id="bg-toggle" aria-label="Change Background">
       <span class="action-label">Background</span>
       <span class="action-arrow">&#8250;</span>
@@ -422,7 +514,6 @@
          ========================================================== */
       const CONFIG = {
           // ★ 背景图存储键 —— 已加入 "WallPaper" 字段以便辨识
-          // 与主页面的 'home_bg_image' 不冲突，互不影响
           bgKey: 'page_WallPaper_image',
           // 压缩后最大宽度
           maxBgWidth: 1600,
@@ -431,6 +522,7 @@
       };
 
       const DOM = {
+          bgMarker: document.getElementById('bg-marker'),
           bgLayer: document.getElementById('bg-layer'),
           bgToggle: document.getElementById('bg-toggle'),
 
@@ -563,8 +655,11 @@
               const data = localStorage.getItem(this.key);
               if (data) {
                   DOM.bgLayer.style.backgroundImage = `url(${data})`;
+                  // ★ 有背景图 → 触发顶部柔化层淡入
+                  DOM.bgMarker.classList.add('has-image');
               } else {
                   DOM.bgLayer.style.backgroundImage = 'none';
+                  DOM.bgMarker.classList.remove('has-image');
               }
           },
 
