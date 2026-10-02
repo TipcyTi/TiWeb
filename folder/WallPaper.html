@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Page</title>
+  <style>
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent;
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
+          -webkit-text-size-adjust: none;
+      }
+
+      :root {
+          color-scheme: light;
+
+          --c-bg: #F1F2ED;
+          --c-text: #000000;
+          --c-text-soft: #1A1A1A;
+          --c-modal-bg: #E8E9E4;
+          --c-border: #D0D1CC;
+          --c-surface: #DCDDD8;
+          --c-surface-border: #C8C9C4;
+          --c-input-bg: #F1F2ED;
+          --c-input-focus: #FFFFFF;
+          --c-btn-gray: #B0B1AC;
+          --c-btn-gray-hover: #A8A9A4;
+          --c-preview: #D8D9D4;
+          --c-img-btn: #D0D1CC;
+          --c-img-btn-hover: #B8B9B4;
+          --c-veil: 241, 242, 237;
+          --c-scroll-thumb: #C8C9C4;
+          --c-mode-border: rgba(0, 0, 0, 0.10);
+
+          --safe-area-inset-top: env(safe-area-inset-top, 0px);
+          --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+          --safe-area-inset-left: env(safe-area-inset-left, 0px);
+          --safe-area-inset-right: env(safe-area-inset-right, 0px);
+
+          --z-bg: 1;
+          --z-ui: 5;
+          --z-modal: 200;
+
+          --corner-gap: 14px;
+      }
+
+      html.dark {
+          color-scheme: dark;
+
+          --c-bg: #000000;
+          --c-text: #FFFFFF;
+          --c-text-soft: #FFFFFF;
+          --c-modal-bg: #000000;
+          --c-border: #222222;
+          --c-surface: #0A0A0A;
+          --c-surface-border: #222222;
+          --c-input-bg: #000000;
+          --c-input-focus: #111111;
+          --c-btn-gray: #1A1A1A;
+          --c-btn-gray-hover: #2A2A2A;
+          --c-preview: #0A0A0A;
+          --c-img-btn: #1A1A1A;
+          --c-img-btn-hover: #2A2A2A;
+          --c-veil: 0, 0, 0;
+          --c-scroll-thumb: #333333;
+          --c-mode-border: rgba(255, 255, 255, 0.14);
+      }
+
+      html,
+      body {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          overscroll-behavior: none;
+          background-color: var(--c-bg);
+          color: var(--c-text);
+          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-weight: 700;
+          transition: background-color 0.25s ease, color 0.25s ease;
+      }
+
+      /* ==========================================================
+         ★ 背景层 —— 本页唯一的"内容"
+         ========================================================== */
+      #bg-layer {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: var(--z-bg);
+          background-color: var(--c-bg);
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-size: cover;
+          pointer-events: none;
+          transition: background-color 0.25s ease;
+          -webkit-transform: translateZ(0);
+          transform: translateZ(0);
+      }
+
+      /* ==========================================================
+         ★ 底部唯一操作条 —— Background
+         ========================================================== */
+      #bg-toggle {
+          position: fixed;
+          bottom: calc(var(--safe-area-inset-bottom) + var(--corner-gap));
+          left: calc(var(--safe-area-inset-left) + var(--corner-gap));
+          right: calc(var(--safe-area-inset-right) + var(--corner-gap));
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 0 18px 0 22px;
+          border: 1px solid var(--c-mode-border);
+          border-radius: 999px;
+          background: rgba(var(--c-veil), 0.55);
+          -webkit-backdrop-filter: blur(14px) saturate(140%);
+          backdrop-filter: blur(14px) saturate(140%);
+          color: var(--c-text);
+          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          line-height: 1;
+          cursor: pointer;
+          z-index: var(--z-ui);
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.25s ease, color 0.25s ease,
+                      border-color 0.25s ease, transform 0.2s ease;
+      }
+      #bg-toggle:active {
+          transform: scale(0.985);
+          background-color: rgba(var(--c-veil), 0.75);
+      }
+
+      .action-label {
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          line-height: 1;
+          text-transform: uppercase;
+      }
+      .action-arrow {
+          font-size: 22px;
+          line-height: 1;
+          opacity: 0.6;
+          font-family: Impact;
+      }
+
+      /* ==========================================================
+         ★ 弹层
+         ========================================================== */
+      .modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(var(--c-veil), 0.95);
+          z-index: var(--z-modal);
+          justify-content: center;
+          align-items: center;
+          will-change: opacity;
+      }
+      .modal-overlay.active {
+          display: flex;
+          animation: overlayFade 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .modal-overlay.active .modal-content {
+          animation: modalRise 0.42s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+      }
+      .modal-overlay.active.closing {
+          animation: overlayFadeOut 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+      }
+      .modal-overlay.active.closing .modal-content {
+          animation: modalSink 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+      }
+
+      @keyframes overlayFade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+      }
+      @keyframes overlayFadeOut {
+          from { opacity: 1; }
+          to   { opacity: 0; }
+      }
+      @keyframes modalRise {
+          0% {
+              opacity: 0;
+              transform: translateY(32px) scale(0.93);
+              filter: blur(4px);
+          }
+          55% {
+              opacity: 1;
+              filter: blur(0);
+          }
+          100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              filter: blur(0);
+          }
+      }
+      @keyframes modalSink {
+          0% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              filter: blur(0);
+          }
+          100% {
+              opacity: 0;
+              transform: translateY(24px) scale(0.95);
+              filter: blur(3px);
+          }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+          .modal-overlay.active,
+          .modal-overlay.active .modal-content,
+          .modal-overlay.active.closing,
+          .modal-overlay.active.closing .modal-content {
+              animation: none;
+          }
+      }
+
+      .modal-content {
+          background-color: var(--c-modal-bg);
+          width: 90%;
+          max-width: 460px;
+          border-radius: 20px;
+          padding: 20px;
+          border: 1px solid var(--c-border);
+          color: var(--c-text);
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          max-height: 92vh;
+          overflow: hidden;
+          transition: background-color 0.25s ease, border-color 0.25s ease,
+                      color 0.25s ease;
+          will-change: transform, opacity;
+      }
+      .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
+      .modal-title {
+          font-size: 20px;
+          font-weight: 700;
+          font-family: Impact;
+      }
+      .modal-close {
+          background: none;
+          border: none;
+          color: var(--c-text);
+          font-size: 24px;
+          cursor: pointer;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 50%;
+          transition: background-color 0.3s ease;
+          font-family: Impact;
+      }
+      .modal-close:hover {
+          background-color: rgba(128, 128, 128, 0.18);
+      }
+      .modal-section {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
+      .section-title {
+          font-size: 15px;
+          font-weight: 700;
+          font-family: Impact;
+      }
+      .modal-buttons {
+          display: flex;
+          gap: 12px;
+          margin-top: 5px;
+      }
+      .modal-button {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 8px;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-family: Impact;
+          font-size: 14px;
+      }
+      .modal-button.save {
+          background-color: #4CAF50;
+          color: white;
+      }
+      .modal-button.save:hover {
+          background-color: #45a049;
+      }
+      .modal-button.cancel {
+          background-color: var(--c-btn-gray);
+          color: var(--c-text);
+      }
+      .modal-button.cancel:hover {
+          background-color: var(--c-btn-gray-hover);
+      }
+
+      /* ===== 预览区 ===== */
+      .preview-wrap {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 14px 0;
+          background: var(--c-surface);
+          border: 1px solid var(--c-border);
+          border-radius: 14px;
+          overflow: hidden;
+          transition: background-color 0.25s ease, border-color 0.25s ease;
+      }
+      .preview-bg {
+          width: 90%;
+          height: 150px;
+          border-radius: 12px;
+          background-color: var(--c-preview);
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-size: cover;
+          border: 1px solid var(--c-border);
+          transition: background-color 0.25s ease, border-color 0.25s ease;
+      }
+
+      .file-input-wrapper {
+          position: relative;
+          overflow: hidden;
+          display: block;
+          width: 100%;
+      }
+      .file-input-button {
+          background-color: var(--c-img-btn);
+          color: var(--c-text);
+          padding: 12px 14px;
+          border-radius: 10px;
+          cursor: pointer;
+          text-align: center;
+          font-weight: 600;
+          transition: background-color 0.3s ease, color 0.25s ease;
+          width: 100%;
+          font-family: Impact;
+          font-size: 14px;
+          letter-spacing: 1px;
+      }
+      .file-input-button:hover {
+          background-color: var(--c-img-btn-hover);
+      }
+      .file-input {
+          position: absolute;
+          left: 0;
+          top: 0;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+      }
+  </style>
+</head>
+<body>
+
+  <!-- 背景层 -->
+  <div id="bg-layer"></div>
+
+  <!-- 底部唯一操作条 -->
+  <button id="bg-toggle" aria-label="Change Background">
+      <span class="action-label">Background</span>
+      <span class="action-arrow">&#8250;</span>
+  </button>
+
+  <!-- Background 弹窗 -->
+  <div class="modal-overlay" id="bgOverlay">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 class="modal-title">Background</h2>
+              <button class="modal-close" id="bgModalClose">&times;</button>
+          </div>
+          <div class="modal-section">
+              <h3 class="section-title">Preview</h3>
+              <div class="preview-wrap">
+                  <div class="preview-bg" id="bgPreview"></div>
+              </div>
+          </div>
+          <div class="modal-section">
+              <div class="file-input-wrapper">
+                  <div class="file-input-button">Select Image</div>
+                  <input type="file" class="file-input" id="bgFileInput" accept="image/*">
+              </div>
+          </div>
+          <div class="modal-buttons">
+              <button class="modal-button cancel" id="bgResetButton">Reset</button>
+              <button class="modal-button cancel" id="bgCancelButton">Cancel</button>
+              <button class="modal-button save" id="bgSaveButton">Apply</button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      /* ==========================================================
+         ★ 可配置项
+         ========================================================== */
+      const CONFIG = {
+          // 背景图存储键（同一目录下所有子页面共用同一张背景）
+          bgKey: 'page_bg_image',
+          // 压缩后最大宽度
+          maxBgWidth: 1600,
+          // JPEG 输出质量
+          jpegQuality: 0.92
+      };
+
+      const DOM = {
+          bgLayer: document.getElementById('bg-layer'),
+          bgToggle: document.getElementById('bg-toggle'),
+
+          bgOverlay: document.getElementById('bgOverlay'),
+          bgModalClose: document.getElementById('bgModalClose'),
+          bgPreview: document.getElementById('bgPreview'),
+          bgFileInput: document.getElementById('bgFileInput'),
+          bgResetButton: document.getElementById('bgResetButton'),
+          bgCancelButton: document.getElementById('bgCancelButton'),
+          bgSaveButton: document.getElementById('bgSaveButton')
+      };
+
+      /* ==========================================================
+         ★ 主题接收器
+         优先级：URL 参数 → postMessage → 系统偏好
+         ========================================================== */
+      const ThemeReceiver = {
+          locked: false,   // 是否已被父页面 / URL 接管
+          mq: null,
+
+          init: function() {
+              this.mq = window.matchMedia
+                  ? window.matchMedia('(prefers-color-scheme: dark)')
+                  : null;
+
+              // 1) URL 参数（父页面首屏拼接的）
+              let urlTheme = null;
+              try {
+                  urlTheme = new URLSearchParams(window.location.search).get('theme');
+              } catch (err) {
+                  urlTheme = null;
+              }
+
+              if (urlTheme === 'dark' || urlTheme === 'light') {
+                  this.locked = true;
+                  this.apply(urlTheme);
+              } else {
+                  // 2) 无参数 → 先跟随系统
+                  this.apply(this.systemDark() ? 'dark' : 'light');
+              }
+
+              // 3) postMessage（父页面动态切换时推送）
+              window.addEventListener('message', (e) => {
+                  const data = e.data;
+                  if (!data || typeof data !== 'object') return;
+                  if (data.type !== 'ti-theme') return;
+                  if (data.theme !== 'dark' && data.theme !== 'light') return;
+                  this.locked = true;
+                  this.apply(data.theme);
+              });
+
+              // 4) 系统主题变化（仅在未被接管时生效）
+              if (this.mq) {
+                  const onChange = (ev) => {
+                      if (this.locked) return;
+                      this.apply(ev.matches ? 'dark' : 'light');
+                  };
+                  if (this.mq.addEventListener) {
+                      this.mq.addEventListener('change', onChange);
+                  } else if (this.mq.addListener) {
+                      this.mq.addListener(onChange);
+                  }
+              }
+          },
+
+          systemDark: function() {
+              return this.mq ? this.mq.matches : false;
+          },
+
+          apply: function(theme) {
+              document.documentElement.classList.toggle('dark', theme === 'dark');
+          }
+      };
+
+      /* ==========================================================
+         ★ Modal 动画辅助
+         ========================================================== */
+      const ModalAnim = {
+          CLOSE_MS: 240,
+
+          show: function(el) {
+              if (!el) return;
+              clearTimeout(el._closeTimer);
+              el.classList.remove('closing');
+              el.classList.add('active');
+          },
+
+          hide: function(el, onDone) {
+              if (!el) return;
+              if (!el.classList.contains('active')) {
+                  if (onDone) onDone();
+                  return;
+              }
+              if (el.classList.contains('closing')) return;
+
+              el.classList.add('closing');
+
+              const reduce = window.matchMedia &&
+                             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              const delay = reduce ? 0 : this.CLOSE_MS;
+
+              clearTimeout(el._closeTimer);
+              el._closeTimer = setTimeout(() => {
+                  el.classList.remove('active');
+                  el.classList.remove('closing');
+                  if (onDone) onDone();
+              }, delay);
+          }
+      };
+
+      /* ==========================================================
+         ★ 背景管理 —— 本页唯一功能
+         ========================================================== */
+      const BackgroundManager = {
+          key: CONFIG.bgKey,
+          pending: null,
+          pendingReset: false,
+
+          init: function() {
+              this.apply();
+
+              DOM.bgToggle.addEventListener('click', () => this.showModal());
+              DOM.bgModalClose.addEventListener('click', () => this.hideModal());
+              DOM.bgCancelButton.addEventListener('click', () => this.hideModal());
+              DOM.bgSaveButton.addEventListener('click', () => this.saveChanges());
+              DOM.bgResetButton.addEventListener('click', () => this.resetPending());
+              DOM.bgOverlay.addEventListener('click', (e) => {
+                  if (e.target === DOM.bgOverlay) this.hideModal();
+              });
+              DOM.bgFileInput.addEventListener('change', (e) => this.handleUpload(e));
+          },
+
+          /* ---------- 应用 ---------- */
+          apply: function() {
+              const data = localStorage.getItem(this.key);
+              if (data) {
+                  DOM.bgLayer.style.backgroundImage = `url(${data})`;
+              } else {
+                  DOM.bgLayer.style.backgroundImage = 'none';
+              }
+          },
+
+          /* ---------- 打开弹窗 ---------- */
+          showModal: function() {
+              this.pending = localStorage.getItem(this.key) || null;
+              this.pendingReset = false;
+              this.updatePreview();
+              ModalAnim.show(DOM.bgOverlay);
+          },
+
+          /* ---------- 关闭弹窗 ---------- */
+          hideModal: function() {
+              this.pending = null;
+              this.pendingReset = false;
+              DOM.bgFileInput.value = '';
+              ModalAnim.hide(DOM.bgOverlay);
+          },
+
+          /* ---------- 预览 ---------- */
+          updatePreview: function() {
+              if (this.pendingReset || !this.pending) {
+                  DOM.bgPreview.style.backgroundImage = '';
+              } else {
+                  DOM.bgPreview.style.backgroundImage = `url(${this.pending})`;
+              }
+          },
+
+          /* ---------- 重置（暂存，未保存） ---------- */
+          resetPending: function() {
+              this.pending = null;
+              this.pendingReset = true;
+              this.updatePreview();
+          },
+
+          /* ---------- 选择图片并压缩 ---------- */
+          handleUpload: function(event) {
+              const file = event.target.files && event.target.files[0];
+              if (!file) return;
+
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                  const img = new Image();
+                  img.onload = () => {
+                      const capW = CONFIG.maxBgWidth;
+                      const targetW = Math.min(capW, img.width);
+                      const scale = targetW / img.width;
+
+                      const canvas = document.createElement('canvas');
+                      canvas.width = Math.round(img.width * scale);
+                      canvas.height = Math.round(img.height * scale);
+
+                      const ctx = canvas.getContext('2d');
+                      ctx.imageSmoothingEnabled = true;
+                      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                      this.pending = canvas.toDataURL('image/jpeg', CONFIG.jpegQuality);
+                      this.pendingReset = false;
+                      this.updatePreview();
+                  };
+                  img.src = e.target.result;
+              };
+              reader.readAsDataURL(file);
+
+              event.target.value = '';
+          },
+
+          /* ---------- 保存 ---------- */
+          saveChanges: function() {
+              if (this.pending && !this.pendingReset) {
+                  try {
+                      localStorage.setItem(this.key, this.pending);
+                  } catch (err) {
+                      alert('背景图片过大，无法保存，请换一张');
+                  }
+              } else {
+                  localStorage.removeItem(this.key);
+              }
+              this.apply();
+              this.hideModal();
+          }
+      };
+
+      /* ==========================================================
+         ★ 启动
+         ========================================================== */
+      function initApp() {
+          ThemeReceiver.init();
+          BackgroundManager.init();
+      }
+
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initApp);
+      } else {
+          initApp();
+      }
+
+      /* 阻止整页滚动 / 橡皮筋 */
+      window.addEventListener('scroll', preventScroll, { passive: false });
+      window.addEventListener('touchmove', preventScroll, { passive: false });
+      function preventScroll(e) {
+          if (e.target && e.target.closest && e.target.closest('.modal-content')) return;
+          e.preventDefault();
+          window.scrollTo(0, 0);
+          return false;
+      }
+  </script>
+</body>
+</html>
