@@ -22,56 +22,122 @@
           -webkit-touch-callout: none;
           -webkit-text-size-adjust: none;
       }
-      html {
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
-      }
-      body {
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
-          overflow: hidden;
-          background: #F1F2ED;
-          font-family: Impact;
-          color: #000000;
-          font-weight: 700;
-          position: relative;
-          touch-action: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-      }
+
       :root {
+          color-scheme: light;
+
+          --c-bg: #F1F2ED;
+          --c-text: #000000;
+          --c-text-soft: #1A1A1A;
+          --c-modal-bg: #E8E9E4;
+          --c-border: #D0D1CC;
+          --c-surface: #DCDDD8;
+          --c-surface-border: #C8C9C4;
+          --c-input-bg: #F1F2ED;
+          --c-input-focus: #FFFFFF;
+          --c-btn-gray: #B0B1AC;
+          --c-btn-gray-hover: #A8A9A4;
+          --c-preview: #D8D9D4;
+          --c-img-btn: #D0D1CC;
+          --c-img-btn-hover: #B8B9B4;
+          --c-veil: 241, 242, 237;
+          --c-scroll-thumb: #C8C9C4;
+          --c-switch-track: rgba(0, 0, 0, 0.18);
+          --c-switch-knob: #FFFFFF;
+          --c-mode-border: rgba(0, 0, 0, 0.10);
+
+          --c-chip-fill: rgba(0, 0, 0, 0.07);
+          --c-chip-fill-text: var(--c-text);
+          --c-chip-border-on: rgba(0, 0, 0, 0.22);
+
           --safe-area-inset-top: env(safe-area-inset-top, 0px);
           --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
           --safe-area-inset-left: env(safe-area-inset-left, 0px);
           --safe-area-inset-right: env(safe-area-inset-right, 0px);
-          --Ti-image-radius: 50px;
+
+          --z-bg: 1;
+          --z-content: 2;
+          --z-ui: 5;
+          --z-pageview: 60;
+          --z-modal: 200;
+
+          --corner-gap: 14px;
+          --corner-size: clamp(72px, 19vw, 104px);
+          --top-offset: 26px;
       }
+
+      html.dark {
+          color-scheme: dark;
+
+          --c-bg: #000000;
+          --c-text: #FFFFFF;
+          --c-text-soft: #FFFFFF;
+          --c-modal-bg: #000000;
+          --c-border: #222222;
+          --c-surface: #0A0A0A;
+          --c-surface-border: #222222;
+          --c-input-bg: #000000;
+          --c-input-focus: #111111;
+          --c-btn-gray: #1A1A1A;
+          --c-btn-gray-hover: #2A2A2A;
+          --c-preview: #0A0A0A;
+          --c-img-btn: #1A1A1A;
+          --c-img-btn-hover: #2A2A2A;
+          --c-veil: 0, 0, 0;
+          --c-scroll-thumb: #333333;
+          --c-switch-track: #FFFFFF;
+          --c-switch-knob: #000000;
+          --c-mode-border: rgba(255, 255, 255, 0.14);
+
+          --c-chip-fill: rgba(255, 255, 255, 0.13);
+          --c-chip-fill-text: var(--c-text);
+          --c-chip-border-on: rgba(255, 255, 255, 0.28);
+      }
+
+      html {
+          width: 100%;
+          min-height: 100vh;
+          min-height: 100dvh;
+          min-height: 100lvh;
+          min-height: 200vh;
+          height: 200vh;
+          overflow: hidden;
+          background-color: var(--c-bg);
+          background-image: none;
+          background-repeat: no-repeat;
+          background-position: center top;
+          transition: background-color 0.25s ease;
+      }
+
+      body {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: transparent;
+          font-family: Impact;
+          color: var(--c-text);
+          font-weight: 700;
+          transition: color 0.25s ease;
+      }
+
+      /* ===== 认证页 ===== */
       #auth-container {
           position: fixed;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          background-color: #F1F2ED;
+          background-color: var(--c-bg);
           display: flex;
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          padding-top: var(--safe-area-inset-top);
-          padding-bottom: var(--safe-area-inset-bottom);
-          padding-left: var(--safe-area-inset-left);
-          padding-right: var(--safe-area-inset-right);
           z-index: 100;
           overflow: hidden;
-          transition: opacity 0.3s ease;
-          box-sizing: border-box;
+          transition: opacity 0.3s ease, background-color 0.25s ease;
       }
       .auth-button-container {
           width: 100%;
@@ -83,7 +149,7 @@
       }
       .auth-button {
           background: none;
-          color: #000000;
+          color: var(--c-text);
           border: none;
           border-radius: 0;
           padding: 20px 15px;
@@ -96,7 +162,7 @@
           overflow: hidden;
           letter-spacing: -1px;
           line-height: 0.9;
-          text-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+          text-shadow: none;
           width: 75%;
           max-width: 400px;
       }
@@ -120,10 +186,10 @@
           left: 50%;
           margin-left: -10px;
           margin-top: -10px;
-          border: 2px solid #000000;
+          border: 2px solid var(--c-text);
           border-radius: 50%;
           border-top-color: transparent;
-          animation: spin 1s ease infinite;
+          animation: spin 1s linear infinite;
       }
       @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -138,7 +204,6 @@
       }
       .button-main-text {
           font-size: 1em;
-          margin-bottom: 2px;
           width: 100%;
           text-align: center;
       }
@@ -149,6 +214,8 @@
           width: 100%;
           text-align: center;
       }
+
+      /* ===== 主页面淡入容器 ===== */
       #content-container {
           display: none;
           position: fixed;
@@ -157,20 +224,370 @@
           width: 100%;
           height: 100%;
           background: transparent;
-          z-index: 50;
+          z-index: var(--z-content);
           opacity: 0;
           transition: opacity 0.3s ease;
-          overflow: hidden;
-          padding-top: var(--safe-area-inset-top);
-          padding-bottom: var(--safe-area-inset-bottom);
-          padding-left: var(--safe-area-inset-left);
-          padding-right: var(--safe-area-inset-right);
-          box-sizing: border-box;
+          pointer-events: none;
       }
       #content-container.active {
           opacity: 1;
           display: block;
       }
+      #home-view {
+          width: 100%;
+          height: 100%;
+      }
+
+      /* ===== 背景标记容器 ===== */
+      #bg-marker {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 0;
+          height: 0;
+          z-index: var(--z-bg);
+          pointer-events: none;
+          overflow: hidden;
+      }
+
+      /* ===== 顶部柔化层 ===== */
+      #top-veil {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: calc(var(--safe-area-inset-top) + 730px);
+          z-index: 1;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.45s ease;
+
+          background: linear-gradient(
+              to bottom,
+              rgba(var(--c-veil), 0.95) 0%,
+              rgba(var(--c-veil), 0.88) calc(var(--safe-area-inset-top) + 60px),
+              rgba(var(--c-veil), 0.78) calc(var(--safe-area-inset-top) + 150px),
+              rgba(var(--c-veil), 0.66) calc(var(--safe-area-inset-top) + 250px),
+              rgba(var(--c-veil), 0.53) calc(var(--safe-area-inset-top) + 350px),
+              rgba(var(--c-veil), 0.41) calc(var(--safe-area-inset-top) + 440px),
+              rgba(var(--c-veil), 0.30) calc(var(--safe-area-inset-top) + 520px),
+              rgba(var(--c-veil), 0.20) calc(var(--safe-area-inset-top) + 590px),
+              rgba(var(--c-veil), 0.11) calc(var(--safe-area-inset-top) + 650px),
+              rgba(var(--c-veil), 0.04) calc(var(--safe-area-inset-top) + 690px),
+              rgba(var(--c-veil), 0) 100%
+          );
+
+          -webkit-backdrop-filter: blur(12px) saturate(110%);
+          backdrop-filter: blur(12px) saturate(110%);
+
+          -webkit-mask-image: linear-gradient(
+              to bottom,
+              #000 0%,
+              rgba(0, 0, 0, 0.95) calc(var(--safe-area-inset-top) + 50px),
+              rgba(0, 0, 0, 0.88) calc(var(--safe-area-inset-top) + 140px),
+              rgba(0, 0, 0, 0.79) calc(var(--safe-area-inset-top) + 240px),
+              rgba(0, 0, 0, 0.68) calc(var(--safe-area-inset-top) + 340px),
+              rgba(0, 0, 0, 0.56) calc(var(--safe-area-inset-top) + 430px),
+              rgba(0, 0, 0, 0.43) calc(var(--safe-area-inset-top) + 515px),
+              rgba(0, 0, 0, 0.31) calc(var(--safe-area-inset-top) + 585px),
+              rgba(0, 0, 0, 0.19) calc(var(--safe-area-inset-top) + 645px),
+              rgba(0, 0, 0, 0.09) calc(var(--safe-area-inset-top) + 685px),
+              rgba(0, 0, 0, 0.03) calc(var(--safe-area-inset-top) + 715px),
+              transparent 100%
+          );
+          mask-image: linear-gradient(
+              to bottom,
+              #000 0%,
+              rgba(0, 0, 0, 0.95) calc(var(--safe-area-inset-top) + 50px),
+              rgba(0, 0, 0, 0.88) calc(var(--safe-area-inset-top) + 140px),
+              rgba(0, 0, 0, 0.79) calc(var(--safe-area-inset-top) + 240px),
+              rgba(0, 0, 0, 0.68) calc(var(--safe-area-inset-top) + 340px),
+              rgba(0, 0, 0, 0.56) calc(var(--safe-area-inset-top) + 430px),
+              rgba(0, 0, 0, 0.43) calc(var(--safe-area-inset-top) + 515px),
+              rgba(0, 0, 0, 0.31) calc(var(--safe-area-inset-top) + 585px),
+              rgba(0, 0, 0, 0.19) calc(var(--safe-area-inset-top) + 645px),
+              rgba(0, 0, 0, 0.09) calc(var(--safe-area-inset-top) + 685px),
+              rgba(0, 0, 0, 0.03) calc(var(--safe-area-inset-top) + 715px),
+              transparent 100%
+          );
+          -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+      }
+      #bg-marker.has-image ~ #top-veil {
+          opacity: 1;
+      }
+
+      /* ===== 顶部栏（仅展示） ===== */
+      #top-bar {
+          position: fixed;
+          top: calc(
+              var(--safe-area-inset-top) +
+              var(--corner-gap) +
+              var(--top-offset)
+          );
+          left: calc(var(--safe-area-inset-left) + var(--corner-gap));
+          right: calc(var(--safe-area-inset-right) + var(--corner-gap));
+          height: var(--corner-size);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          z-index: var(--z-ui);
+          pointer-events: none;
+      }
+
+      /* ===== 品牌头像 ===== */
+      #brand-label {
+          position: relative;
+          flex: 0 0 auto;
+          height: var(--corner-size);
+          width: var(--corner-size);
+          overflow: hidden;
+          border-radius: 50%;
+          background: transparent;
+          transition: box-shadow 0.2s ease;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          display: none;
+
+          box-shadow:
+              0 1px 2px rgba(0, 0, 0, 0.10),
+              0 4px 10px rgba(0, 0, 0, 0.16),
+              0 12px 28px rgba(0, 0, 0, 0.26),
+              0 24px 56px rgba(0, 0, 0, 0.28),
+              0 40px 90px rgba(0, 0, 0, 0.16),
+              0 0 0 1px rgba(0, 0, 0, 0.05);
+      }
+      #brand-label.has-avatar {
+          display: block;
+      }
+      html.dark #brand-label.has-avatar {
+          box-shadow:
+              0 1px 2px rgba(0, 0, 0, 0.45),
+              0 4px 10px rgba(0, 0, 0, 0.55),
+              0 12px 28px rgba(0, 0, 0, 0.65),
+              0 24px 56px rgba(0, 0, 0, 0.60),
+              0 0 0 1px rgba(255, 255, 255, 0.10);
+      }
+      #brand-label img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+          display: block;
+      }
+
+      .corner-button {
+          position: relative;
+          flex: 0 1 auto;
+          width: auto;
+          height: auto;
+          border: none;
+          border-radius: 0;
+          background: transparent;
+          color: var(--c-text-soft);
+          display: inline-flex;
+          justify-content: flex-start;
+          align-items: center;
+          padding: 0;
+          margin: 0;
+          transition: color 0.25s ease;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+
+          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-size: clamp(46px, 14vw, 80px);
+          font-weight: 700;
+          letter-spacing: 0;
+          line-height: 1;
+          text-align: left;
+          white-space: nowrap;
+          max-width: 62vw;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+
+      /* ==========================================================
+         ★ 操作按钮组 —— 固定在页面最底部
+         ========================================================== */
+      #action-stack {
+          position: fixed;
+          bottom: calc(var(--safe-area-inset-bottom) + var(--corner-gap));
+          left: calc(var(--safe-area-inset-left) + var(--corner-gap));
+          right: calc(var(--safe-area-inset-right) + var(--corner-gap));
+          top: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          z-index: var(--z-ui);
+          pointer-events: none;
+      }
+      #action-stack > * {
+          pointer-events: auto;
+      }
+
+      .action-bar {
+          position: relative;
+          width: 100%;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 0 18px 0 22px;
+          border: 1px solid var(--c-mode-border);
+          border-radius: 999px;
+          background: rgba(var(--c-veil), 0.55);
+          -webkit-backdrop-filter: blur(14px) saturate(140%);
+          backdrop-filter: blur(14px) saturate(140%);
+          color: var(--c-text);
+          cursor: pointer;
+          transition: background-color 0.25s ease, color 0.25s ease,
+                      border-color 0.25s ease, transform 0.2s ease;
+          -webkit-tap-highlight-color: transparent;
+          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+      }
+      .action-bar:active {
+          transform: scale(0.985);
+      }
+
+      .action-label {
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          line-height: 1;
+          text-transform: uppercase;
+      }
+
+      .action-arrow {
+          font-size: 22px;
+          line-height: 1;
+          opacity: 0.6;
+          font-family: Impact;
+      }
+
+      /* ===== Mode 栏（现在位于最底部） ===== */
+      #mode-bar {
+          cursor: default;
+      }
+      #mode-bar:active {
+          transform: none;
+      }
+      .mode-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+
+      /* ==========================================================
+         ★ Auto —— 内嵌式胶囊按钮（柔和填充）
+         ========================================================== */
+      .auto-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px 16px;
+          border-radius: 999px;
+          border: 1px solid var(--c-mode-border);
+          background: transparent;
+          color: var(--c-text);
+          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          line-height: 1;
+          text-transform: uppercase;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          transition:
+              background-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.2s ease,
+              opacity 0.28s ease;
+      }
+      .auto-toggle:active {
+          transform: scale(0.94);
+      }
+
+      #auto-toggle[aria-pressed="true"] {
+          background: var(--c-chip-fill);
+          color: var(--c-chip-fill-text);
+          border-color: var(--c-chip-border-on);
+          opacity: 1;
+      }
+
+      #auto-toggle[aria-pressed="false"] {
+          background: transparent;
+          color: var(--c-text);
+          opacity: 0.5;
+      }
+      #auto-toggle[aria-pressed="false"]:hover {
+          opacity: 0.75;
+      }
+
+      /* 主开关（滑动） */
+      .theme-toggle-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          transition: opacity 0.25s ease, transform 0.2s ease;
+      }
+      .theme-toggle-btn:active {
+          transform: scale(0.96);
+      }
+      .theme-toggle-btn.disabled {
+          opacity: 0.3;
+          pointer-events: none;
+          cursor: default;
+      }
+
+      .mode-switch {
+          position: relative;
+          flex: 0 0 auto;
+          width: 46px;
+          height: 26px;
+          border-radius: 999px;
+          background: var(--c-switch-track);
+          transition: background-color 0.25s ease;
+      }
+      .mode-knob {
+          position: absolute;
+          top: 50%;
+          left: 3px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: var(--c-switch-knob);
+          transform: translateY(-50%);
+          transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                      background-color 0.25s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      }
+      html.dark .mode-knob {
+          left: 23px;
+      }
+
+      /* 隐藏的文件选择器 */
+      #hidden-inputs {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 0;
+          height: 0;
+          overflow: hidden;
+          opacity: 0;
+          pointer-events: none;
+      }
+
+      /* ==========================================================
+         ★ 弹层 —— 打开 & 关闭 双向动画
+         ========================================================== */
       .modal-overlay {
           display: none;
           position: fixed;
@@ -178,49 +595,108 @@
           left: 0;
           width: 100%;
           height: 100%;
-          background-color: rgba(241, 242, 237, 0.85);
-          z-index: 200;
+          background-color: rgba(var(--c-veil), 0.95);
+          z-index: var(--z-modal);
           justify-content: center;
           align-items: center;
-          backdrop-filter: blur(5px);
+          will-change: opacity;
       }
       .modal-overlay.active {
           display: flex;
+          animation: overlayFade 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
+      .modal-overlay.active .modal-content {
+          animation: modalRise 0.42s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+      }
+      .modal-overlay.active.closing {
+          animation: overlayFadeOut 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+      }
+      .modal-overlay.active.closing .modal-content {
+          animation: modalSink 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+      }
+
+      @keyframes overlayFade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+      }
+      @keyframes overlayFadeOut {
+          from { opacity: 1; }
+          to   { opacity: 0; }
+      }
+      @keyframes modalRise {
+          0% {
+              opacity: 0;
+              transform: translateY(32px) scale(0.93);
+              filter: blur(4px);
+          }
+          55% {
+              opacity: 1;
+              filter: blur(0);
+          }
+          100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              filter: blur(0);
+          }
+      }
+      @keyframes modalSink {
+          0% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              filter: blur(0);
+          }
+          100% {
+              opacity: 0;
+              transform: translateY(24px) scale(0.95);
+              filter: blur(3px);
+          }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+          .modal-overlay.active,
+          .modal-overlay.active .modal-content,
+          .modal-overlay.active.closing,
+          .modal-overlay.active.closing .modal-content {
+              animation: none;
+          }
+      }
+
       .modal-content {
-          background-color: #E8E9E4;
+          background-color: var(--c-modal-bg);
           width: 90%;
-          max-width: 500px;
+          max-width: 460px;
           border-radius: 20px;
-          padding: 30px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-          color: #000000;
+          padding: 20px;
+          border: 1px solid var(--c-border);
+          color: var(--c-text);
           display: flex;
           flex-direction: column;
-          gap: 20px;
-          max-height: 85vh;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
+          gap: 15px;
+          max-height: 92vh;
+          overflow: hidden;
+          transition: background-color 0.25s ease, border-color 0.25s ease,
+                      color 0.25s ease;
+          will-change: transform, opacity;
       }
       .modal-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 10px;
+          margin-bottom: 0;
       }
       .modal-title {
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 700;
           font-family: Impact;
       }
       .modal-close {
           background: none;
           border: none;
-          color: #000000;
-          font-size: 28px;
+          color: var(--c-text);
+          font-size: 24px;
           cursor: pointer;
-          width: 40px;
-          height: 40px;
+          width: 32px;
+          height: 32px;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -229,53 +705,107 @@
           font-family: Impact;
       }
       .modal-close:hover {
-          background-color: rgba(0, 0, 0, 0.1);
+          background-color: rgba(128, 128, 128, 0.18);
       }
       .modal-section {
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          gap: 8px;
       }
       .section-title {
-          font-size: 18px;
+          font-size: 15px;
           font-weight: 700;
-          margin-bottom: 5px;
           font-family: Impact;
       }
-      .image-preview-container {
+      .modal-buttons {
           display: flex;
-          flex-direction: column;
+          gap: 12px;
+          margin-top: 5px;
+      }
+      .modal-button {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 8px;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-family: Impact;
+          font-size: 14px;
+      }
+      .modal-button.save {
+          background-color: #4CAF50;
+          color: white;
+      }
+      .modal-button.save:hover {
+          background-color: #45a049;
+      }
+      .modal-button.cancel {
+          background-color: var(--c-btn-gray);
+          color: var(--c-text);
+      }
+      .modal-button.cancel:hover {
+          background-color: var(--c-btn-gray-hover);
+      }
+
+      /* ===== 预览区 ===== */
+      .preview-wrap {
+          width: 100%;
+          display: flex;
+          justify-content: center;
           align-items: center;
-          gap: 15px;
-      }
-      .image-preview {
-          width: 150px;
-          height: 150px;
-          background: #D8D9D4 url('Ti.png') center/cover no-repeat;
-          border-radius: 15px;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+          padding: 14px 0;
+          background: var(--c-surface);
+          border: 1px solid var(--c-border);
+          border-radius: 14px;
           overflow: hidden;
+          transition: background-color 0.25s ease, border-color 0.25s ease;
       }
+      .preview-avatar {
+          width: 160px;
+          height: 160px;
+          border-radius: 50%;
+          background: var(--c-preview) center/cover no-repeat;
+          border: 1px dashed var(--c-border);
+          transition: background-color 0.25s ease, border-color 0.25s ease;
+      }
+      .preview-avatar.empty {
+          background: transparent;
+      }
+      .preview-avatar.has-image {
+          border-style: solid;
+      }
+      .preview-bg {
+          width: 90%;
+          height: 150px;
+          border-radius: 12px;
+          background: var(--c-preview) center/cover no-repeat;
+          border: 1px solid var(--c-border);
+          transition: background-color 0.25s ease, border-color 0.25s ease;
+      }
+
       .file-input-wrapper {
           position: relative;
           overflow: hidden;
-          display: inline-block;
+          display: block;
           width: 100%;
       }
       .file-input-button {
-          background-color: #D0D1CC;
-          color: #000000;
-          padding: 12px 20px;
+          background-color: var(--c-img-btn);
+          color: var(--c-text);
+          padding: 12px 14px;
           border-radius: 10px;
           cursor: pointer;
           text-align: center;
           font-weight: 600;
-          transition: background-color 0.3s ease;
+          transition: background-color 0.3s ease, color 0.25s ease;
           width: 100%;
           font-family: Impact;
+          font-size: 14px;
+          letter-spacing: 1px;
       }
       .file-input-button:hover {
-          background-color: #B8B9B4;
+          background-color: var(--c-img-btn-hover);
       }
       .file-input {
           position: absolute;
@@ -286,136 +816,35 @@
           height: 100%;
           cursor: pointer;
       }
-      .text-input-container {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-          margin-top: 15px;
-      }
+
+      /* ===== 文本输入框 ===== */
       .text-input {
-          background-color: #DCDDD8;
-          border: 2px solid #C8C9C4;
-          border-radius: 10px;
-          padding: 12px 15px;
-          color: #000000;
-          font-size: 16px;
-          font-family: Impact;
-          transition: border-color 0.3s ease;
           width: 100%;
+          padding: 10px 14px;
+          border-radius: 8px;
+          border: 1px solid var(--c-border);
+          background-color: var(--c-input-bg);
+          color: var(--c-text);
+          font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          outline: none;
+          transition: border-color 0.2s ease, background-color 0.2s ease,
+                      color 0.25s ease;
+          -webkit-user-select: text;
+          user-select: text;
       }
       .text-input:focus {
-          outline: none;
-          border-color: #5a5a5a;
+          border-color: var(--c-border);
+          background-color: var(--c-input-focus);
       }
       .text-input::placeholder {
-          color: rgba(0, 0, 0, 0.5);
+          color: #9A9B96;
+          font-weight: 400;
       }
-      .modal-buttons {
-          display: flex;
-          gap: 15px;
-          margin-top: 10px;
-      }
-      .modal-button {
-          flex: 1;
-          padding: 12px 20px;
-          border-radius: 10px;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          font-family: Impact;
-      }
-      .modal-button.save {
-          background-color: #4CAF50;
-          color: white;
-      }
-      .modal-button.save:hover {
-          background-color: #45a049;
-      }
-      .modal-button.cancel {
-          background-color: #B0B1AC;
-          color: #000000;
-      }
-      .modal-button.cancel:hover {
-          background-color: #A8A9A4;
-      }
+
       .no-scroll {
           overflow: hidden;
-      }
-      @supports not (top: env(safe-area-inset-top)) {
-          :root {
-              --safe-area-inset-top: constant(safe-area-inset-top, 0px);
-              --safe-area-inset-top: constant(safe-area-inset-top, 0px);
-              --safe-area-inset-bottom: constant(safe-area-inset-bottom, 0px);
-              --safe-area-inset-left: constant(safe-area-inset-left, 0px);
-              --safe-area-inset-right: constant(safe-area-inset-right, 0px);
-          }
-      }
-
-      /* ===== 主页面 ===== */
-      #home-view {
-          width: 100%;
-          height: 100%;
-          position: relative;
-          overflow: hidden;
-      }
-      #bg-image {
-          position: fixed;
-          left: 0;
-          right: 0;
-          top: calc(var(--safe-area-inset-top) + 32px);
-          bottom: calc(-1 * var(--safe-area-inset-bottom));
-          background-color: transparent;
-          background-size: cover;
-          background-position: center bottom;
-          background-repeat: no-repeat;
-          border-top-left-radius: 48px;
-          border-top-right-radius: 48px;
-          box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.08);
-          z-index: 0;
-          opacity: 0;
-          transition: opacity 0.45s ease;
-          pointer-events: none;
-      }
-      #bg-image.has-image {
-          opacity: 1;
-      }
-
-      /* ===== 角落圆形按钮 ===== */
-      .corner-button {
-          position: fixed;
-          bottom: calc(var(--safe-area-inset-bottom) + 20px);
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          border: none;
-          background: rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(20px) saturate(160%);
-          -webkit-backdrop-filter: blur(20px) saturate(160%);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-          color: #000000;
-          cursor: pointer;
-          z-index: 5;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 0;
-          transition: transform 0.2s ease, background-color 0.2s ease;
-      }
-      .corner-button:active {
-          transform: scale(0.92);
-          background: rgba(255, 255, 255, 0.8);
-      }
-      .corner-button svg {
-          width: 20px;
-          height: 20px;
-          display: block;
-      }
-      .corner-button.left {
-          left: calc(var(--safe-area-inset-left) + 20px);
-      }
-      .corner-button.right {
-          right: calc(var(--safe-area-inset-right) + 20px);
       }
 
       /* ===== 页面列表 ===== */
@@ -427,10 +856,12 @@
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
+          scrollbar-width: thin;
+          scrollbar-color: var(--c-scroll-thumb) transparent;
       }
       .page-item {
-          background-color: #DCDDD8;
-          border: 2px solid #C8C9C4;
+          background-color: var(--c-surface);
+          border: 1px solid var(--c-surface-border);
           border-radius: 10px;
           padding: 14px 16px;
           font-family: Impact;
@@ -438,12 +869,13 @@
           letter-spacing: 1px;
           text-align: center;
           cursor: pointer;
-          transition: background-color 0.2s ease, transform 0.2s ease;
+          transition: background-color 0.2s ease, transform 0.2s ease,
+                      border-color 0.25s ease;
           word-break: break-all;
       }
       .page-item:active {
           transform: scale(0.97);
-          background-color: #C8C9C4;
+          background-color: var(--c-surface-border);
       }
       .page-empty {
           text-align: center;
@@ -461,8 +893,9 @@
           left: 0;
           width: 100%;
           height: 100%;
-          z-index: 60;
-          background: #F1F2ED;
+          z-index: var(--z-pageview);
+          background: var(--c-bg);
+          transition: background-color 0.25s ease;
       }
       #page-view.active {
           display: block;
@@ -472,7 +905,7 @@
           height: 100%;
           border: 0;
           display: block;
-          background: #F1F2ED;
+          background: var(--c-bg);
       }
       #back-button {
           position: fixed;
@@ -482,10 +915,8 @@
           height: 44px;
           border: none;
           border-radius: 50%;
-          background: rgba(0, 0, 0, 0.08);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          color: #000000;
+          background: var(--c-bg);
+          color: var(--c-text);
           font-family: Impact;
           font-size: 20px;
           line-height: 1;
@@ -493,16 +924,62 @@
           justify-content: center;
           align-items: center;
           cursor: pointer;
-          z-index: 70;
-          transition: transform 0.2s ease, background-color 0.2s ease;
+          z-index: calc(var(--z-pageview) + 10);
+          transition: background-color 0.2s ease, color 0.25s ease;
       }
       #back-button:active {
-          transform: scale(0.92);
-          background: rgba(0, 0, 0, 0.16);
+          background: var(--c-surface);
       }
   </style>
 </head>
 <body class="no-scroll">
+
+  <div id="bg-marker"></div>
+  <div id="top-veil"></div>
+
+  <div id="top-bar">
+      <div id="pageButton" class="corner-button" aria-hidden="true">Ti</div>
+      <div id="brand-label" aria-hidden="true">
+          <img id="avatarImage" alt="Avatar">
+      </div>
+  </div>
+
+  <!-- 操作按钮组：从上到下 Pages → Settings → Avatar → Background → Mode -->
+  <div id="action-stack">
+      <button id="pages-toggle" class="action-bar" aria-label="Open Pages">
+          <span class="action-label">Pages</span>
+          <span class="action-arrow">&#8250;</span>
+      </button>
+      <button id="settings-toggle" class="action-bar" aria-label="Open Settings">
+          <span class="action-label">Settings</span>
+          <span class="action-arrow">&#8250;</span>
+      </button>
+      <button id="avatar-toggle" class="action-bar" aria-label="Change Avatar">
+          <span class="action-label">Avatar</span>
+          <span class="action-arrow">&#8250;</span>
+      </button>
+      <button id="bg-toggle" class="action-bar" aria-label="Change Background">
+          <span class="action-label">Background</span>
+          <span class="action-arrow">&#8250;</span>
+      </button>
+
+      <!-- Mode 移到最后 -->
+      <div id="mode-bar" class="action-bar">
+          <span class="action-label">Mode</span>
+          <div class="mode-controls">
+              <button id="auto-toggle" class="auto-toggle" aria-pressed="true" aria-label="Auto mode">Auto</button>
+              <button id="theme-toggle" class="theme-toggle-btn" aria-pressed="false" aria-label="Toggle Dark Mode">
+                  <span class="mode-switch"><span class="mode-knob"></span></span>
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <div id="hidden-inputs">
+      <input type="file" id="avatarInput" accept="image/*">
+      <input type="file" id="bgInput" accept="image/*">
+  </div>
+
   <div id="auth-container">
       <div class="auth-button-container">
           <button class="auth-button" id="authButton">
@@ -512,31 +989,17 @@
           </button>
       </div>
   </div>
-  <div id="content-container">
-      <div id="home-view">
-          <div id="bg-image"></div>
-          <button id="bgUploadButton" class="corner-button left" aria-label="上传背景图片">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="3"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <path d="M21 15l-5-5L5 21"/>
-              </svg>
-          </button>
-          <button id="pageButton" class="corner-button right" aria-label="选择页面">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="4" y1="7" x2="20" y2="7"/>
-                  <line x1="4" y1="12" x2="20" y2="12"/>
-                  <line x1="4" y1="17" x2="20" y2="17"/>
-              </svg>
-          </button>
-      </div>
 
-      <div id="page-view">
-          <iframe id="stage" title="page"></iframe>
-          <button id="back-button">&#8592;</button>
-      </div>
+  <div id="content-container">
+      <div id="home-view"></div>
   </div>
 
+  <div id="page-view">
+      <iframe id="stage" title="page"></iframe>
+      <button id="back-button">&#8592;</button>
+  </div>
+
+  <!-- Pages 弹窗 -->
   <div class="modal-overlay" id="pageListOverlay">
       <div class="modal-content">
           <div class="modal-header">
@@ -547,6 +1010,7 @@
       </div>
   </div>
 
+  <!-- Settings 弹窗 -->
   <div class="modal-overlay" id="modalOverlay">
       <div class="modal-content">
           <div class="modal-header">
@@ -554,26 +1018,68 @@
               <button class="modal-close" id="modalClose">&times;</button>
           </div>
           <div class="modal-section">
-              <h3 class="section-title">Change Picture</h3>
-              <div class="image-preview-container">
-                  <div class="image-preview" id="imagePreview"></div>
-                  <div class="file-input-wrapper">
-                      <div class="file-input-button">Select Picture</div>
-                      <input type="file" class="file-input" id="imageInput" accept="image/*">
-                  </div>
-              </div>
-          </div>
-          <div class="modal-section">
-              <h3 class="section-title">Background</h3>
-              <div class="file-input-wrapper">
-                  <div class="file-input-button">Select Background</div>
-                  <input type="file" class="file-input" id="bgInput" accept="image/*">
-              </div>
-              <button class="modal-button cancel" id="bgResetButton">Reset Background</button>
+              <h3 class="section-title">Button Text</h3>
+              <input type="text" class="text-input" id="buttonTextInput"
+                     placeholder="Ti" maxlength="16" autocomplete="off"
+                     autocorrect="off" autocapitalize="off" spellcheck="false">
           </div>
           <div class="modal-buttons">
               <button class="modal-button cancel" id="cancelButton">Cancel</button>
-              <button class="modal-button save" id="saveButton">Save</button>
+              <button class="modal-button save" id="saveButton">Apply</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Avatar 弹窗 -->
+  <div class="modal-overlay" id="avatarOverlay">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 class="modal-title">Avatar</h2>
+              <button class="modal-close" id="avatarModalClose">&times;</button>
+          </div>
+          <div class="modal-section">
+              <h3 class="section-title">Preview</h3>
+              <div class="preview-wrap">
+                  <div class="preview-avatar empty" id="avatarPreview"></div>
+              </div>
+          </div>
+          <div class="modal-section">
+              <div class="file-input-wrapper">
+                  <div class="file-input-button">Select Image</div>
+                  <input type="file" class="file-input" id="avatarFileInput" accept="image/*">
+              </div>
+          </div>
+          <div class="modal-buttons">
+              <button class="modal-button cancel" id="avatarResetButton">Reset</button>
+              <button class="modal-button cancel" id="avatarCancelButton">Cancel</button>
+              <button class="modal-button save" id="avatarSaveButton">Apply</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Background 弹窗 -->
+  <div class="modal-overlay" id="bgOverlay">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 class="modal-title">Background</h2>
+              <button class="modal-close" id="bgModalClose">&times;</button>
+          </div>
+          <div class="modal-section">
+              <h3 class="section-title">Preview</h3>
+              <div class="preview-wrap">
+                  <div class="preview-bg" id="bgPreview"></div>
+              </div>
+          </div>
+          <div class="modal-section">
+              <div class="file-input-wrapper">
+                  <div class="file-input-button">Select Image</div>
+                  <input type="file" class="file-input" id="bgFileInput" accept="image/*">
+              </div>
+          </div>
+          <div class="modal-buttons">
+              <button class="modal-button cancel" id="bgResetButton">Reset</button>
+              <button class="modal-button cancel" id="bgCancelButton">Cancel</button>
+              <button class="modal-button save" id="bgSaveButton">Apply</button>
           </div>
       </div>
   </div>
@@ -597,8 +1103,8 @@
           authButton: document.getElementById('authButton'),
           modalOverlay: document.getElementById('modalOverlay'),
           modalClose: document.getElementById('modalClose'),
-          imageInput: document.getElementById('imageInput'),
-          imagePreview: document.getElementById('imagePreview'),
+          brandLabel: document.getElementById('brand-label'),
+          avatarImage: document.getElementById('avatarImage'),
           saveButton: document.getElementById('saveButton'),
           cancelButton: document.getElementById('cancelButton'),
           pageButton: document.getElementById('pageButton'),
@@ -608,47 +1114,214 @@
           pageView: document.getElementById('page-view'),
           stage: document.getElementById('stage'),
           backButton: document.getElementById('back-button'),
-          bgImage: document.getElementById('bg-image'),
-          bgInput: document.getElementById('bgInput'),
+          bgMarker: document.getElementById('bg-marker'),
+          buttonTextInput: document.getElementById('buttonTextInput'),
+          themeToggle: document.getElementById('theme-toggle'),
+          autoToggle: document.getElementById('auto-toggle'),
+          pagesToggle: document.getElementById('pages-toggle'),
+          settingsToggle: document.getElementById('settings-toggle'),
+          avatarToggle: document.getElementById('avatar-toggle'),
+          bgToggle: document.getElementById('bg-toggle'),
+
+          avatarOverlay: document.getElementById('avatarOverlay'),
+          avatarModalClose: document.getElementById('avatarModalClose'),
+          avatarPreview: document.getElementById('avatarPreview'),
+          avatarFileInput: document.getElementById('avatarFileInput'),
+          avatarResetButton: document.getElementById('avatarResetButton'),
+          avatarCancelButton: document.getElementById('avatarCancelButton'),
+          avatarSaveButton: document.getElementById('avatarSaveButton'),
+
+          bgOverlay: document.getElementById('bgOverlay'),
+          bgModalClose: document.getElementById('bgModalClose'),
+          bgPreview: document.getElementById('bgPreview'),
+          bgFileInput: document.getElementById('bgFileInput'),
           bgResetButton: document.getElementById('bgResetButton'),
-          bgUploadButton: document.getElementById('bgUploadButton')
+          bgCancelButton: document.getElementById('bgCancelButton'),
+          bgSaveButton: document.getElementById('bgSaveButton')
       };
 
+      /* ==========================================================
+         ★ Modal 动画辅助
+         ========================================================== */
+      const ModalAnim = {
+          CLOSE_MS: 240,
+
+          show: function(el) {
+              if (!el) return;
+              clearTimeout(el._closeTimer);
+              el.classList.remove('closing');
+              el.classList.add('active');
+          },
+
+          hide: function(el, onDone) {
+              if (!el) return;
+              if (!el.classList.contains('active')) {
+                  if (onDone) onDone();
+                  return;
+              }
+              if (el.classList.contains('closing')) return;
+
+              el.classList.add('closing');
+
+              const reduce = window.matchMedia &&
+                             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              const delay = reduce ? 0 : this.CLOSE_MS;
+
+              clearTimeout(el._closeTimer);
+              el._closeTimer = setTimeout(() => {
+                  el.classList.remove('active');
+                  el.classList.remove('closing');
+                  if (onDone) onDone();
+              }, delay);
+          }
+      };
+
+      /* ==========================================================
+         ★ 夜间模式
+         ========================================================== */
+      const ThemeManager = {
+          autoKey: 'home_dark_mode_auto',
+          manualKey: 'home_dark_mode',
+          mq: null,
+
+          init: function() {
+              this.mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+              const onSystemChange = () => {
+                  if (this.isAuto()) {
+                      this.apply(this.mq.matches);
+                  }
+              };
+              if (this.mq.addEventListener) {
+                  this.mq.addEventListener('change', onSystemChange);
+              } else if (this.mq.addListener) {
+                  this.mq.addListener(onSystemChange);
+              }
+
+              if (this.isAuto()) {
+                  this.apply(this.mq.matches);
+              } else {
+                  this.apply(localStorage.getItem(this.manualKey) === '1');
+              }
+              this.updateUI();
+
+              DOM.autoToggle.addEventListener('click', () => this.toggleAuto());
+
+              DOM.themeToggle.addEventListener('click', () => {
+                  if (this.isAuto()) return;
+                  const next = !document.documentElement.classList.contains('dark');
+                  this.apply(next);
+                  localStorage.setItem(this.manualKey, next ? '1' : '0');
+                  this.updateUI();
+              });
+          },
+
+          isAuto: function() {
+              return localStorage.getItem(this.autoKey) !== '0';
+          },
+
+          toggleAuto: function() {
+              const newAuto = !this.isAuto();
+              localStorage.setItem(this.autoKey, newAuto ? '1' : '0');
+
+              if (newAuto) {
+                  this.apply(this.mq.matches);
+              } else {
+                  const currentDark = document.documentElement.classList.contains('dark');
+                  localStorage.setItem(this.manualKey, currentDark ? '1' : '0');
+              }
+              this.updateUI();
+          },
+
+          apply: function(on) {
+              document.documentElement.classList.toggle('dark', on);
+              const meta = document.querySelector('meta[name="theme-color"]');
+              if (meta) {
+                  meta.setAttribute('content', on ? '#000000' : '#F1F2ED');
+              }
+              this.updateUI();
+          },
+
+          updateUI: function() {
+              const autoOn = this.isAuto();
+              const dark = document.documentElement.classList.contains('dark');
+
+              DOM.autoToggle.setAttribute('aria-pressed', autoOn ? 'true' : 'false');
+              DOM.themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+              DOM.themeToggle.classList.toggle('disabled', autoOn);
+          }
+      };
+
+      /* ==========================================================
+         ★ 按钮文本
+         ========================================================== */
+      const ButtonTextManager = {
+          key: 'home_button_text',
+          defaultText: 'Ti',
+          init: function() {
+              this.apply();
+          },
+          apply: function() {
+              const text = localStorage.getItem(this.key);
+              DOM.pageButton.textContent = (text && text.trim()) ? text : this.defaultText;
+          }
+      };
+
+      /* ==========================================================
+         ★ 设置弹窗（仅按钮文本）
+         ========================================================== */
       const ModalManager = {
+          originalButtonText: null,
+
           init: function() {
               DOM.modalClose.addEventListener('click', () => this.hideModal());
               DOM.cancelButton.addEventListener('click', () => this.hideModal());
               DOM.saveButton.addEventListener('click', () => this.saveChanges());
-              DOM.imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
+              DOM.settingsToggle.addEventListener('click', () => this.showModal());
               DOM.modalOverlay.addEventListener('click', (e) => {
                   if (e.target === DOM.modalOverlay) {
                       this.hideModal();
                   }
               });
+              DOM.buttonTextInput.addEventListener('input', () => {
+                  const v = DOM.buttonTextInput.value.trim();
+                  DOM.pageButton.textContent = v || ButtonTextManager.defaultText;
+              });
           },
+
           showModal: function() {
-              DOM.modalOverlay.classList.add('active');
+              this.originalButtonText = DOM.pageButton.textContent;
+              DOM.buttonTextInput.value = localStorage.getItem(ButtonTextManager.key) || '';
+              ModalAnim.show(DOM.modalOverlay);
               document.body.classList.add('no-scroll');
           },
-          hideModal: function() {
-              DOM.modalOverlay.classList.remove('active');
-              document.body.classList.remove('no-scroll');
-          },
-          handleImageUpload: function(event) {
-              const file = event.target.files[0];
-              if (file) {
-                  const reader = new FileReader();
-                  reader.onload = function(e) {
-                      DOM.imagePreview.style.backgroundImage = `url(${e.target.result})`;
-                  };
-                  reader.readAsDataURL(file);
+
+          hideModal: function(restoreButtonText) {
+              if (restoreButtonText !== false && this.originalButtonText !== null) {
+                  DOM.pageButton.textContent = this.originalButtonText;
               }
+              this.originalButtonText = null;
+
+              ModalAnim.hide(DOM.modalOverlay, () => {
+                  document.body.classList.remove('no-scroll');
+              });
           },
+
           saveChanges: function() {
-              this.hideModal();
+              const text = DOM.buttonTextInput.value.trim();
+              if (text) {
+                  localStorage.setItem(ButtonTextManager.key, text);
+              } else {
+                  localStorage.removeItem(ButtonTextManager.key);
+              }
+              ButtonTextManager.apply();
+              this.hideModal(false);
           }
       };
 
+      /* ==========================================================
+         ★ 认证管理
+         ========================================================== */
       const AuthManager = {
           init: function() {
               if (!window.PublicKeyCredential) {
@@ -657,16 +1330,6 @@
               }
               this.checkExistingCredentials();
               DOM.authButton.addEventListener('click', () => this.startAuthentication());
-              this.preventScroll();
-          },
-          preventScroll: function() {
-              document.body.addEventListener('touchmove', function(e) {
-                  e.preventDefault();
-              }, { passive: false });
-              document.addEventListener('scroll', function(e) {
-                  e.preventDefault();
-                  window.scrollTo(0, 0);
-              });
           },
           checkExistingCredentials: function() {
               try {
@@ -774,12 +1437,14 @@
           }
       };
 
-      /* ===== 页面选择与替换 ===== */
+      /* ==========================================================
+         ★ 页面列表
+         ========================================================== */
       const Pages = {
           loaded: false,
           files: [],
           init: function() {
-              DOM.pageButton.addEventListener('click', () => this.showList());
+              DOM.pagesToggle.addEventListener('click', () => this.showList());
               DOM.pageListClose.addEventListener('click', () => this.hideList());
               DOM.backButton.addEventListener('click', () => this.goHome());
               DOM.pageListOverlay.addEventListener('click', (e) => {
@@ -789,11 +1454,14 @@
               });
           },
           showList: async function() {
-              DOM.pageListOverlay.classList.add('active');
+              ModalAnim.show(DOM.pageListOverlay);
+              document.body.classList.add('no-scroll');
               await this.load();
           },
           hideList: function() {
-              DOM.pageListOverlay.classList.remove('active');
+              ModalAnim.hide(DOM.pageListOverlay, () => {
+                  document.body.classList.remove('no-scroll');
+              });
           },
           load: async function() {
               if (this.loaded) return;
@@ -836,29 +1504,197 @@
           }
       };
 
-      /* ===== 背景图片 ===== */
-      const BackgroundManager = {
-          key: 'home_bg_image',
+      /* ==========================================================
+         ★ 头像管理
+         ========================================================== */
+      const AvatarManager = {
+          key: 'home_avatar_image',
+          pending: null,
+          pendingReset: false,
+
           init: function() {
               this.apply();
-              DOM.bgInput.addEventListener('change', (e) => this.save(e));
-              DOM.bgResetButton.addEventListener('click', () => this.reset());
-              DOM.bgUploadButton.addEventListener('click', () => {
-                  DOM.bgInput.value = '';
-                  DOM.bgInput.click();
+
+              DOM.avatarToggle.addEventListener('click', () => this.showModal());
+              DOM.avatarModalClose.addEventListener('click', () => this.hideModal());
+              DOM.avatarCancelButton.addEventListener('click', () => this.hideModal());
+              DOM.avatarSaveButton.addEventListener('click', () => this.saveChanges());
+              DOM.avatarResetButton.addEventListener('click', () => this.resetPending());
+              DOM.avatarOverlay.addEventListener('click', (e) => {
+                  if (e.target === DOM.avatarOverlay) this.hideModal();
               });
+              DOM.avatarFileInput.addEventListener('change', (e) => this.handleUpload(e));
           },
+
           apply: function() {
               const data = localStorage.getItem(this.key);
               if (data) {
-                  DOM.bgImage.style.backgroundImage = `url(${data})`;
-                  DOM.bgImage.classList.add('has-image');
+                  DOM.avatarImage.src = data;
+                  DOM.brandLabel.classList.add('has-avatar');
               } else {
-                  DOM.bgImage.style.backgroundImage = '';
-                  DOM.bgImage.classList.remove('has-image');
+                  DOM.avatarImage.removeAttribute('src');
+                  DOM.brandLabel.classList.remove('has-avatar');
               }
           },
-          save: function(event) {
+
+          showModal: function() {
+              const saved = localStorage.getItem(this.key) || null;
+              this.pending = saved;
+              this.pendingReset = false;
+              this.updatePreview();
+              ModalAnim.show(DOM.avatarOverlay);
+              document.body.classList.add('no-scroll');
+          },
+
+          hideModal: function() {
+              this.pending = null;
+              this.pendingReset = false;
+              DOM.avatarFileInput.value = '';
+              ModalAnim.hide(DOM.avatarOverlay, () => {
+                  document.body.classList.remove('no-scroll');
+              });
+          },
+
+          updatePreview: function() {
+              if (this.pendingReset || !this.pending) {
+                  DOM.avatarPreview.style.backgroundImage = '';
+                  DOM.avatarPreview.classList.add('empty');
+                  DOM.avatarPreview.classList.remove('has-image');
+              } else {
+                  DOM.avatarPreview.style.backgroundImage = `url(${this.pending})`;
+                  DOM.avatarPreview.classList.remove('empty');
+                  DOM.avatarPreview.classList.add('has-image');
+              }
+          },
+
+          resetPending: function() {
+              this.pending = null;
+              this.pendingReset = true;
+              this.updatePreview();
+          },
+
+          handleUpload: function(event) {
+              const file = event.target.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                  const img = new Image();
+                  img.onload = () => {
+                      const size = 400;
+                      const canvas = document.createElement('canvas');
+                      canvas.width = size;
+                      canvas.height = size;
+                      const ctx = canvas.getContext('2d');
+                      const minSide = Math.min(img.width, img.height);
+                      const sx = (img.width - minSide) / 2;
+                      const sy = (img.height - minSide) / 2;
+                      ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+                      this.pending = canvas.toDataURL('image/jpeg', 0.92);
+                      this.pendingReset = false;
+                      this.updatePreview();
+                  };
+                  img.src = e.target.result;
+              };
+              reader.readAsDataURL(file);
+              event.target.value = '';
+          },
+
+          saveChanges: function() {
+              if (this.pending && !this.pendingReset) {
+                  try {
+                      localStorage.setItem(this.key, this.pending);
+                  } catch (err) {
+                      alert('头像图片过大，无法保存');
+                  }
+              } else {
+                  localStorage.removeItem(this.key);
+              }
+              this.apply();
+              this.hideModal();
+          }
+      };
+
+      /* ==========================================================
+         ★ 背景管理
+         ========================================================== */
+      const BackgroundManager = {
+          key: 'home_bg_image',
+          _imgW: 0,
+          _imgH: 0,
+          pending: null,
+          pendingReset: false,
+
+          init: function() {
+              this.apply();
+
+              DOM.bgToggle.addEventListener('click', () => this.showModal());
+              DOM.bgModalClose.addEventListener('click', () => this.hideModal());
+              DOM.bgCancelButton.addEventListener('click', () => this.hideModal());
+              DOM.bgSaveButton.addEventListener('click', () => this.saveChanges());
+              DOM.bgResetButton.addEventListener('click', () => this.resetPending());
+              DOM.bgOverlay.addEventListener('click', (e) => {
+                  if (e.target === DOM.bgOverlay) this.hideModal();
+              });
+              DOM.bgFileInput.addEventListener('change', (e) => this.handleUpload(e));
+
+              window.addEventListener('resize', () => this.refit());
+              window.addEventListener('orientationchange', () => {
+                  setTimeout(() => this.refit(), 300);
+              });
+          },
+
+          apply: function() {
+              const data = localStorage.getItem(this.key);
+              const root = document.documentElement;
+              if (data) {
+                  const img = new Image();
+                  img.onload = () => {
+                      this._imgW = img.naturalWidth;
+                      this._imgH = img.naturalHeight;
+                      this.refit();
+                  };
+                  img.src = data;
+                  root.style.backgroundImage = `url(${data})`;
+                  DOM.bgMarker.classList.add('has-image');
+              } else {
+                  root.style.backgroundImage = 'none';
+                  root.style.backgroundSize = '';
+                  DOM.bgMarker.classList.remove('has-image');
+              }
+          },
+
+          showModal: function() {
+              this.pending = localStorage.getItem(this.key) || null;
+              this.pendingReset = false;
+              this.updatePreview();
+              ModalAnim.show(DOM.bgOverlay);
+              document.body.classList.add('no-scroll');
+          },
+
+          hideModal: function() {
+              this.pending = null;
+              this.pendingReset = false;
+              DOM.bgFileInput.value = '';
+              ModalAnim.hide(DOM.bgOverlay, () => {
+                  document.body.classList.remove('no-scroll');
+              });
+          },
+
+          updatePreview: function() {
+              if (this.pendingReset || !this.pending) {
+                  DOM.bgPreview.style.backgroundImage = '';
+              } else {
+                  DOM.bgPreview.style.backgroundImage = `url(${this.pending})`;
+              }
+          },
+
+          resetPending: function() {
+              this.pending = null;
+              this.pendingReset = true;
+              this.updatePreview();
+          },
+
+          handleUpload: function(event) {
               const file = event.target.files[0];
               if (!file) return;
               const reader = new FileReader();
@@ -866,37 +1702,66 @@
                   const img = new Image();
                   img.onload = () => {
                       const capW = 1600;
-                      const targetW = Math.min(capW, Math.max(window.innerWidth, img.width));
+                      const targetW = Math.min(capW, img.width);
                       const scale = targetW / img.width;
                       const canvas = document.createElement('canvas');
                       canvas.width = Math.round(img.width * scale);
                       canvas.height = Math.round(img.height * scale);
                       const ctx = canvas.getContext('2d');
                       ctx.imageSmoothingEnabled = true;
-                      ctx.imageSmoothingQuality = 'high';
                       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                      const data = canvas.toDataURL('image/jpeg', 0.86);
-                      try {
-                          localStorage.setItem(this.key, data);
-                          this.apply();
-                      } catch (err) {
-                          alert('图片过大，无法保存，请换一张');
-                      }
+                      this.pending = canvas.toDataURL('image/jpeg', 0.92);
+                      this.pendingReset = false;
+                      this.updatePreview();
                   };
                   img.src = e.target.result;
               };
               reader.readAsDataURL(file);
+              event.target.value = '';
           },
-          reset: function() {
-              localStorage.removeItem(this.key);
+
+          saveChanges: function() {
+              if (this.pending && !this.pendingReset) {
+                  try {
+                      localStorage.setItem(this.key, this.pending);
+                  } catch (err) {
+                      alert('背景图片过大，无法保存，请换一张');
+                  }
+              } else {
+                  localStorage.removeItem(this.key);
+              }
               this.apply();
+              this.hideModal();
+          },
+
+          refit: function() {
+              if (!this._imgW || !this._imgH) return;
+              const vw = window.innerWidth;
+              const vh = window.innerHeight + 80;
+              const imgRatio = this._imgW / this._imgH;
+              const viewRatio = vw / vh;
+              let bgW, bgH;
+              if (imgRatio >= viewRatio) {
+                  bgH = vh;
+                  bgW = vh * imgRatio;
+              } else {
+                  bgW = vw;
+                  bgH = vw / imgRatio;
+              }
+              const root = document.documentElement;
+              root.style.backgroundSize = `${Math.round(bgW)}px ${Math.round(bgH)}px`;
+              root.style.backgroundPosition = 'center top';
+              root.style.backgroundRepeat = 'no-repeat';
           }
       };
 
       function initApp() {
+          ThemeManager.init();
           AuthManager.init();
           ModalManager.init();
           Pages.init();
+          ButtonTextManager.init();
+          AvatarManager.init();
           BackgroundManager.init();
       }
       if (document.readyState === 'loading') {
