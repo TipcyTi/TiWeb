@@ -844,9 +844,7 @@
           overflow: hidden;
       }
 
-      /* ==========================================================
-         ★ 页面列表 —— 每一项依次错落淡入
-         ========================================================== */
+      /* ===== 页面列表 ===== */
       .page-list {
           display: flex;
           flex-direction: column;
@@ -966,6 +964,12 @@
           border: 0;
           display: block;
           background: var(--c-bg);
+          /* ★ 关键：给 iframe 设置 color-scheme，让子页面里的
+             prefers-color-scheme 也能跟随 */
+          color-scheme: light;
+      }
+      html.dark #stage {
+          color-scheme: dark;
       }
 
       /* ==========================================================
@@ -1213,6 +1217,38 @@
       };
 
       /* ==========================================================
+         ★ 主题同步器 —— 把当前主题推送给 iframe
+         双保险：URL 参数（首屏）+ postMessage（动态切换）
+         ========================================================== */
+      const ThemeBridge = {
+          // 读取当前是否深色
+          isDark: function() {
+              return document.documentElement.classList.contains('dark');
+          },
+
+          // 给子页面 URL 拼接 theme 参数
+          decorateURL: function(url) {
+              const theme = this.isDark() ? 'dark' : 'light';
+              const sep = url.indexOf('?') === -1 ? '?' : '&';
+              return url + sep + 'theme=' + theme;
+          },
+
+          // 通过 postMessage 把主题推给 iframe
+          push: function() {
+              const frame = DOM.stage;
+              if (!frame || !frame.contentWindow) return;
+              try {
+                  frame.contentWindow.postMessage({
+                      type: 'ti-theme',
+                      theme: this.isDark() ? 'dark' : 'light'
+                  }, '*');
+              } catch (err) {
+                  // 跨域时静默失败
+              }
+          }
+      };
+
+      /* ==========================================================
          ★ Modal 动画辅助
          ========================================================== */
       const ModalAnim = {
@@ -1312,6 +1348,8 @@
                   meta.setAttribute('content', on ? '#000000' : '#F1F2ED');
               }
               this.updateUI();
+              // ★ 主题变化时，立刻通知 iframe
+              ThemeBridge.push();
           },
 
           updateUI: function() {
@@ -1340,7 +1378,7 @@
       };
 
       /* ==========================================================
-         ★ 设置弹窗（仅按钮文本）
+         ★ 设置弹窗
          ========================================================== */
       const ModalManager = {
           originalButtonText: null,
@@ -1510,12 +1548,12 @@
       };
 
       /* ==========================================================
-         ★ 页面列表（列表项错落淡入 + 页面视图进入/退出动画）
+         ★ 页面列表 + iframe 主题同步
          ========================================================== */
       const Pages = {
           loaded: false,
           files: [],
-          PAGE_EXIT_MS: 260,   // 与 CSS 中 pageViewOut 时长保持一致
+          PAGE_EXIT_MS: 260,
 
           init: function() {
               DOM.pagesToggle.addEventListener('click', () => this.showList());
@@ -1526,13 +1564,20 @@
                       this.hideList();
                   }
               });
+
+              // iframe 每次加载完成后，再推一次主题
+              // 覆盖子页面首次渲染时的时序问题
+              DOM.stage.addEventListener('load', () => {
+                  if (DOM.pageView.classList.contains('active')) {
+                      ThemeBridge.push();
+                  }
+              });
           },
 
           showList: async function() {
               ModalAnim.show(DOM.pageListOverlay);
               document.body.classList.add('no-scroll');
               await this.load();
-              // 每次打开都重新渲染，以重新触发列表项动画
               this.render();
           },
 
@@ -1568,7 +1613,6 @@
                   const item = document.createElement('div');
                   item.className = 'page-item';
                   item.textContent = name.replace(/\.html$/i, '');
-                  // 依次错落入场：每项延迟 40ms，最多延迟到 400ms
                   item.style.animationDelay = Math.min(i * 40, 400) + 'ms';
                   item.addEventListener('click', () => this.open(name));
                   DOM.pageList.appendChild(item);
@@ -1577,9 +1621,12 @@
 
           open: function(name) {
               this.hideList();
-              // 若上一次退出动画残留，先清理
               DOM.pageView.classList.remove('closing');
-              DOM.stage.src = 'folder/' + encodeURIComponent(name);
+
+              // ★ 关键：把当前主题以 URL 参数拼接到子页面地址
+              const rawURL = 'folder/' + encodeURIComponent(name);
+              DOM.stage.src = ThemeBridge.decorateURL(rawURL);
+
               DOM.pageView.classList.add('active');
           },
 
