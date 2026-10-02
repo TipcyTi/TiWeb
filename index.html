@@ -7,27 +7,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ti">
   <meta name="description" content="Ti">
-
-  <!-- ============================================================
-       ★ 首屏兜底：防止白闪
-       ============================================================ -->
-  <style>
-    html { margin: 0; background-color: #F1F2ED; }
-    html.dark { background-color: #000000; }
-  </style>
-  <script>
-    (function () {
-      try {
-        var auto = localStorage.getItem('home_dark_mode_auto') !== '0';
-        var dark = auto
-          ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
-          : (localStorage.getItem('home_dark_mode') === '1');
-        if (dark) document.documentElement.classList.add('dark');
-      } catch (e) {}
-    })();
-  </script>
-  <meta name="theme-color" content="#F1F2ED">
-
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="Ti.png">
   <link rel="apple-touch-startup-image" href="Ti.png">
@@ -1094,19 +1073,6 @@
 </head>
 <body class="no-scroll">
 
-  <!-- ============================================================
-       ★ 认证容器提到最前，最先渲染，减少白闪时间
-       ============================================================ -->
-  <div id="auth-container">
-      <div class="auth-button-container">
-          <button class="auth-button" id="authButton">
-              <div class="button-text-container">
-                  <div class="button-main-text">Ti</div>
-              </div>
-          </button>
-      </div>
-  </div>
-
   <div id="bg-marker"></div>
   <div id="top-veil"></div>
 
@@ -1150,6 +1116,16 @@
   <div id="hidden-inputs">
       <input type="file" id="avatarInput" accept="image/*">
       <input type="file" id="bgInput" accept="image/*">
+  </div>
+
+  <div id="auth-container">
+      <div class="auth-button-container">
+          <button class="auth-button" id="authButton">
+              <div class="button-text-container">
+                  <div class="button-main-text">Ti</div>
+              </div>
+          </button>
+      </div>
   </div>
 
   <div id="content-container">
