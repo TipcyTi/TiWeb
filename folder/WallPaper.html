@@ -50,6 +50,8 @@
           --z-modal: 200;
 
           --corner-gap: 14px;
+
+          --bg-fade-duration: 0.7s;
       }
 
       html.dark {
@@ -88,7 +90,7 @@
       }
 
       /* ==========================================================
-         ★ 背景层 —— 本页唯一的"内容"
+         ★ 背景层 —— 带淡入加载动画
          ========================================================== */
       #bg-layer {
           position: fixed;
@@ -102,13 +104,62 @@
           background-repeat: no-repeat;
           background-size: cover;
           pointer-events: none;
-          transition: background-color 0.25s ease;
           -webkit-transform: translateZ(0);
           transform: translateZ(0);
+
+          /* ★ 初始完全透明 + 轻微缩放，等待预加载后淡入 */
+          opacity: 0;
+          transform: scale(1.02);
+          transition:
+              opacity var(--bg-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
+              transform var(--bg-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.25s ease;
+          will-change: opacity, transform;
+      }
+
+      /* ★ 加载完成后的状态：淡入 + 归位 */
+      #bg-layer.is-loaded {
+          opacity: 1;
+          transform: scale(1);
+      }
+
+      /* ★ 无背景图时，仍显示底色但不要缩放动画 */
+      #bg-layer.no-image {
+          opacity: 1;
+          transform: scale(1);
+          transition: background-color 0.25s ease;
       }
 
       /* ==========================================================
-         ★ 背景标记容器（仅供 CSS 选择器使用，不渲染）
+         ★ 加载指示器（背景图未加载完成时显示）
+         ========================================================== */
+      #bg-loader {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          width: 34px;
+          height: 34px;
+          margin-left: -17px;
+          margin-top: -17px;
+          z-index: var(--z-veil);
+          border: 2px solid var(--c-text);
+          border-radius: 50%;
+          border-top-color: transparent;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.3s ease;
+          animation: spin 0.9s linear infinite;
+      }
+      #bg-loader.is-visible {
+          opacity: 0.45;
+      }
+      @keyframes spin {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+
+      /* ==========================================================
+         ★ 背景标记容器（仅供 CSS 选择器使用）
          ========================================================== */
       #bg-marker {
           position: fixed;
@@ -122,7 +173,7 @@
       }
 
       /* ==========================================================
-         ★ 顶部大面积柔化层 —— 回归的过度效果
+         ★ 顶部大面积柔化层
          ========================================================== */
       #top-veil {
           position: fixed;
@@ -187,13 +238,13 @@
           mask-repeat: no-repeat;
       }
 
-      /* 当存在背景图时，柔化层淡入 */
-      #bg-marker.has-image ~ #top-veil {
+      /* ★ 只有背景图真正显示后才淡入柔化层 */
+      #bg-layer.is-loaded ~ #top-veil {
           opacity: 1;
       }
 
       /* ==========================================================
-         ★ 顶部操作条 —— Background（保持在顶部）
+         ★ 顶部操作条 —— Background
          ========================================================== */
       #bg-toggle {
           position: fixed;
@@ -316,6 +367,9 @@
           .modal-overlay.active.closing,
           .modal-overlay.active.closing .modal-content {
               animation: none;
+          }
+          #bg-layer {
+              transition: none;
           }
       }
 
@@ -466,11 +520,14 @@
 </head>
 <body>
 
-  <!-- 背景标记（用于触发柔化层） -->
+  <!-- 背景标记 -->
   <div id="bg-marker"></div>
 
   <!-- 背景层 -->
   <div id="bg-layer"></div>
+
+  <!-- 背景加载指示器 -->
+  <div id="bg-loader"></div>
 
   <!-- 顶部大面积柔化层 -->
   <div id="top-veil"></div>
@@ -524,6 +581,7 @@
       const DOM = {
           bgMarker: document.getElementById('bg-marker'),
           bgLayer: document.getElementById('bg-layer'),
+          bgLoader: document.getElementById('bg-loader'),
           bgToggle: document.getElementById('bg-toggle'),
 
           bgOverlay: document.getElementById('bgOverlay'),
@@ -630,12 +688,13 @@
       };
 
       /* ==========================================================
-         ★ 背景管理 —— 本页唯一功能
+         ★ 背景管理 —— 本页唯一功能（含加载动画）
          ========================================================== */
       const BackgroundManager = {
           key: CONFIG.bgKey,
           pending: null,
           pendingReset: false,
+          _loadToken: 0,
 
           init: function() {
               this.apply();
@@ -651,16 +710,53 @@
               DOM.bgFileInput.addEventListener('change', (e) => this.handleUpload(e));
           },
 
+          /* ---------- 应用（带预加载 + 淡入） ---------- */
           apply: function() {
               const data = localStorage.getItem(this.key);
-              if (data) {
-                  DOM.bgLayer.style.backgroundImage = `url(${data})`;
-                  // ★ 有背景图 → 触发顶部柔化层淡入
-                  DOM.bgMarker.classList.add('has-image');
-              } else {
+
+              // 每次应用都递增 token，防止旧的异步回调覆盖新状态
+              const token = ++this._loadToken;
+
+              if (!data) {
+                  // 无背景图：直接进入无图状态
                   DOM.bgLayer.style.backgroundImage = 'none';
+                  DOM.bgLayer.classList.remove('is-loaded');
+                  DOM.bgLayer.classList.add('no-image');
+                  DOM.bgLoader.classList.remove('is-visible');
                   DOM.bgMarker.classList.remove('has-image');
+                  return;
               }
+
+              // 有背景图：先显示加载指示器，预加载完成后再淡入
+              DOM.bgLoader.classList.add('is-visible');
+              DOM.bgLayer.classList.remove('no-image');
+              DOM.bgLayer.classList.remove('is-loaded');
+              DOM.bgMarker.classList.remove('has-image');
+
+              const img = new Image();
+              img.onload = () => {
+                  if (token !== this._loadToken) return; // 已被更新的调用取代
+
+                  DOM.bgLayer.style.backgroundImage = `url(${data})`;
+
+                  // 强制一次回流，确保 transition 生效
+                  void DOM.bgLayer.offsetWidth;
+
+                  // 淡入背景层
+                  DOM.bgLayer.classList.add('is-loaded');
+
+                  // 淡出加载指示器
+                  DOM.bgLoader.classList.remove('is-visible');
+
+                  // 背景图真正显示后，再让柔化层淡入
+                  DOM.bgMarker.classList.add('has-image');
+              };
+              img.onerror = () => {
+                  if (token !== this._loadToken) return;
+                  DOM.bgLoader.classList.remove('is-visible');
+                  DOM.bgLayer.classList.add('no-image');
+              };
+              img.src = data;
           },
 
           showModal: function() {
