@@ -26,6 +26,11 @@
       :root {
           color-scheme: light;
 
+          /* ★ 系统粗体字体栈 */
+          --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                         'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB',
+                         'Microsoft YaHei', Arial, sans-serif;
+
           --c-bg: #F1F2ED;
           --c-text: #000000;
           --c-text-soft: #1A1A1A;
@@ -117,7 +122,7 @@
           height: 100%;
           overflow: hidden;
           background: transparent;
-          font-family: Impact;
+          font-family: var(--font-system);
           color: var(--c-text);
           font-weight: 700;
           transition: color 0.25s ease;
@@ -395,10 +400,10 @@
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
 
-          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-family: var(--font-system);
           font-size: clamp(46px, 14vw, 80px);
-          font-weight: 700;
-          letter-spacing: 0;
+          font-weight: 800;
+          letter-spacing: -1px;
           line-height: 1;
           text-align: left;
           white-space: nowrap;
@@ -429,7 +434,7 @@
       .action-bar {
           position: relative;
           width: 100%;
-          height: 65px;
+          height: 60px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -445,14 +450,15 @@
           transition: background-color 0.25s ease, color 0.25s ease,
                       border-color 0.25s ease, transform 0.2s ease;
           -webkit-tap-highlight-color: transparent;
-          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-family: var(--font-system);
+          font-weight: 700;
       }
       .action-bar:active {
           transform: scale(0.985);
       }
 
       .action-label {
-          font-size: 19px;
+          font-size: 16px;
           font-weight: 700;
           letter-spacing: 1.5px;
           line-height: 1;
@@ -463,7 +469,8 @@
           font-size: 22px;
           line-height: 1;
           opacity: 0.6;
-          font-family: Impact;
+          font-family: var(--font-system);
+          font-weight: 700;
       }
 
       /* ===== Mode 栏 ===== */
@@ -489,7 +496,7 @@
           border: 1px solid var(--c-mode-border);
           background: transparent;
           color: var(--c-text);
-          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-family: var(--font-system);
           font-size: 13px;
           font-weight: 700;
           letter-spacing: 1.5px;
@@ -684,7 +691,7 @@
       .modal-title {
           font-size: 20px;
           font-weight: 700;
-          font-family: Impact;
+          font-family: var(--font-system);
       }
       .modal-close {
           background: none;
@@ -699,7 +706,8 @@
           align-items: center;
           border-radius: 50%;
           transition: background-color 0.3s ease;
-          font-family: Impact;
+          font-family: var(--font-system);
+          font-weight: 700;
       }
       .modal-close:hover {
           background-color: rgba(128, 128, 128, 0.18);
@@ -712,7 +720,7 @@
       .section-title {
           font-size: 15px;
           font-weight: 700;
-          font-family: Impact;
+          font-family: var(--font-system);
       }
       .modal-buttons {
           display: flex;
@@ -724,10 +732,10 @@
           padding: 10px 14px;
           border-radius: 8px;
           border: none;
-          font-weight: 600;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.3s ease;
-          font-family: Impact;
+          font-family: var(--font-system);
           font-size: 14px;
       }
       .modal-button.save {
@@ -794,10 +802,10 @@
           border-radius: 10px;
           cursor: pointer;
           text-align: center;
-          font-weight: 600;
+          font-weight: 700;
           transition: background-color 0.3s ease, color 0.25s ease;
           width: 100%;
-          font-family: Impact;
+          font-family: var(--font-system);
           font-size: 14px;
           letter-spacing: 1px;
       }
@@ -822,7 +830,7 @@
           border: 1px solid var(--c-border);
           background-color: var(--c-input-bg);
           color: var(--c-text);
-          font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+          font-family: var(--font-system);
           font-size: 15px;
           font-weight: 600;
           outline: none;
@@ -861,8 +869,9 @@
           border: 1px solid var(--c-surface-border);
           border-radius: 10px;
           padding: 14px 16px;
-          font-family: Impact;
+          font-family: var(--font-system);
           font-size: 16px;
+          font-weight: 700;
           letter-spacing: 1px;
           text-align: center;
           cursor: pointer;
@@ -894,7 +903,8 @@
           opacity: 0.6;
           font-size: 14px;
           padding: 12px;
-          font-family: Impact;
+          font-family: var(--font-system);
+          font-weight: 700;
           animation: pageItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
 
@@ -989,7 +999,7 @@
           -webkit-backdrop-filter: blur(14px) saturate(140%);
           backdrop-filter: blur(14px) saturate(140%);
           color: var(--c-text);
-          font-family: Impact, 'Arial Narrow Bold', sans-serif;
+          font-family: var(--font-system);
           font-size: 16px;
           font-weight: 700;
           letter-spacing: 1.5px;
