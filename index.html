@@ -348,36 +348,40 @@
           overflow: hidden;
           border-radius: 50%;
           background: transparent;
-          transition: box-shadow 0.2s ease;
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
           display: none;
 
-          box-shadow:
-              0 1px 2px rgba(0, 0, 0, 0.10),
-              0 4px 10px rgba(0, 0, 0, 0.16),
-              0 12px 28px rgba(0, 0, 0, 0.26),
-              0 24px 56px rgba(0, 0, 0, 0.28),
-              0 40px 90px rgba(0, 0, 0, 0.16),
-              0 0 0 1px rgba(0, 0, 0, 0.05);
+          /* ★ 关键修复：用 filter: drop-shadow() 替代 box-shadow
+             drop-shadow 跟随元素的【渲染轮廓】（即圆形边缘），
+             不会在圆角盒子的底部抗锯齿接缝处产生残留白点 */
+          filter:
+              drop-shadow(0 0 3px rgba(0, 0, 0, 0.35))
+              drop-shadow(0 0 10px rgba(0, 0, 0, 0.28))
+              drop-shadow(0 0 24px rgba(0, 0, 0, 0.20))
+              drop-shadow(0 0 48px rgba(0, 0, 0, 0.10));
+
+          transition: filter 0.2s ease;
       }
       #brand-label.has-avatar {
           display: block;
       }
       html.dark #brand-label.has-avatar {
-          box-shadow:
-              0 1px 2px rgba(0, 0, 0, 0.45),
-              0 4px 10px rgba(0, 0, 0, 0.55),
-              0 12px 28px rgba(0, 0, 0, 0.65),
-              0 24px 56px rgba(0, 0, 0, 0.60),
-              0 0 0 1px rgba(255, 255, 255, 0.10);
+          filter:
+              drop-shadow(0 0 3px rgba(0, 0, 0, 0.75))
+              drop-shadow(0 0 10px rgba(0, 0, 0, 0.70))
+              drop-shadow(0 0 24px rgba(0, 0, 0, 0.55))
+              drop-shadow(0 0 48px rgba(0, 0, 0, 0.30));
       }
       #brand-label img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          border-radius: 50%;
           display: block;
+
+          /* ★ 裁剪完全交给父容器；图片自身不加圆角、不做 scale
+             scale(1.02) 会在圆形底部引入亚像素色差，是白点的来源之一 */
+          border-radius: 0;
+          transform: none;
+          -webkit-transform: none;
       }
 
       .corner-button {
@@ -972,8 +976,6 @@
           border: 0;
           display: block;
           background: var(--c-bg);
-          /* ★ 关键：给 iframe 设置 color-scheme，让子页面里的
-             prefers-color-scheme 也能跟随 */
           color-scheme: light;
       }
       html.dark #stage {
@@ -1229,19 +1231,16 @@
          双保险：URL 参数（首屏）+ postMessage（动态切换）
          ========================================================== */
       const ThemeBridge = {
-          // 读取当前是否深色
           isDark: function() {
               return document.documentElement.classList.contains('dark');
           },
 
-          // 给子页面 URL 拼接 theme 参数
           decorateURL: function(url) {
               const theme = this.isDark() ? 'dark' : 'light';
               const sep = url.indexOf('?') === -1 ? '?' : '&';
               return url + sep + 'theme=' + theme;
           },
 
-          // 通过 postMessage 把主题推给 iframe
           push: function() {
               const frame = DOM.stage;
               if (!frame || !frame.contentWindow) return;
@@ -1356,7 +1355,6 @@
                   meta.setAttribute('content', on ? '#000000' : '#F1F2ED');
               }
               this.updateUI();
-              // ★ 主题变化时，立刻通知 iframe
               ThemeBridge.push();
           },
 
@@ -1573,8 +1571,6 @@
                   }
               });
 
-              // iframe 每次加载完成后，再推一次主题
-              // 覆盖子页面首次渲染时的时序问题
               DOM.stage.addEventListener('load', () => {
                   if (DOM.pageView.classList.contains('active')) {
                       ThemeBridge.push();
@@ -1631,7 +1627,6 @@
               this.hideList();
               DOM.pageView.classList.remove('closing');
 
-              // ★ 关键：把当前主题以 URL 参数拼接到子页面地址
               const rawURL = 'folder/' + encodeURIComponent(name);
               DOM.stage.src = ThemeBridge.decorateURL(rawURL);
 
@@ -1933,4 +1928,4 @@
       }
   </script>
 </body>
-</html>=
+</html>
