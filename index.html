@@ -26,11 +26,6 @@
       :root {
           color-scheme: light;
 
-          /* ★ 系统默认字体栈（粗体由 font-weight 控制） */
-          --c-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-                    'Hiragino Sans GB', 'Microsoft YaHei', Roboto, 'Helvetica Neue',
-                    Arial, sans-serif;
-
           --c-bg: #F1F2ED;
           --c-text: #000000;
           --c-text-soft: #1A1A1A;
@@ -122,8 +117,9 @@
           height: 100%;
           overflow: hidden;
           background: transparent;
-          /* ★ 系统默认字体 */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           color: var(--c-text);
           font-weight: 700;
           transition: color 0.25s ease;
@@ -401,8 +397,9 @@
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
 
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-size: clamp(46px, 14vw, 80px);
           font-weight: 700;
           letter-spacing: 0;
@@ -452,8 +449,9 @@
           transition: background-color 0.25s ease, color 0.25s ease,
                       border-color 0.25s ease, transform 0.2s ease;
           -webkit-tap-highlight-color: transparent;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-weight: 700;
       }
       .action-bar:active {
@@ -472,8 +470,10 @@
           font-size: 22px;
           line-height: 1;
           opacity: 0.6;
-          /* ★ 系统默认字体 */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
+          font-weight: 700;
       }
 
       /* ===== Mode 栏 ===== */
@@ -499,8 +499,9 @@
           border: 1px solid var(--c-mode-border);
           background: transparent;
           color: var(--c-text);
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-size: 13px;
           font-weight: 700;
           letter-spacing: 1.5px;
@@ -695,8 +696,9 @@
       .modal-title {
           font-size: 20px;
           font-weight: 700;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
       }
       .modal-close {
           background: none;
@@ -711,8 +713,9 @@
           align-items: center;
           border-radius: 50%;
           transition: background-color 0.3s ease;
-          /* ★ 系统默认字体 */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-weight: 700;
       }
       .modal-close:hover {
@@ -726,8 +729,9 @@
       .section-title {
           font-size: 15px;
           font-weight: 700;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
       }
       .modal-buttons {
           display: flex;
@@ -742,8 +746,9 @@
           font-weight: 700;
           cursor: pointer;
           transition: all 0.3s ease;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-size: 14px;
       }
       .modal-button.save {
@@ -813,8 +818,9 @@
           font-weight: 700;
           transition: background-color 0.3s ease, color 0.25s ease;
           width: 100%;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-size: 14px;
           letter-spacing: 1px;
       }
@@ -878,8 +884,9 @@
           border: 1px solid var(--c-surface-border);
           border-radius: 10px;
           padding: 14px 16px;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-weight: 700;
           font-size: 16px;
           letter-spacing: 1px;
@@ -913,8 +920,9 @@
           opacity: 0.6;
           font-size: 14px;
           padding: 12px;
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-weight: 700;
           animation: pageItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1010,8 +1018,9 @@
           -webkit-backdrop-filter: blur(14px) saturate(140%);
           backdrop-filter: blur(14px) saturate(140%);
           color: var(--c-text);
-          /* ★ 系统默认字体（粗体） */
-          font-family: var(--c-font);
+          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
+                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
+                       'Hiragino Sans GB', sans-serif;
           font-size: 16px;
           font-weight: 700;
           letter-spacing: 1.5px;
