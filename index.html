@@ -26,6 +26,9 @@
       :root {
           color-scheme: light;
 
+          --f-default: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                       'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+
           --c-bg: #F1F2ED;
           --c-text: #000000;
           --c-text-soft: #1A1A1A;
@@ -117,9 +120,7 @@
           height: 100%;
           overflow: hidden;
           background: transparent;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           color: var(--c-text);
           font-weight: 700;
           transition: color 0.25s ease;
@@ -156,7 +157,7 @@
           border-radius: 0;
           padding: 20px 15px;
           font-size: 72px;
-          font-weight: 400;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.3s ease;
           font-family: 'Snell Roundhand', 'Snell Roundhand Black', cursive;
@@ -397,9 +398,7 @@
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
 
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-size: clamp(46px, 14vw, 80px);
           font-weight: 700;
           letter-spacing: 0;
@@ -449,9 +448,7 @@
           transition: background-color 0.25s ease, color 0.25s ease,
                       border-color 0.25s ease, transform 0.2s ease;
           -webkit-tap-highlight-color: transparent;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-weight: 700;
       }
       .action-bar:active {
@@ -470,9 +467,7 @@
           font-size: 22px;
           line-height: 1;
           opacity: 0.6;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-weight: 700;
       }
 
@@ -499,9 +494,7 @@
           border: 1px solid var(--c-mode-border);
           background: transparent;
           color: var(--c-text);
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-size: 13px;
           font-weight: 700;
           letter-spacing: 1.5px;
@@ -696,9 +689,7 @@
       .modal-title {
           font-size: 20px;
           font-weight: 700;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
       }
       .modal-close {
           background: none;
@@ -713,9 +704,7 @@
           align-items: center;
           border-radius: 50%;
           transition: background-color 0.3s ease;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-weight: 700;
       }
       .modal-close:hover {
@@ -729,9 +718,7 @@
       .section-title {
           font-size: 15px;
           font-weight: 700;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
       }
       .modal-buttons {
           display: flex;
@@ -746,9 +733,7 @@
           font-weight: 700;
           cursor: pointer;
           transition: all 0.3s ease;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-size: 14px;
       }
       .modal-button.save {
@@ -818,9 +803,7 @@
           font-weight: 700;
           transition: background-color 0.3s ease, color 0.25s ease;
           width: 100%;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-size: 14px;
           letter-spacing: 1px;
       }
@@ -845,9 +828,9 @@
           border: 1px solid var(--c-border);
           background-color: var(--c-input-bg);
           color: var(--c-text);
-          font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+          font-family: var(--f-default);
           font-size: 15px;
-          font-weight: 600;
+          font-weight: 700;
           outline: none;
           transition: border-color 0.2s ease, background-color 0.2s ease,
                       color 0.25s ease;
@@ -884,11 +867,9 @@
           border: 1px solid var(--c-surface-border);
           border-radius: 10px;
           padding: 14px 16px;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
-          font-weight: 700;
+          font-family: var(--f-default);
           font-size: 16px;
+          font-weight: 700;
           letter-spacing: 1px;
           text-align: center;
           cursor: pointer;
@@ -920,9 +901,7 @@
           opacity: 0.6;
           font-size: 14px;
           padding: 12px;
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-weight: 700;
           animation: pageItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1018,9 +997,7 @@
           -webkit-backdrop-filter: blur(14px) saturate(140%);
           backdrop-filter: blur(14px) saturate(140%);
           color: var(--c-text);
-          font-family: 'PingFang SC', 'PingFang TC', 'PingFang HK',
-                       -apple-system, 'Helvetica Neue', 'Microsoft YaHei',
-                       'Hiragino Sans GB', sans-serif;
+          font-family: var(--f-default);
           font-size: 16px;
           font-weight: 700;
           letter-spacing: 1.5px;
