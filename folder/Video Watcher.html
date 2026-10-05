@@ -21,7 +21,6 @@
 
       :root {
           color-scheme: light;
-
           --f-default: -apple-system, BlinkMacSystemFont, 'Segoe UI',
                        'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
 
@@ -44,7 +43,6 @@
 
       html.dark {
           color-scheme: dark;
-
           --c-bg: #000000;
           --c-text: #FFFFFF;
           --c-surface: #0A0A0A;
@@ -95,7 +93,7 @@
               calc(var(--safe-left) + 16px);
       }
 
-      /* ===== 顶部标题行 ===== */
+      /* ===== 顶部 ===== */
       .head {
           flex: 0 0 auto;
           display: flex;
@@ -126,7 +124,6 @@
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 100%;
-          transition: opacity 0.25s ease;
       }
 
       .head-actions {
@@ -168,7 +165,7 @@
           display: none;
       }
 
-      /* ===== 主体（列表 / 播放器叠放） ===== */
+      /* ===== 主体 ===== */
       .body {
           position: relative;
           flex: 1 1 auto;
@@ -396,7 +393,6 @@
           opacity: 1;
       }
 
-      /* ===== 控制条 ===== */
       .controls {
           position: absolute;
           left: 10px;
@@ -571,7 +567,8 @@
       }
 
       /* ===== 隐藏 input ===== */
-      #folderInput {
+      #folderInput,
+      #fileInput {
           position: fixed;
           top: 0;
           left: 0;
@@ -697,7 +694,10 @@
     </div>
   </div>
 
+  <!-- 文件夹选择（支持的浏览器） -->
   <input type="file" id="folderInput" webkitdirectory directory multiple>
+  <!-- 多文件选择（兜底，iOS 等） -->
+  <input type="file" id="fileInput" accept="video/*" multiple>
 
   <div id="toast"></div>
 
@@ -706,40 +706,38 @@
          元素引用
          ========================================================== */
       const els = {
-          layout:    document.getElementById('layout'),
-          stage:     document.getElementById('stage'),
-          video:     document.getElementById('video'),
-          fileName:  document.getElementById('fileName'),
+          layout:     document.getElementById('layout'),
+          stage:      document.getElementById('stage'),
+          video:      document.getElementById('video'),
+          fileName:   document.getElementById('fileName'),
 
-          listView:  document.getElementById('listView'),
-          list:      document.getElementById('list'),
-          listEmpty: document.getElementById('listEmpty'),
-          emptyTitle:document.getElementById('emptyTitle'),
-          emptySub:  document.getElementById('emptySub'),
+          listView:   document.getElementById('listView'),
+          list:       document.getElementById('list'),
+          listEmpty:  document.getElementById('listEmpty'),
+          emptyTitle: document.getElementById('emptyTitle'),
+          emptySub:   document.getElementById('emptySub'),
 
-          pickBtn:   document.getElementById('pickBtn'),
-          listToggle:document.getElementById('listToggle'),
+          pickBtn:    document.getElementById('pickBtn'),
+          listToggle: document.getElementById('listToggle'),
           folderInput:document.getElementById('folderInput'),
+          fileInput:  document.getElementById('fileInput'),
 
-          scrub:     document.getElementById('scrub'),
-          buffer:    document.getElementById('buffer'),
-          fill:      document.getElementById('fill'),
-          knob:      document.getElementById('knob'),
+          scrub:      document.getElementById('scrub'),
+          buffer:     document.getElementById('buffer'),
+          fill:       document.getElementById('fill'),
+          knob:       document.getElementById('knob'),
 
-          playBtn:   document.getElementById('playBtn'),
-          muteBtn:   document.getElementById('muteBtn'),
-          fsBtn:     document.getElementById('fsBtn'),
-          timeNow:   document.getElementById('timeNow'),
-          timeTotal: document.getElementById('timeTotal'),
+          playBtn:    document.getElementById('playBtn'),
+          muteBtn:    document.getElementById('muteBtn'),
+          fsBtn:      document.getElementById('fsBtn'),
+          timeNow:    document.getElementById('timeNow'),
+          timeTotal:  document.getElementById('timeTotal'),
 
-          toast:     document.getElementById('toast')
+          toast:      document.getElementById('toast')
       };
 
       /* ==========================================================
-         ★ 主题桥接
-         1) URL ?theme=dark|light  —— 父页面 iframe.src 首屏注入
-         2) postMessage           —— 父页面切换主题时实时推送
-         3) prefers-color-scheme  —— 独立打开时的兜底
+         主题桥接
          ========================================================== */
       const Theme = {
           locked: false,
@@ -798,7 +796,7 @@
       };
 
       /* ==========================================================
-         ★ 工具函数
+         工具
          ========================================================== */
       const VIDEO_EXTS = new Set([
           'mp4', 'm4v', 'mov', 'webm', 'ogv', 'ogg', 'mkv', 'avi', 'wmv',
@@ -808,7 +806,8 @@
 
       function isVideoFile(file) {
           if (!file) return false;
-          if (file.type && file.type.indexOf('video/') === 0) return true;
+          const type = file.type || '';
+          if (type.indexOf('video/') === 0) return true;
           const name = file.name || '';
           const dot = name.lastIndexOf('.');
           if (dot < 0) return false;
@@ -847,8 +846,18 @@
           }, 2200);
       }
 
+      /* 特征检测：浏览器是否支持文件夹选择 */
+      const SUPPORTS_DIRECTORY = (function () {
+          try {
+              const input = document.createElement('input');
+              return 'webkitdirectory' in input || 'directory' in input;
+          } catch (err) {
+              return false;
+          }
+      })();
+
       /* ==========================================================
-         ★ 播放器（负责 video 元素 + 控制条，不做文件管理）
+         播放器
          ========================================================== */
       const Player = {
           _url: null,
@@ -861,7 +870,6 @@
               this.bindKeyboard();
           },
 
-          /* ---------- 加载 ---------- */
           loadFile: function (file) {
               const v = els.video;
               this.releaseURL();
@@ -895,7 +903,6 @@
               els.timeTotal.textContent = '0:00';
           },
 
-          /* ---------- 视频事件 ---------- */
           bindVideo: function () {
               const v = els.video;
 
@@ -928,7 +935,6 @@
               v.addEventListener('ended', () => {
                   els.stage.classList.remove('playing');
                   this.showUI(true);
-                  // 自动接续列表中下一个视频
                   Library.playNext();
               });
 
@@ -937,7 +943,6 @@
                   toast('无法播放此视频');
               });
 
-              // 点击画面：播放 / 暂停
               v.addEventListener('click', () => {
                   if (!v.src) return;
                   if (v.paused) v.play().catch(() => {});
@@ -945,7 +950,6 @@
               });
           },
 
-          /* ---------- 控制条 ---------- */
           bindControls: function () {
               const v = els.video;
 
@@ -1059,7 +1063,6 @@
               els.buffer.style.width = Math.min(100, (end / d) * 100) + '%';
           },
 
-          /* ---------- UI 显隐 ---------- */
           showUI: function (keep) {
               els.stage.classList.remove('hide-ui');
               clearTimeout(this.hideTimer);
@@ -1076,7 +1079,6 @@
               }, 3200);
           },
 
-          /* ---------- 全屏 ---------- */
           toggleFullscreen: function () {
               const doc = document;
               const el = els.stage;
@@ -1097,12 +1099,10 @@
               }
           },
 
-          /* ---------- 键盘 ---------- */
           bindKeyboard: function () {
               window.addEventListener('keydown', (e) => {
                   const v = els.video;
                   if (!v.src) return;
-                  // 列表视图下不响应
                   if (!els.layout.classList.contains('mode-player')) return;
 
                   if (e.code === 'Space') {
@@ -1128,31 +1128,49 @@
       };
 
       /* ==========================================================
-         ★ 媒体库（文件夹扫描 + 列表 + 选中播放）
+         媒体库
          ========================================================== */
       const Library = {
-          items: [],          // { file, name, folder, size, path }
+          items: [],
           currentIndex: -1,
 
           init: function () {
+              // 根据能力切换按钮文案
+              if (!SUPPORTS_DIRECTORY) {
+                  els.pickBtn.textContent = 'Files';
+              }
+
               els.pickBtn.addEventListener('click', () => this.pick());
               els.listEmpty.addEventListener('click', () => this.pick());
               els.listToggle.addEventListener('click', () => this.showList());
 
+              // ★ 关键修复：先把 FileList 复制为真数组，再清空 input
               els.folderInput.addEventListener('change', (e) => {
-                  const files = e.target.files;
+                  const files = Array.from(e.target.files || []);
                   e.target.value = '';
-                  if (files && files.length) this.build(files);
+                  if (!files.length) return;
+                  this.build(files);
+              });
+
+              els.fileInput.addEventListener('change', (e) => {
+                  const files = Array.from(e.target.files || []);
+                  e.target.value = '';
+                  if (!files.length) return;
+                  this.build(files);
               });
 
               this.bindDrop();
           },
 
           pick: function () {
-              els.folderInput.click();
+              if (SUPPORTS_DIRECTORY) {
+                  els.folderInput.click();
+              } else {
+                  els.fileInput.click();
+              }
           },
 
-          /* ---------- 拖拽（桌面端） ---------- */
+          /* ---------- 拖拽（桌面） ---------- */
           bindDrop: function () {
               window.addEventListener('dragover', (e) => {
                   e.preventDefault();
@@ -1185,7 +1203,7 @@
                           toast('未找到视频文件');
                       }
                   } else if (dt.files && dt.files.length) {
-                      this.build(dt.files);
+                      this.build(Array.from(dt.files));
                   }
               });
           },
@@ -1197,7 +1215,6 @@
                   const file = await new Promise((resolve) => {
                       entry.file(
                           (f) => {
-                              // 记录相对路径，便于同名区分
                               try {
                                   Object.defineProperty(f, '_relPath', {
                                       value: entry.fullPath || ('/' + f.name),
@@ -1237,22 +1254,23 @@
 
           /* ---------- 构建列表 ---------- */
           build: function (fileList) {
+              const raw = Array.from(fileList || []);
               const items = [];
 
-              for (let i = 0; i < fileList.length; i++) {
-                  const f = fileList[i];
+              for (let i = 0; i < raw.length; i++) {
+                  const f = raw[i];
                   if (!isVideoFile(f)) continue;
 
-                  const relPath = f.webkitRelativePath || f._relPath || f.name;
+                  const relPath = f.webkitRelativePath || f._relPath || f.name || '';
                   const cleanPath = String(relPath).replace(/^\/+/, '');
                   const lastSlash = cleanPath.lastIndexOf('/');
                   const folder = lastSlash > 0 ? cleanPath.slice(0, lastSlash) : '';
 
                   items.push({
                       file: f,
-                      name: f.name,
+                      name: f.name || '未命名视频',
                       folder: folder,
-                      size: f.size,
+                      size: f.size || 0,
                       path: cleanPath
                   });
               }
@@ -1265,14 +1283,13 @@
                   els.listToggle.hidden = true;
                   this.items = [];
                   this.currentIndex = -1;
+                  toast('未找到视频文件');
                   return;
               }
 
-              // 恢复空状态文案
               els.emptyTitle.textContent = 'Choose a folder';
               els.emptySub.textContent = 'All videos inside will be listed';
 
-              // 按路径自然排序（数字感知）
               items.sort((a, b) =>
                   a.path.localeCompare(b.path, undefined, {
                       numeric: true,
@@ -1289,7 +1306,6 @@
               els.fileName.textContent = items.length + ' video' + (items.length > 1 ? 's' : '');
               els.listToggle.hidden = true;
 
-              // 切换回列表视图
               els.layout.classList.remove('mode-player');
               els.layout.classList.add('mode-list');
 
@@ -1334,7 +1350,6 @@
 
                   info.appendChild(name);
                   info.appendChild(meta);
-
                   row.appendChild(icon);
                   row.appendChild(info);
 
@@ -1346,7 +1361,6 @@
               els.list.appendChild(frag);
           },
 
-          /* ---------- 播放 ---------- */
           play: function (index) {
               if (index < 0 || index >= this.items.length) return;
 
@@ -1366,7 +1380,7 @@
 
               const p = els.video.play();
               if (p && typeof p.catch === 'function') {
-                  p.catch(() => { /* 自动播放被拦截时静默 */ });
+                  p.catch(() => { /* 忽略自动播放拦截 */ });
               }
           },
 
@@ -1389,10 +1403,13 @@
               const rows = els.list.querySelectorAll('.list-item');
               const row = rows[index];
               if (!row || !row.scrollIntoView) return;
-              row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              try {
+                  row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              } catch (err) {
+                  row.scrollIntoView();
+              }
           },
 
-          /* ---------- 回到列表 ---------- */
           showList: function () {
               if (!this.items.length) return;
 
