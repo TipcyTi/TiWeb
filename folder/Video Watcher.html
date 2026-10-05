@@ -91,6 +91,20 @@
               calc(var(--safe-right) + 16px)
               calc(var(--safe-bottom) + 16px)
               calc(var(--safe-left) + 16px);
+          transition: padding 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* 播放模式：紧凑内边距，隐藏顶部标题行，让视频占满 */
+      .layout.mode-player {
+          gap: 0;
+          padding:
+              calc(var(--safe-top) + 6px)
+              calc(var(--safe-right) + 6px)
+              calc(var(--safe-bottom) + 6px)
+              calc(var(--safe-left) + 6px);
+      }
+      .layout.mode-player .head {
+          display: none;
       }
 
       /* ===== 顶部 ===== */
@@ -154,16 +168,6 @@
       .pill:active {
           transform: scale(0.94);
       }
-      .pill.ghost {
-          background: transparent;
-          opacity: 0.55;
-      }
-      .pill.ghost:active {
-          opacity: 0.9;
-      }
-      .pill[hidden] {
-          display: none;
-      }
 
       /* ===== 主体 ===== */
       .body {
@@ -177,8 +181,9 @@
           position: absolute;
           inset: 0;
           border-radius: 22px;
-          transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+          transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+                      border-radius 0.25s ease;
       }
 
       .list-view {
@@ -190,7 +195,7 @@
 
       .stage {
           border: 1px solid var(--c-border);
-          background: var(--c-surface);
+          background: #000;
           overflow: hidden;
           isolation: isolate;
           opacity: 0;
@@ -236,8 +241,7 @@
           border: 1px solid var(--c-border-soft);
           color: var(--c-text);
           opacity: 0.9;
-          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                      background-color 0.25s ease;
+          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
       }
       .empty:active .empty-ring {
           transform: scale(0.92);
@@ -249,7 +253,6 @@
       .empty-title {
           font-size: 17px;
           font-weight: 700;
-          letter-spacing: 0.2px;
       }
       .empty-sub {
           font-size: 12.5px;
@@ -274,19 +277,13 @@
           scrollbar-width: thin;
           scrollbar-color: var(--c-scroll-thumb) transparent;
       }
-      .list::-webkit-scrollbar {
-          width: 4px;
-      }
+      .list::-webkit-scrollbar { width: 4px; }
       .list::-webkit-scrollbar-thumb {
           background: var(--c-scroll-thumb);
           border-radius: 999px;
       }
-      .list-view.has-items .empty {
-          display: none;
-      }
-      .list-view.has-items .list {
-          display: flex;
-      }
+      .list-view.has-items .empty { display: none; }
+      .list-view.has-items .list { display: flex; }
 
       .list-item {
           flex: 0 0 auto;
@@ -298,7 +295,6 @@
           background: var(--c-surface);
           border: 1px solid var(--c-border);
           cursor: pointer;
-          -webkit-tap-highlight-color: transparent;
           transition: background-color 0.2s ease, transform 0.18s ease,
                       border-color 0.25s ease;
           animation: itemIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -313,16 +309,8 @@
       }
 
       @keyframes itemIn {
-          0% {
-              opacity: 0;
-              transform: translateY(12px);
-              filter: blur(3px);
-          }
-          100% {
-              opacity: 1;
-              transform: translateY(0);
-              filter: blur(0);
-          }
+          0%   { opacity: 0; transform: translateY(12px); filter: blur(3px); }
+          100% { opacity: 1; transform: translateY(0);    filter: blur(0); }
       }
 
       .item-icon {
@@ -335,12 +323,8 @@
           justify-content: center;
           background: var(--c-chip);
           color: var(--c-text);
-          transition: background-color 0.25s ease;
       }
-      .item-icon svg {
-          width: 17px;
-          height: 17px;
-      }
+      .item-icon svg { width: 17px; height: 17px; }
       .list-item.active .item-icon svg {
           transform: scale(0.86);
           transition: transform 0.2s ease;
@@ -372,12 +356,6 @@
       /* ==========================================================
          播放器
          ========================================================== */
-      .stage:fullscreen,
-      .stage:-webkit-full-screen {
-          border-radius: 0;
-          border: none;
-      }
-
       .stage video {
           position: absolute;
           inset: 0;
@@ -385,7 +363,7 @@
           height: 100%;
           object-fit: contain;
           display: block;
-          background: transparent;
+          background: #000;
           opacity: 0;
           transition: opacity 0.32s ease;
       }
@@ -393,26 +371,88 @@
           opacity: 1;
       }
 
+      /* ===== 顶部浮层（返回 + 标题） ===== */
+      .player-top {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: calc(var(--safe-top) + 10px) 12px 28px;
+          background: linear-gradient(
+              to bottom,
+              rgba(0, 0, 0, 0.58) 0%,
+              rgba(0, 0, 0, 0.32) 55%,
+              rgba(0, 0, 0, 0) 100%
+          );
+          color: #fff;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(-6px);
+          transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+          z-index: 3;
+      }
+      .stage.has-video .player-top {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0);
+      }
+      .stage.hide-ui .player-top {
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(-6px);
+      }
+
+      .player-top .icon-btn {
+          color: #fff;
+          flex: 0 0 auto;
+      }
+      .player-top .icon-btn:active {
+          background: rgba(255, 255, 255, 0.18);
+      }
+
+      .player-title {
+          flex: 1 1 auto;
+          min-width: 0;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+      }
+      .player-top-spacer {
+          flex: 0 0 auto;
+          width: 40px;
+      }
+
+      /* ===== 底部控制条 ===== */
       .controls {
           position: absolute;
-          left: 10px;
-          right: 10px;
-          bottom: 10px;
+          left: 12px;
+          right: 12px;
+          bottom: 12px;
           display: flex;
           flex-direction: column;
           gap: 6px;
           padding: 12px 14px 10px;
           border-radius: 18px;
-          border: 1px solid var(--c-border-soft);
-          background: rgba(var(--c-veil), 0.62);
-          -webkit-backdrop-filter: blur(16px) saturate(150%);
-          backdrop-filter: blur(16px) saturate(150%);
-          box-shadow: 0 8px 26px var(--c-shadow);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(20, 20, 20, 0.55);
+          -webkit-backdrop-filter: blur(18px) saturate(160%);
+          backdrop-filter: blur(18px) saturate(160%);
+          color: #fff;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
           opacity: 0;
           pointer-events: none;
           transform: translateY(10px);
           transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
                       transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+          z-index: 2;
       }
       .stage.has-video .controls {
           opacity: 1;
@@ -427,7 +467,7 @@
 
       .scrub {
           position: relative;
-          height: 20px;
+          height: 22px;
           display: flex;
           align-items: center;
           cursor: pointer;
@@ -438,7 +478,7 @@
           width: 100%;
           height: 5px;
           border-radius: 999px;
-          background: var(--c-track);
+          background: rgba(255, 255, 255, 0.22);
           overflow: hidden;
       }
       .scrub-buffer {
@@ -447,8 +487,8 @@
           left: 0;
           bottom: 0;
           width: 0%;
-          background: currentColor;
-          opacity: 0.16;
+          background: #fff;
+          opacity: 0.22;
           transition: width 0.25s linear;
       }
       .scrub-fill {
@@ -457,25 +497,25 @@
           left: 0;
           bottom: 0;
           width: 0%;
-          background: currentColor;
-          opacity: 0.85;
+          background: #fff;
+          opacity: 0.95;
       }
       .scrub-knob {
           position: absolute;
           top: 50%;
           left: 0%;
-          width: 13px;
-          height: 13px;
-          margin-left: -6.5px;
+          width: 14px;
+          height: 14px;
+          margin-left: -7px;
           border-radius: 50%;
-          background: var(--c-text);
+          background: #fff;
           transform: translateY(-50%) scale(0.85);
           transition: transform 0.18s ease;
           pointer-events: none;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
       }
       .scrub.dragging .scrub-knob {
-          transform: translateY(-50%) scale(1.2);
+          transform: translateY(-50%) scale(1.25);
       }
 
       .ctrl-row {
@@ -490,23 +530,22 @@
           border-radius: 50%;
           border: none;
           background: transparent;
-          color: var(--c-text);
+          color: inherit;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 0;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
-          transition: background-color 0.2s ease, transform 0.2s ease,
-                      color 0.25s ease;
+          transition: background-color 0.2s ease, transform 0.2s ease;
       }
       .icon-btn:active {
           transform: scale(0.9);
-          background: var(--c-chip);
+          background: rgba(255, 255, 255, 0.16);
       }
       .icon-btn svg {
-          width: 21px;
-          height: 21px;
+          width: 22px;
+          height: 22px;
           display: block;
       }
 
@@ -516,17 +555,17 @@
           font-weight: 700;
           letter-spacing: 0.2px;
           font-variant-numeric: tabular-nums;
-          opacity: 0.75;
+          opacity: 0.9;
           white-space: nowrap;
+          color: #fff;
       }
       .time .sep {
-          opacity: 0.5;
+          opacity: 0.55;
           margin: 0 1px;
       }
-      .spacer {
-          flex: 1 1 auto;
-      }
+      .spacer { flex: 1 1 auto; }
 
+      /* 播放状态图标切换 */
       .stage .ico-pause { display: none; }
       .stage.playing .ico-play { display: none; }
       .stage.playing .ico-pause { display: block; }
@@ -538,6 +577,39 @@
       body.isfs .ico-expand { display: none; }
       .ico-compress { display: none; }
       body.isfs .ico-compress { display: block; }
+
+      /* ==========================================================
+         ★ 全屏状态重置 —— 去掉圆角/边框/内边距
+         ========================================================== */
+      .stage:fullscreen,
+      .stage:-webkit-full-screen,
+      .stage:-moz-full-screen,
+      .stage:-ms-fullscreen {
+          border-radius: 0 !important;
+          border: none !important;
+          background: #000 !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+      }
+      .stage:fullscreen video,
+      .stage:-webkit-full-screen video {
+          background: #000;
+      }
+      .stage:fullscreen .controls,
+      .stage:-webkit-full-screen .controls {
+          bottom: max(12px, env(safe-area-inset-bottom, 12px));
+          left: max(12px, env(safe-area-inset-left, 12px));
+          right: max(12px, env(safe-area-inset-right, 12px));
+      }
+      .stage:fullscreen .player-top,
+      .stage:-webkit-full-screen .player-top {
+          padding-top: max(10px, env(safe-area-inset-top, 10px));
+          padding-left: max(12px, env(safe-area-inset-left, 12px));
+          padding-right: max(12px, env(safe-area-inset-right, 12px));
+      }
 
       /* ===== 提示气泡 ===== */
       #toast {
@@ -581,10 +653,12 @@
       @media (prefers-reduced-motion: reduce) {
           .empty,
           .controls,
+          .player-top,
           .stage video,
           .list-view,
           .stage,
-          .list-item {
+          .list-item,
+          .layout {
               transition: none;
               animation: none;
           }
@@ -602,7 +676,6 @@
         <div class="subtitle" id="fileName">No folder selected</div>
       </div>
       <div class="head-actions">
-        <button class="pill ghost" id="listToggle" type="button" hidden>List</button>
         <button class="pill" id="pickBtn" type="button">Folder</button>
       </div>
     </div>
@@ -630,6 +703,19 @@
       <div class="stage" id="stage">
         <video id="video" playsinline webkit-playsinline preload="metadata"></video>
 
+        <!-- 顶部浮层：返回 + 标题 -->
+        <div class="player-top" id="playerTop">
+          <button class="icon-btn" id="closeBtn" type="button" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <div class="player-title" id="playerTitle"></div>
+          <div class="player-top-spacer"></div>
+        </div>
+
+        <!-- 底部控制条 -->
         <div class="controls" id="controls">
           <div class="scrub" id="scrub">
             <div class="scrub-track">
@@ -709,6 +795,11 @@
           layout:     document.getElementById('layout'),
           stage:      document.getElementById('stage'),
           video:      document.getElementById('video'),
+
+          playerTop:  document.getElementById('playerTop'),
+          playerTitle:document.getElementById('playerTitle'),
+          closeBtn:   document.getElementById('closeBtn'),
+
           fileName:   document.getElementById('fileName'),
 
           listView:   document.getElementById('listView'),
@@ -718,7 +809,6 @@
           emptySub:   document.getElementById('emptySub'),
 
           pickBtn:    document.getElementById('pickBtn'),
-          listToggle: document.getElementById('listToggle'),
           folderInput:document.getElementById('folderInput'),
           fileInput:  document.getElementById('fileInput'),
 
@@ -856,6 +946,10 @@
           }
       })();
 
+      /* iOS 判定（原生 video 全屏回退） */
+      const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
       /* ==========================================================
          播放器
          ========================================================== */
@@ -868,6 +962,7 @@
               this.bindVideo();
               this.bindControls();
               this.bindKeyboard();
+              this.bindFullscreenEvents();
           },
 
           loadFile: function (file) {
@@ -943,6 +1038,7 @@
                   toast('无法播放此视频');
               });
 
+              // 点击画面：播放 / 暂停
               v.addEventListener('click', () => {
                   if (!v.src) return;
                   if (v.paused) v.play().catch(() => {});
@@ -969,6 +1065,10 @@
               els.fsBtn.addEventListener('click', () => {
                   this.toggleFullscreen();
                   this.showUI(true);
+              });
+
+              els.closeBtn.addEventListener('click', () => {
+                  Library.showList();
               });
 
               const scrub = els.scrub;
@@ -1014,17 +1114,37 @@
                   if (this.dragging) this.showUI();
               });
 
-              const fsChange = () => {
-                  const doc = document;
-                  const fsEl = doc.fullscreenElement || doc.webkitFullscreenElement;
+              window.addEventListener('resize', () => {
+                  setTimeout(() => this.updateBuffer(), 120);
+              });
+              window.addEventListener('orientationchange', () => {
+                  setTimeout(() => this.updateBuffer(), 320);
+              });
+          },
+
+          bindFullscreenEvents: function () {
+              const doc = document;
+
+              const sync = () => {
+                  const fsEl = doc.fullscreenElement ||
+                               doc.webkitFullscreenElement ||
+                               doc.mozFullScreenElement ||
+                               doc.msFullscreenElement;
                   document.body.classList.toggle('isfs', !!fsEl);
                   setTimeout(() => this.updateBuffer(), 120);
               };
-              document.addEventListener('fullscreenchange', fsChange);
-              document.addEventListener('webkitfullscreenchange', fsChange);
 
-              window.addEventListener('resize', () => {
-                  setTimeout(() => this.updateBuffer(), 120);
+              doc.addEventListener('fullscreenchange', sync);
+              doc.addEventListener('webkitfullscreenchange', sync);
+              doc.addEventListener('mozfullscreenchange', sync);
+              doc.addEventListener('MSFullscreenChange', sync);
+
+              // iOS 原生 video 全屏事件
+              els.video.addEventListener('webkitbeginfullscreen', () => {
+                  document.body.classList.add('isfs');
+              });
+              els.video.addEventListener('webkitendfullscreen', () => {
+                  document.body.classList.remove('isfs');
               });
           },
 
@@ -1079,23 +1199,63 @@
               }, 3200);
           },
 
+          /* ==========================================================
+             ★ 全屏切换（容器优先，iOS 回退到原生 video 全屏）
+             ========================================================== */
           toggleFullscreen: function () {
               const doc = document;
               const el = els.stage;
-              const fsEl = doc.fullscreenElement || doc.webkitFullscreenElement;
+              const v = els.video;
 
+              // 已经在全屏 —— 退出
+              const fsEl = doc.fullscreenElement ||
+                           doc.webkitFullscreenElement ||
+                           doc.mozFullScreenElement ||
+                           doc.msFullscreenElement;
               if (fsEl) {
                   if (doc.exitFullscreen) doc.exitFullscreen().catch(() => {});
                   else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+                  else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen();
+                  else if (doc.msExitFullscreen) doc.msExitFullscreen();
                   return;
               }
 
-              if (el.requestFullscreen) {
-                  el.requestFullscreen().catch(() => {});
-              } else if (el.webkitRequestFullscreen) {
-                  el.webkitRequestFullscreen();
-              } else if (els.video.webkitEnterFullscreen) {
-                  els.video.webkitEnterFullscreen();
+              // iOS：优先调用 video 原生全屏（体验最好）
+              if (IS_IOS && typeof v.webkitEnterFullscreen === 'function') {
+                  try {
+                      v.webkitEnterFullscreen();
+                      return;
+                  } catch (err) { /* 落到下面容器全屏尝试 */ }
+              }
+
+              // 容器全屏
+              const elReq = el.requestFullscreen ||
+                            el.webkitRequestFullscreen ||
+                            el.mozRequestFullScreen ||
+                            el.msRequestFullscreen;
+
+              if (elReq) {
+                  try {
+                      const p = elReq.call(el);
+                      if (p && typeof p.catch === 'function') {
+                          p.catch(() => {
+                              // 容器全屏失败 → 回退到 video 原生全屏
+                              if (typeof v.webkitEnterFullscreen === 'function') {
+                                  try { v.webkitEnterFullscreen(); } catch (e) {}
+                              }
+                          });
+                      }
+                  } catch (err) {
+                      if (typeof v.webkitEnterFullscreen === 'function') {
+                          try { v.webkitEnterFullscreen(); } catch (e) {}
+                      }
+                  }
+                  return;
+              }
+
+              // 最后兜底
+              if (typeof v.webkitEnterFullscreen === 'function') {
+                  try { v.webkitEnterFullscreen(); } catch (e) {}
               }
           },
 
@@ -1120,6 +1280,9 @@
                       v.muted = !v.muted;
                       document.body.classList.toggle('muted', v.muted);
                       this.showUI(true);
+                  } else if (e.code === 'KeyF') {
+                      this.toggleFullscreen();
+                      this.showUI(true);
                   } else if (e.code === 'Escape') {
                       Library.showList();
                   }
@@ -1135,16 +1298,13 @@
           currentIndex: -1,
 
           init: function () {
-              // 根据能力切换按钮文案
               if (!SUPPORTS_DIRECTORY) {
                   els.pickBtn.textContent = 'Files';
               }
 
               els.pickBtn.addEventListener('click', () => this.pick());
               els.listEmpty.addEventListener('click', () => this.pick());
-              els.listToggle.addEventListener('click', () => this.showList());
 
-              // ★ 关键修复：先把 FileList 复制为真数组，再清空 input
               els.folderInput.addEventListener('change', (e) => {
                   const files = Array.from(e.target.files || []);
                   e.target.value = '';
@@ -1170,7 +1330,6 @@
               }
           },
 
-          /* ---------- 拖拽（桌面） ---------- */
           bindDrop: function () {
               window.addEventListener('dragover', (e) => {
                   e.preventDefault();
@@ -1252,7 +1411,6 @@
               }
           },
 
-          /* ---------- 构建列表 ---------- */
           build: function (fileList) {
               const raw = Array.from(fileList || []);
               const items = [];
@@ -1280,7 +1438,6 @@
                   els.emptyTitle.textContent = 'No videos found';
                   els.emptySub.textContent = 'Try choosing another folder';
                   els.fileName.textContent = 'No videos found';
-                  els.listToggle.hidden = true;
                   this.items = [];
                   this.currentIndex = -1;
                   toast('未找到视频文件');
@@ -1304,7 +1461,6 @@
 
               els.listView.classList.add('has-items');
               els.fileName.textContent = items.length + ' video' + (items.length > 1 ? 's' : '');
-              els.listToggle.hidden = true;
 
               els.layout.classList.remove('mode-player');
               els.layout.classList.add('mode-list');
@@ -1312,7 +1468,7 @@
               Player.releaseURL();
               els.video.removeAttribute('src');
               els.video.load();
-              els.stage.classList.remove('has-video', 'playing');
+              els.stage.classList.remove('has-video', 'playing', 'hide-ui');
 
               els.list.scrollTop = 0;
           },
@@ -1371,8 +1527,8 @@
 
               els.layout.classList.add('mode-player');
               els.layout.classList.remove('mode-list');
-              els.listToggle.hidden = false;
 
+              els.playerTitle.textContent = item.name;
               els.fileName.textContent = item.name;
 
               this.highlight(index);
@@ -1413,11 +1569,10 @@
           showList: function () {
               if (!this.items.length) return;
 
-              els.video.pause();
+              try { els.video.pause(); } catch (err) { /* ignore */ }
 
               els.layout.classList.remove('mode-player');
               els.layout.classList.add('mode-list');
-              els.listToggle.hidden = true;
 
               els.fileName.textContent =
                   this.items.length + ' video' + (this.items.length > 1 ? 's' : '');
