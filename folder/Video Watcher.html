@@ -31,9 +31,15 @@
           --c-border-soft: rgba(0, 0, 0, 0.10);
           --c-veil: 241, 242, 237;
           --c-chip: rgba(0, 0, 0, 0.07);
-          --c-track: rgba(0, 0, 0, 0.14);
+          --c-chip-strong: rgba(0, 0, 0, 0.10);
           --c-scroll-thumb: #C8C9C4;
           --c-shadow: rgba(0, 0, 0, 0.14);
+          --c-sheet-shadow: rgba(0, 0, 0, 0.28);
+          --c-backdrop: rgba(0, 0, 0, 0.55);
+
+          --c-accent: #3BD16F;
+          --c-accent-glow: rgba(59, 209, 111, 0.22);
+          --c-danger: #E5484D;
 
           --safe-top: env(safe-area-inset-top, 0px);
           --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -50,9 +56,11 @@
           --c-border-soft: rgba(255, 255, 255, 0.14);
           --c-veil: 0, 0, 0;
           --c-chip: rgba(255, 255, 255, 0.13);
-          --c-track: rgba(255, 255, 255, 0.18);
+          --c-chip-strong: rgba(255, 255, 255, 0.18);
           --c-scroll-thumb: #333333;
           --c-shadow: rgba(0, 0, 0, 0.65);
+          --c-sheet-shadow: rgba(0, 0, 0, 0.75);
+          --c-backdrop: rgba(0, 0, 0, 0.68);
       }
 
       html, body {
@@ -77,6 +85,10 @@
           transition: background-color 0.25s ease, color 0.25s ease;
       }
 
+      body.modal-open {
+          overflow: hidden;
+      }
+
       /* ==========================================================
          布局
          ========================================================== */
@@ -91,20 +103,6 @@
               calc(var(--safe-right) + 16px)
               calc(var(--safe-bottom) + 16px)
               calc(var(--safe-left) + 16px);
-          transition: padding 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-      }
-
-      /* 播放模式：紧凑内边距，隐藏顶部标题行，让视频占满 */
-      .layout.mode-player {
-          gap: 0;
-          padding:
-              calc(var(--safe-top) + 6px)
-              calc(var(--safe-right) + 6px)
-              calc(var(--safe-bottom) + 6px)
-              calc(var(--safe-left) + 6px);
-      }
-      .layout.mode-player .head {
-          display: none;
       }
 
       /* ===== 顶部 ===== */
@@ -176,42 +174,13 @@
           min-height: 0;
       }
 
-      .list-view,
-      .stage {
+      .list-view {
           position: absolute;
           inset: 0;
-          border-radius: 22px;
-          transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-                      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-                      border-radius 0.25s ease;
-      }
-
-      .list-view {
           display: flex;
           flex-direction: column;
-          opacity: 1;
-          transform: scale(1);
-      }
-
-      .stage {
-          border: 1px solid var(--c-border);
-          background: #000;
-          overflow: hidden;
-          isolation: isolate;
-          opacity: 0;
-          pointer-events: none;
-          transform: scale(0.985);
-      }
-
-      .layout.mode-player .list-view {
-          opacity: 0;
-          pointer-events: none;
-          transform: scale(0.985);
-      }
-      .layout.mode-player .stage {
-          opacity: 1;
-          pointer-events: auto;
-          transform: scale(1);
+          border-radius: 22px;
+          transition: background-color 0.25s ease;
       }
 
       /* ==========================================================
@@ -241,7 +210,8 @@
           border: 1px solid var(--c-border-soft);
           color: var(--c-text);
           opacity: 0.9;
-          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                      background-color 0.25s ease;
       }
       .empty:active .empty-ring {
           transform: scale(0.92);
@@ -253,6 +223,7 @@
       .empty-title {
           font-size: 17px;
           font-weight: 700;
+          letter-spacing: 0.2px;
       }
       .empty-sub {
           font-size: 12.5px;
@@ -277,13 +248,19 @@
           scrollbar-width: thin;
           scrollbar-color: var(--c-scroll-thumb) transparent;
       }
-      .list::-webkit-scrollbar { width: 4px; }
+      .list::-webkit-scrollbar {
+          width: 4px;
+      }
       .list::-webkit-scrollbar-thumb {
           background: var(--c-scroll-thumb);
           border-radius: 999px;
       }
-      .list-view.has-items .empty { display: none; }
-      .list-view.has-items .list { display: flex; }
+      .list-view.has-items .empty {
+          display: none;
+      }
+      .list-view.has-items .list {
+          display: flex;
+      }
 
       .list-item {
           flex: 0 0 auto;
@@ -295,6 +272,7 @@
           background: var(--c-surface);
           border: 1px solid var(--c-border);
           cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
           transition: background-color 0.2s ease, transform 0.18s ease,
                       border-color 0.25s ease;
           animation: itemIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -309,8 +287,16 @@
       }
 
       @keyframes itemIn {
-          0%   { opacity: 0; transform: translateY(12px); filter: blur(3px); }
-          100% { opacity: 1; transform: translateY(0);    filter: blur(0); }
+          0% {
+              opacity: 0;
+              transform: translateY(12px);
+              filter: blur(3px);
+          }
+          100% {
+              opacity: 1;
+              transform: translateY(0);
+              filter: blur(0);
+          }
       }
 
       .item-icon {
@@ -323,11 +309,15 @@
           justify-content: center;
           background: var(--c-chip);
           color: var(--c-text);
+          transition: background-color 0.25s ease, transform 0.25s ease;
       }
-      .item-icon svg { width: 17px; height: 17px; }
-      .list-item.active .item-icon svg {
-          transform: scale(0.86);
-          transition: transform 0.2s ease;
+      .item-icon svg {
+          width: 17px;
+          height: 17px;
+      }
+      .list-item.active .item-icon {
+          background: var(--c-accent);
+          color: #000;
       }
 
       .item-info {
@@ -354,261 +344,190 @@
       }
 
       /* ==========================================================
-         播放器
+         ★ Modal 状态栏 + 内嵌系统控件
          ========================================================== */
-      .stage video {
-          position: absolute;
+
+      /* 背景遮罩 */
+      .sheet-backdrop {
+          position: fixed;
           inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-          background: #000;
+          background: var(--c-backdrop);
+          -webkit-backdrop-filter: blur(6px) saturate(120%);
+          backdrop-filter: blur(6px) saturate(120%);
           opacity: 0;
-          transition: opacity 0.32s ease;
+          pointer-events: none;
+          z-index: 90;
+          transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
       }
-      .stage.has-video video {
+      .sheet-backdrop.show {
           opacity: 1;
+          pointer-events: auto;
       }
 
-      /* ===== 顶部浮层（返回 + 标题） ===== */
-      .player-top {
-          position: absolute;
-          top: 0;
+      /* 底部 Modal */
+      .sheet {
+          position: fixed;
           left: 0;
           right: 0;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: calc(var(--safe-top) + 10px) 12px 28px;
-          background: linear-gradient(
-              to bottom,
-              rgba(0, 0, 0, 0.58) 0%,
-              rgba(0, 0, 0, 0.32) 55%,
-              rgba(0, 0, 0, 0) 100%
-          );
-          color: #fff;
-          opacity: 0;
-          pointer-events: none;
-          transform: translateY(-6px);
-          transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-                      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-          z-index: 3;
-      }
-      .stage.has-video .player-top {
-          opacity: 1;
-          pointer-events: auto;
-          transform: translateY(0);
-      }
-      .stage.hide-ui .player-top {
-          opacity: 0;
-          pointer-events: none;
-          transform: translateY(-6px);
-      }
-
-      .player-top .icon-btn {
-          color: #fff;
-          flex: 0 0 auto;
-      }
-      .player-top .icon-btn:active {
-          background: rgba(255, 255, 255, 0.18);
-      }
-
-      .player-title {
-          flex: 1 1 auto;
-          min-width: 0;
-          font-size: 15px;
-          font-weight: 700;
-          letter-spacing: 0.2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
-      }
-      .player-top-spacer {
-          flex: 0 0 auto;
-          width: 40px;
-      }
-
-      /* ===== 底部控制条 ===== */
-      .controls {
-          position: absolute;
-          left: 12px;
-          right: 12px;
-          bottom: 12px;
+          bottom: 0;
+          height: min(80vh, 660px);
+          max-height: calc(100dvh - var(--safe-top) - 24px);
+          background: var(--c-bg);
+          border-radius: 26px 26px 0 0;
+          border-top: 1px solid var(--c-border-soft);
+          box-shadow: 0 -14px 48px var(--c-sheet-shadow);
+          transform: translateY(100%);
+          transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                      background-color 0.25s ease;
+          z-index: 91;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-          padding: 12px 14px 10px;
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(20, 20, 20, 0.55);
-          -webkit-backdrop-filter: blur(18px) saturate(160%);
-          backdrop-filter: blur(18px) saturate(160%);
-          color: #fff;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
-          opacity: 0;
-          pointer-events: none;
-          transform: translateY(10px);
-          transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-                      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-          z-index: 2;
+          overflow: hidden;
+          padding-bottom: var(--safe-bottom);
+          will-change: transform;
       }
-      .stage.has-video .controls {
-          opacity: 1;
-          pointer-events: auto;
+      .sheet.show {
           transform: translateY(0);
       }
-      .stage.hide-ui .controls {
-          opacity: 0;
-          pointer-events: none;
-          transform: translateY(10px);
-      }
 
-      .scrub {
-          position: relative;
-          height: 22px;
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          touch-action: none;
-      }
-      .scrub-track {
-          position: relative;
-          width: 100%;
-          height: 5px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.22);
-          overflow: hidden;
-      }
-      .scrub-buffer {
-          position: absolute;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          width: 0%;
-          background: #fff;
-          opacity: 0.22;
-          transition: width 0.25s linear;
-      }
-      .scrub-fill {
-          position: absolute;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          width: 0%;
-          background: #fff;
-          opacity: 0.95;
-      }
-      .scrub-knob {
-          position: absolute;
-          top: 50%;
-          left: 0%;
-          width: 14px;
-          height: 14px;
-          margin-left: -7px;
-          border-radius: 50%;
-          background: #fff;
-          transform: translateY(-50%) scale(0.85);
-          transition: transform 0.18s ease;
-          pointer-events: none;
-          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
-      }
-      .scrub.dragging .scrub-knob {
-          transform: translateY(-50%) scale(1.25);
-      }
-
-      .ctrl-row {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-      }
-      .icon-btn {
+      /* 拖动把手 */
+      .sheet-grabber {
           flex: 0 0 auto;
           width: 40px;
-          height: 40px;
+          height: 4px;
+          border-radius: 999px;
+          background: var(--c-text);
+          opacity: 0.16;
+          margin: 10px auto 2px;
+          transition: opacity 0.25s ease, background-color 0.25s ease;
+      }
+
+      /* ===== 状态栏 ===== */
+      .sheet-status {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px 14px;
+          border-bottom: 1px solid var(--c-border-soft);
+          transition: border-color 0.25s ease;
+      }
+
+      .status-close {
+          flex: 0 0 auto;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           border: none;
-          background: transparent;
-          color: inherit;
+          background: var(--c-chip);
+          color: var(--c-text);
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
-          transition: background-color 0.2s ease, transform 0.2s ease;
+          transition: background-color 0.2s ease, transform 0.2s ease,
+                      color 0.25s ease;
       }
-      .icon-btn:active {
+      .status-close:active {
           transform: scale(0.9);
-          background: rgba(255, 255, 255, 0.16);
+          background: var(--c-chip-strong);
       }
-      .icon-btn svg {
-          width: 22px;
-          height: 22px;
+      .status-close svg {
+          width: 15px;
+          height: 15px;
           display: block;
       }
 
-      .time {
-          margin-left: 6px;
-          font-size: 13px;
+      .status-info {
+          flex: 1 1 auto;
+          min-width: 0;
+      }
+      .status-label {
+          font-size: 10.5px;
           font-weight: 700;
-          letter-spacing: 0.2px;
-          font-variant-numeric: tabular-nums;
-          opacity: 0.9;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          opacity: 0.4;
+          line-height: 1.2;
+          transition: opacity 0.25s ease;
+      }
+      .status-title {
+          margin-top: 3px;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 0.1px;
+          line-height: 1.25;
           white-space: nowrap;
-          color: #fff;
+          overflow: hidden;
+          text-overflow: ellipsis;
       }
-      .time .sep {
-          opacity: 0.55;
-          margin: 0 1px;
+
+      /* 状态指示胶囊 */
+      .status-indicator {
+          flex: 0 0 auto;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          background: var(--c-chip);
+          border: 1px solid transparent;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+          color: var(--c-text);
+          white-space: nowrap;
+          transition: background-color 0.25s ease, border-color 0.25s ease,
+                      color 0.25s ease, opacity 0.25s ease;
       }
-      .spacer { flex: 1 1 auto; }
-
-      /* 播放状态图标切换 */
-      .stage .ico-pause { display: none; }
-      .stage.playing .ico-play { display: none; }
-      .stage.playing .ico-pause { display: block; }
-
-      .ico-muted { display: none; }
-      body.muted .ico-volume { display: none; }
-      body.muted .ico-muted { display: block; }
-
-      body.isfs .ico-expand { display: none; }
-      .ico-compress { display: none; }
-      body.isfs .ico-compress { display: block; }
-
-      /* ==========================================================
-         ★ 全屏状态重置 —— 去掉圆角/边框/内边距
-         ========================================================== */
-      .stage:fullscreen,
-      .stage:-webkit-full-screen,
-      .stage:-moz-full-screen,
-      .stage:-ms-fullscreen {
-          border-radius: 0 !important;
-          border: none !important;
-          background: #000 !important;
-          inset: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          padding: 0 !important;
-          margin: 0 !important;
+      .indicator-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: currentColor;
+          opacity: 0.35;
+          transition: background-color 0.25s ease, opacity 0.25s ease,
+                      box-shadow 0.25s ease;
       }
-      .stage:fullscreen video,
-      .stage:-webkit-full-screen video {
+      .status-indicator.playing {
+          border-color: var(--c-border-soft);
+      }
+      .status-indicator.playing .indicator-dot {
+          background: var(--c-accent);
+          opacity: 1;
+          box-shadow: 0 0 0 3px var(--c-accent-glow);
+          animation: pulse 1.9s ease-in-out infinite;
+      }
+      .status-indicator.error .indicator-dot {
+          background: var(--c-danger);
+          opacity: 1;
+      }
+
+      @keyframes pulse {
+          0%, 100% { box-shadow: 0 0 0 3px var(--c-accent-glow); }
+          50%      { box-shadow: 0 0 0 6px rgba(59, 209, 111, 0.08); }
+      }
+
+      /* ===== 视频容器（系统控件） ===== */
+      .sheet-video {
+          flex: 1 1 auto;
+          min-height: 0;
           background: #000;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
       }
-      .stage:fullscreen .controls,
-      .stage:-webkit-full-screen .controls {
-          bottom: max(12px, env(safe-area-inset-bottom, 12px));
-          left: max(12px, env(safe-area-inset-left, 12px));
-          right: max(12px, env(safe-area-inset-right, 12px));
-      }
-      .stage:fullscreen .player-top,
-      .stage:-webkit-full-screen .player-top {
-          padding-top: max(10px, env(safe-area-inset-top, 10px));
-          padding-left: max(12px, env(safe-area-inset-left, 12px));
-          padding-right: max(12px, env(safe-area-inset-right, 12px));
+      .sheet-video video {
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: contain;
+          background: #000;
+          outline: none;
       }
 
       /* ===== 提示气泡 ===== */
@@ -619,7 +538,7 @@
           transform: translate(-50%, 14px);
           padding: 12px 20px;
           border-radius: 999px;
-          background: rgba(var(--c-veil), 0.85);
+          background: rgba(var(--c-veil), 0.9);
           -webkit-backdrop-filter: blur(14px) saturate(150%);
           backdrop-filter: blur(14px) saturate(150%);
           border: 1px solid var(--c-border-soft);
@@ -652,13 +571,11 @@
 
       @media (prefers-reduced-motion: reduce) {
           .empty,
-          .controls,
-          .player-top,
-          .stage video,
           .list-view,
-          .stage,
           .list-item,
-          .layout {
+          .sheet,
+          .sheet-backdrop,
+          #toast {
               transition: none;
               animation: none;
           }
@@ -667,7 +584,7 @@
 </head>
 <body>
 
-  <div class="layout mode-list" id="layout">
+  <div class="layout">
 
     <!-- 顶部 -->
     <div class="head">
@@ -680,10 +597,8 @@
       </div>
     </div>
 
-    <!-- 主体 -->
+    <!-- 列表 -->
     <div class="body">
-
-      <!-- 列表视图 -->
       <div class="list-view" id="listView">
         <div class="empty" id="listEmpty">
           <div class="empty-ring">
@@ -698,91 +613,46 @@
         </div>
         <div class="list" id="list"></div>
       </div>
+    </div>
+  </div>
 
-      <!-- 播放器视图 -->
-      <div class="stage" id="stage">
-        <video id="video" playsinline webkit-playsinline preload="metadata"></video>
+  <!-- ==========================================================
+       ★ Modal 状态栏 + 内嵌系统控件视频
+       ========================================================== -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
-        <!-- 顶部浮层：返回 + 标题 -->
-        <div class="player-top" id="playerTop">
-          <button class="icon-btn" id="closeBtn" type="button" aria-label="Back">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-          </button>
-          <div class="player-title" id="playerTitle"></div>
-          <div class="player-top-spacer"></div>
-        </div>
+  <div class="sheet" id="playerSheet" role="dialog" aria-modal="true">
+    <div class="sheet-grabber"></div>
 
-        <!-- 底部控制条 -->
-        <div class="controls" id="controls">
-          <div class="scrub" id="scrub">
-            <div class="scrub-track">
-              <div class="scrub-buffer" id="buffer"></div>
-              <div class="scrub-fill" id="fill"></div>
-            </div>
-            <div class="scrub-knob" id="knob"></div>
-          </div>
+    <!-- 状态栏 -->
+    <div class="sheet-status">
+      <button class="status-close" id="sheetClose" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
 
-          <div class="ctrl-row">
-            <button class="icon-btn" id="playBtn" type="button" aria-label="Play / Pause">
-              <svg class="ico-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M8 5.2v13.6c0 .8.9 1.3 1.6.9l11.3-6.8c.6-.4.6-1.4 0-1.8L9.6 4.3C8.9 3.9 8 4.4 8 5.2z"/>
-              </svg>
-              <svg class="ico-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <rect x="6.5" y="5" width="3.9" height="14" rx="1.5"/>
-                <rect x="13.6" y="5" width="3.9" height="14" rx="1.5"/>
-              </svg>
-            </button>
-
-            <span class="time">
-              <span id="timeNow">0:00</span><span class="sep">/</span><span id="timeTotal">0:00</span>
-            </span>
-
-            <span class="spacer"></span>
-
-            <button class="icon-btn" id="muteBtn" type="button" aria-label="Mute">
-              <svg class="ico-volume" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M4.5 9.2h3.1L12 5.4v13.2l-4.4-3.8H4.5a.6.6 0 0 1-.6-.6V9.8c0-.3.3-.6.6-.6z"/>
-                <path d="M15.4 8.9a4.4 4.4 0 0 1 0 6.2" fill="none" stroke="currentColor"
-                      stroke-width="1.9" stroke-linecap="round"/>
-                <path d="M17.9 6.4a7.9 7.9 0 0 1 0 11.2" fill="none" stroke="currentColor"
-                      stroke-width="1.9" stroke-linecap="round"/>
-              </svg>
-              <svg class="ico-muted" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M4.5 9.2h3.1L12 5.4v13.2l-4.4-3.8H4.5a.6.6 0 0 1-.6-.6V9.8c0-.3.3-.6.6-.6z"/>
-                <path d="M16.2 9.6l4.4 4.8M20.6 9.6l-4.4 4.8" fill="none" stroke="currentColor"
-                      stroke-width="1.9" stroke-linecap="round"/>
-              </svg>
-            </button>
-
-            <button class="icon-btn" id="fsBtn" type="button" aria-label="Fullscreen">
-              <svg class="ico-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.1" stroke-linecap="round" aria-hidden="true">
-                <path d="M4 9.4V5.6A1.6 1.6 0 0 1 5.6 4H9.4"/>
-                <path d="M14.6 4h3.8A1.6 1.6 0 0 1 20 5.6v3.8"/>
-                <path d="M20 14.6v3.8a1.6 1.6 0 0 1-1.6 1.6h-3.8"/>
-                <path d="M9.4 20H5.6A1.6 1.6 0 0 1 4 18.4v-3.8"/>
-              </svg>
-              <svg class="ico-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.1" stroke-linecap="round" aria-hidden="true">
-                <path d="M9.4 4v3.8A1.6 1.6 0 0 1 7.8 9.4H4"/>
-                <path d="M20 9.4h-3.8A1.6 1.6 0 0 1 14.6 7.8V4"/>
-                <path d="M14.6 20v-3.8a1.6 1.6 0 0 1 1.6-1.6H20"/>
-                <path d="M4 14.6h3.8a1.6 1.6 0 0 1 1.6 1.6V20"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+      <div class="status-info">
+        <div class="status-label">Now Playing</div>
+        <div class="status-title" id="sheetTitle">—</div>
       </div>
 
+      <div class="status-indicator" id="sheetIndicator">
+        <span class="indicator-dot"></span>
+        <span class="indicator-text">Ready</span>
+      </div>
+    </div>
+
+    <!-- 视频：浏览器原生控件 -->
+    <div class="sheet-video">
+      <video id="nativeVideo" controls playsinline webkit-playsinline preload="metadata"></video>
     </div>
   </div>
 
   <!-- 文件夹选择（支持的浏览器） -->
   <input type="file" id="folderInput" webkitdirectory directory multiple>
-  <!-- 多文件选择（兜底，iOS 等） -->
+  <!-- 多文件选择（iOS 等兜底） -->
   <input type="file" id="fileInput" accept="video/*" multiple>
 
   <div id="toast"></div>
@@ -792,38 +662,27 @@
          元素引用
          ========================================================== */
       const els = {
-          layout:     document.getElementById('layout'),
-          stage:      document.getElementById('stage'),
-          video:      document.getElementById('video'),
+          fileName:    document.getElementById('fileName'),
 
-          playerTop:  document.getElementById('playerTop'),
-          playerTitle:document.getElementById('playerTitle'),
-          closeBtn:   document.getElementById('closeBtn'),
+          listView:    document.getElementById('listView'),
+          list:        document.getElementById('list'),
+          listEmpty:   document.getElementById('listEmpty'),
+          emptyTitle:  document.getElementById('emptyTitle'),
+          emptySub:    document.getElementById('emptySub'),
 
-          fileName:   document.getElementById('fileName'),
+          pickBtn:     document.getElementById('pickBtn'),
+          folderInput: document.getElementById('folderInput'),
+          fileInput:   document.getElementById('fileInput'),
 
-          listView:   document.getElementById('listView'),
-          list:       document.getElementById('list'),
-          listEmpty:  document.getElementById('listEmpty'),
-          emptyTitle: document.getElementById('emptyTitle'),
-          emptySub:   document.getElementById('emptySub'),
+          /* Modal */
+          sheetBackdrop: document.getElementById('sheetBackdrop'),
+          playerSheet:   document.getElementById('playerSheet'),
+          sheetClose:    document.getElementById('sheetClose'),
+          sheetTitle:    document.getElementById('sheetTitle'),
+          sheetIndicator:document.getElementById('sheetIndicator'),
+          nativeVideo:   document.getElementById('nativeVideo'),
 
-          pickBtn:    document.getElementById('pickBtn'),
-          folderInput:document.getElementById('folderInput'),
-          fileInput:  document.getElementById('fileInput'),
-
-          scrub:      document.getElementById('scrub'),
-          buffer:     document.getElementById('buffer'),
-          fill:       document.getElementById('fill'),
-          knob:       document.getElementById('knob'),
-
-          playBtn:    document.getElementById('playBtn'),
-          muteBtn:    document.getElementById('muteBtn'),
-          fsBtn:      document.getElementById('fsBtn'),
-          timeNow:    document.getElementById('timeNow'),
-          timeTotal:  document.getElementById('timeTotal'),
-
-          toast:      document.getElementById('toast')
+          toast:       document.getElementById('toast')
       };
 
       /* ==========================================================
@@ -904,16 +763,6 @@
           return VIDEO_EXTS.has(name.slice(dot + 1).toLowerCase());
       }
 
-      function fmtTime(sec) {
-          if (!isFinite(sec) || sec < 0) sec = 0;
-          sec = Math.floor(sec);
-          const h = Math.floor(sec / 3600);
-          const m = Math.floor((sec % 3600) / 60);
-          const s = sec % 60;
-          const pad = (n) => String(n).padStart(2, '0');
-          return h > 0 ? (h + ':' + pad(m) + ':' + pad(s)) : (m + ':' + pad(s));
-      }
-
       function fmtSize(bytes) {
           if (!bytes || bytes < 0) return '0 B';
           const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -936,7 +785,6 @@
           }, 2200);
       }
 
-      /* 特征检测：浏览器是否支持文件夹选择 */
       const SUPPORTS_DIRECTORY = (function () {
           try {
               const input = document.createElement('input');
@@ -946,347 +794,146 @@
           }
       })();
 
-      /* iOS 判定（原生 video 全屏回退） */
-      const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
       /* ==========================================================
-         播放器
+         ★ Modal 状态栏播放器
+         —— 内嵌浏览器原生控件（controls 属性）
          ========================================================== */
-      const Player = {
+      const SheetPlayer = {
           _url: null,
-          dragging: false,
-          hideTimer: null,
+          _index: -1,
+          _autoNext: true,
 
           init: function () {
-              this.bindVideo();
-              this.bindControls();
-              this.bindKeyboard();
-              this.bindFullscreenEvents();
-          },
+              const video = els.nativeVideo;
 
-          loadFile: function (file) {
-              const v = els.video;
-              this.releaseURL();
+              els.sheetClose.addEventListener('click', () => this.close());
+              els.sheetBackdrop.addEventListener('click', () => this.close());
 
-              this._url = URL.createObjectURL(file);
-              v.src = this._url;
-              v.load();
-
-              els.stage.classList.add('has-video');
-              els.stage.classList.remove('hide-ui');
-              this.resetProgress();
-          },
-
-          releaseURL: function () {
-              const v = els.video;
-              if (this._url) {
-                  try {
-                      v.removeAttribute('src');
-                      v.load();
-                  } catch (err) { /* ignore */ }
-                  URL.revokeObjectURL(this._url);
-                  this._url = null;
-              }
-          },
-
-          resetProgress: function () {
-              els.fill.style.width = '0%';
-              els.buffer.style.width = '0%';
-              els.knob.style.left = '0%';
-              els.timeNow.textContent = '0:00';
-              els.timeTotal.textContent = '0:00';
-          },
-
-          bindVideo: function () {
-              const v = els.video;
-
-              v.addEventListener('loadedmetadata', () => {
-                  els.timeTotal.textContent = fmtTime(v.duration);
-                  this.updateBuffer();
+              /* ---- 视频状态 → 状态栏指示器 ---- */
+              video.addEventListener('loadstart', () => {
+                  this.setStatus('loading', 'Loading');
               });
-
-              v.addEventListener('timeupdate', () => {
-                  if (this.dragging) return;
-                  const d = v.duration || 0;
-                  const p = d ? (v.currentTime / d) * 100 : 0;
-                  this.setProgress(p);
-                  els.timeNow.textContent = fmtTime(v.currentTime);
+              video.addEventListener('loadedmetadata', () => {
+                  this.setStatus('ready', 'Ready');
               });
-
-              v.addEventListener('progress', () => this.updateBuffer());
-              v.addEventListener('durationchange', () => {
-                  els.timeTotal.textContent = fmtTime(v.duration);
+              video.addEventListener('play', () => {
+                  this.setStatus('playing', 'Playing');
               });
-
-              v.addEventListener('play', () => {
-                  els.stage.classList.add('playing');
-                  this.scheduleHide();
+              video.addEventListener('pause', () => {
+                  if (video.ended) return;
+                  this.setStatus('paused', 'Paused');
               });
-              v.addEventListener('pause', () => {
-                  els.stage.classList.remove('playing');
-                  this.showUI(true);
+              video.addEventListener('waiting', () => {
+                  this.setStatus('loading', 'Buffering');
               });
-              v.addEventListener('ended', () => {
-                  els.stage.classList.remove('playing');
-                  this.showUI(true);
-                  Library.playNext();
+              video.addEventListener('playing', () => {
+                  this.setStatus('playing', 'Playing');
               });
-
-              v.addEventListener('error', () => {
-                  if (!v.src) return;
+              video.addEventListener('ended', () => {
+                  this.setStatus('ended', 'Ended');
+                  this.playNext();
+              });
+              video.addEventListener('error', () => {
+                  if (!video.src) return;
+                  this.setStatus('error', 'Error');
                   toast('无法播放此视频');
               });
 
-              // 点击画面：播放 / 暂停
-              v.addEventListener('click', () => {
-                  if (!v.src) return;
-                  if (v.paused) v.play().catch(() => {});
-                  else v.pause();
-              });
-          },
-
-          bindControls: function () {
-              const v = els.video;
-
-              els.playBtn.addEventListener('click', () => {
-                  if (!v.src) return;
-                  if (v.paused) v.play().catch(() => {});
-                  else v.pause();
-                  this.showUI(true);
-              });
-
-              els.muteBtn.addEventListener('click', () => {
-                  v.muted = !v.muted;
-                  document.body.classList.toggle('muted', v.muted);
-                  this.showUI(true);
-              });
-
-              els.fsBtn.addEventListener('click', () => {
-                  this.toggleFullscreen();
-                  this.showUI(true);
-              });
-
-              els.closeBtn.addEventListener('click', () => {
-                  Library.showList();
-              });
-
-              const scrub = els.scrub;
-
-              const onDown = (e) => {
-                  if (!v.duration) return;
-                  this.dragging = true;
-                  scrub.classList.add('dragging');
-                  this.showUI(true);
-                  if (scrub.setPointerCapture && e.pointerId != null) {
-                      try { scrub.setPointerCapture(e.pointerId); } catch (err) {}
-                  }
-                  this.seekTo(e.clientX);
-              };
-              const onMove = (e) => {
-                  if (!this.dragging) return;
-                  this.seekTo(e.clientX);
-              };
-              const onUp = (e) => {
-                  if (!this.dragging) return;
-                  this.seekTo(e.clientX);
-                  this.dragging = false;
-                  scrub.classList.remove('dragging');
-                  this.scheduleHide();
-              };
-
-              if (window.PointerEvent) {
-                  scrub.addEventListener('pointerdown', onDown);
-                  scrub.addEventListener('pointermove', onMove);
-                  scrub.addEventListener('pointerup', onUp);
-                  scrub.addEventListener('pointercancel', onUp);
-              } else {
-                  scrub.addEventListener('touchstart', (e) => onDown(e.touches[0]), { passive: true });
-                  scrub.addEventListener('touchmove', (e) => onMove(e.touches[0]), { passive: true });
-                  scrub.addEventListener('touchend', onUp);
-                  scrub.addEventListener('mousedown', onDown);
-                  window.addEventListener('mousemove', onMove);
-                  window.addEventListener('mouseup', onUp);
-              }
-
-              els.stage.addEventListener('pointerdown', () => this.showUI());
-              els.stage.addEventListener('pointermove', () => {
-                  if (this.dragging) this.showUI();
-              });
-
-              window.addEventListener('resize', () => {
-                  setTimeout(() => this.updateBuffer(), 120);
-              });
-              window.addEventListener('orientationchange', () => {
-                  setTimeout(() => this.updateBuffer(), 320);
-              });
-          },
-
-          bindFullscreenEvents: function () {
-              const doc = document;
-
-              const sync = () => {
-                  const fsEl = doc.fullscreenElement ||
-                               doc.webkitFullscreenElement ||
-                               doc.mozFullScreenElement ||
-                               doc.msFullscreenElement;
-                  document.body.classList.toggle('isfs', !!fsEl);
-                  setTimeout(() => this.updateBuffer(), 120);
-              };
-
-              doc.addEventListener('fullscreenchange', sync);
-              doc.addEventListener('webkitfullscreenchange', sync);
-              doc.addEventListener('mozfullscreenchange', sync);
-              doc.addEventListener('MSFullscreenChange', sync);
-
-              // iOS 原生 video 全屏事件
-              els.video.addEventListener('webkitbeginfullscreen', () => {
-                  document.body.classList.add('isfs');
-              });
-              els.video.addEventListener('webkitendfullscreen', () => {
-                  document.body.classList.remove('isfs');
-              });
-          },
-
-          seekTo: function (clientX) {
-              const v = els.video;
-              if (!v.duration) return;
-              const rect = els.scrub.getBoundingClientRect();
-              let p = (clientX - rect.left) / rect.width;
-              p = Math.max(0, Math.min(1, p));
-              v.currentTime = p * v.duration;
-              this.setProgress(p * 100);
-              els.timeNow.textContent = fmtTime(v.currentTime);
-          },
-
-          setProgress: function (pct) {
-              pct = Math.max(0, Math.min(100, pct));
-              els.fill.style.width = pct + '%';
-              els.knob.style.left = pct + '%';
-          },
-
-          updateBuffer: function () {
-              const v = els.video;
-              const d = v.duration;
-              if (!d || !v.buffered || !v.buffered.length) return;
-
-              let end = 0;
-              for (let i = 0; i < v.buffered.length; i++) {
-                  const s = v.buffered.start(i);
-                  const e = v.buffered.end(i);
-                  if (v.currentTime >= s && v.currentTime <= e) {
-                      end = e;
-                      break;
-                  }
-                  if (e > end) end = e;
-              }
-              els.buffer.style.width = Math.min(100, (end / d) * 100) + '%';
-          },
-
-          showUI: function (keep) {
-              els.stage.classList.remove('hide-ui');
-              clearTimeout(this.hideTimer);
-              if (keep) this.scheduleHide();
-          },
-
-          scheduleHide: function () {
-              clearTimeout(this.hideTimer);
-              if (els.video.paused) return;
-              this.hideTimer = setTimeout(() => {
-                  if (!els.video.paused && !this.dragging) {
-                      els.stage.classList.add('hide-ui');
-                  }
-              }, 3200);
-          },
-
-          /* ==========================================================
-             ★ 全屏切换（容器优先，iOS 回退到原生 video 全屏）
-             ========================================================== */
-          toggleFullscreen: function () {
-              const doc = document;
-              const el = els.stage;
-              const v = els.video;
-
-              // 已经在全屏 —— 退出
-              const fsEl = doc.fullscreenElement ||
-                           doc.webkitFullscreenElement ||
-                           doc.mozFullScreenElement ||
-                           doc.msFullscreenElement;
-              if (fsEl) {
-                  if (doc.exitFullscreen) doc.exitFullscreen().catch(() => {});
-                  else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
-                  else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen();
-                  else if (doc.msExitFullscreen) doc.msExitFullscreen();
-                  return;
-              }
-
-              // iOS：优先调用 video 原生全屏（体验最好）
-              if (IS_IOS && typeof v.webkitEnterFullscreen === 'function') {
-                  try {
-                      v.webkitEnterFullscreen();
-                      return;
-                  } catch (err) { /* 落到下面容器全屏尝试 */ }
-              }
-
-              // 容器全屏
-              const elReq = el.requestFullscreen ||
-                            el.webkitRequestFullscreen ||
-                            el.mozRequestFullScreen ||
-                            el.msRequestFullscreen;
-
-              if (elReq) {
-                  try {
-                      const p = elReq.call(el);
-                      if (p && typeof p.catch === 'function') {
-                          p.catch(() => {
-                              // 容器全屏失败 → 回退到 video 原生全屏
-                              if (typeof v.webkitEnterFullscreen === 'function') {
-                                  try { v.webkitEnterFullscreen(); } catch (e) {}
-                              }
-                          });
-                      }
-                  } catch (err) {
-                      if (typeof v.webkitEnterFullscreen === 'function') {
-                          try { v.webkitEnterFullscreen(); } catch (e) {}
-                      }
-                  }
-                  return;
-              }
-
-              // 最后兜底
-              if (typeof v.webkitEnterFullscreen === 'function') {
-                  try { v.webkitEnterFullscreen(); } catch (e) {}
-              }
-          },
-
-          bindKeyboard: function () {
+              /* ---- Esc 关闭 ---- */
               window.addEventListener('keydown', (e) => {
-                  const v = els.video;
-                  if (!v.src) return;
-                  if (!els.layout.classList.contains('mode-player')) return;
-
-                  if (e.code === 'Space') {
-                      e.preventDefault();
-                      if (v.paused) v.play().catch(() => {});
-                      else v.pause();
-                      this.showUI(true);
-                  } else if (e.code === 'ArrowLeft') {
-                      v.currentTime = Math.max(0, v.currentTime - 5);
-                      this.showUI(true);
-                  } else if (e.code === 'ArrowRight') {
-                      v.currentTime = Math.min(v.duration || 0, v.currentTime + 5);
-                      this.showUI(true);
-                  } else if (e.code === 'KeyM') {
-                      v.muted = !v.muted;
-                      document.body.classList.toggle('muted', v.muted);
-                      this.showUI(true);
-                  } else if (e.code === 'KeyF') {
-                      this.toggleFullscreen();
-                      this.showUI(true);
-                  } else if (e.code === 'Escape') {
-                      Library.showList();
+                  if (e.code === 'Escape' &&
+                      els.playerSheet.classList.contains('show')) {
+                      this.close();
                   }
               });
+          },
+
+          /* ---------- 打开 Modal ---------- */
+          open: function (item, index) {
+              const video = els.nativeVideo;
+              this._index = (typeof index === 'number') ? index : -1;
+
+              // 释放旧资源
+              if (this._url) {
+                  URL.revokeObjectURL(this._url);
+                  this._url = null;
+              }
+
+              // 新资源
+              this._url = URL.createObjectURL(item.file);
+              video.src = this._url;
+              video.load();
+
+              // 状态栏信息
+              els.sheetTitle.textContent = item.name || '未命名视频';
+              this.setStatus('loading', 'Loading');
+
+              // 显示 Modal
+              els.sheetBackdrop.classList.add('show');
+              els.playerSheet.classList.add('show');
+              document.body.classList.add('modal-open');
+
+              // 尝试自动播放
+              const p = video.play();
+              if (p && typeof p.catch === 'function') {
+                  p.catch(() => {
+                      // 被拦截则停在就绪状态
+                      this.setStatus('ready', 'Tap play');
+                  });
+              }
+          },
+
+          /* ---------- 关闭 Modal ---------- */
+          close: function () {
+              const video = els.nativeVideo;
+
+              this._autoNext = false;
+              clearTimeout(this._nextTimer);
+
+              try {
+                  video.pause();
+                  video.removeAttribute('src');
+                  video.load();
+              } catch (err) { /* ignore */ }
+
+              if (this._url) {
+                  URL.revokeObjectURL(this._url);
+                  this._url = null;
+              }
+
+              this._index = -1;
+
+              els.sheetBackdrop.classList.remove('show');
+              els.playerSheet.classList.remove('show');
+              document.body.classList.remove('modal-open');
+
+              this.setStatus('idle', 'Ready');
+          },
+
+          /* ---------- 自动播放下一个 ---------- */
+          playNext: function () {
+              if (!this._autoNext) return;
+              if (this._index < 0) return;
+              if (!els.playerSheet.classList.contains('show')) return;
+
+              const next = this._index + 1;
+              if (next >= Library.items.length) return;
+
+              clearTimeout(this._nextTimer);
+              this._nextTimer = setTimeout(() => {
+                  if (!els.playerSheet.classList.contains('show')) return;
+                  Library.play(next);
+              }, 700);
+          },
+
+          /* ---------- 状态指示器 ---------- */
+          setStatus: function (state, text) {
+              const ind = els.sheetIndicator;
+              ind.classList.toggle('playing', state === 'playing');
+              ind.classList.toggle('error', state === 'error');
+
+              const label = ind.querySelector('.indicator-text');
+              if (label) label.textContent = text;
           }
       };
 
@@ -1330,6 +977,7 @@
               }
           },
 
+          /* ---------- 拖拽（桌面端） ---------- */
           bindDrop: function () {
               window.addEventListener('dragover', (e) => {
                   e.preventDefault();
@@ -1411,6 +1059,7 @@
               }
           },
 
+          /* ---------- 构建列表 ---------- */
           build: function (fileList) {
               const raw = Array.from(fileList || []);
               const items = [];
@@ -1440,6 +1089,7 @@
                   els.fileName.textContent = 'No videos found';
                   this.items = [];
                   this.currentIndex = -1;
+                  SheetPlayer.close();
                   toast('未找到视频文件');
                   return;
               }
@@ -1462,15 +1112,10 @@
               els.listView.classList.add('has-items');
               els.fileName.textContent = items.length + ' video' + (items.length > 1 ? 's' : '');
 
-              els.layout.classList.remove('mode-player');
-              els.layout.classList.add('mode-list');
-
-              Player.releaseURL();
-              els.video.removeAttribute('src');
-              els.video.load();
-              els.stage.classList.remove('has-video', 'playing', 'hide-ui');
-
+              SheetPlayer.close();
               els.list.scrollTop = 0;
+
+              toast('已加载 ' + items.length + ' 个视频');
           },
 
           render: function () {
@@ -1517,35 +1162,20 @@
               els.list.appendChild(frag);
           },
 
+          /* ---------- 点击列表 → 打开 Modal ---------- */
           play: function (index) {
               if (index < 0 || index >= this.items.length) return;
 
               const item = this.items[index];
               this.currentIndex = index;
 
-              Player.loadFile(item.file);
-
-              els.layout.classList.add('mode-player');
-              els.layout.classList.remove('mode-list');
-
-              els.playerTitle.textContent = item.name;
-              els.fileName.textContent = item.name;
-
               this.highlight(index);
               this.scrollIntoView(index);
 
-              const p = els.video.play();
-              if (p && typeof p.catch === 'function') {
-                  p.catch(() => { /* 忽略自动播放拦截 */ });
-              }
-          },
+              // 重新启用自动续播
+              SheetPlayer._autoNext = true;
 
-          playNext: function () {
-              if (this.items.length <= 1) return;
-              const next = this.currentIndex + 1;
-              if (next < this.items.length) {
-                  this.play(next);
-              }
+              SheetPlayer.open(item, index);
           },
 
           highlight: function (index) {
@@ -1564,18 +1194,6 @@
               } catch (err) {
                   row.scrollIntoView();
               }
-          },
-
-          showList: function () {
-              if (!this.items.length) return;
-
-              try { els.video.pause(); } catch (err) { /* ignore */ }
-
-              els.layout.classList.remove('mode-player');
-              els.layout.classList.add('mode-list');
-
-              els.fileName.textContent =
-                  this.items.length + ' video' + (this.items.length > 1 ? 's' : '');
           }
       };
 
@@ -1584,7 +1202,7 @@
          ========================================================== */
       function init() {
           Theme.init();
-          Player.init();
+          SheetPlayer.init();
           Library.init();
       }
 
@@ -1594,11 +1212,12 @@
           init();
       }
 
-      // 阻止整页橡皮筋滚动（保留列表 / 进度条可用）
+      // 阻止整页橡皮筋滚动（保留列表可滚动）
       window.addEventListener('touchmove', (e) => {
           const t = e.target;
           if (!t || !t.closest) return;
-          if (t.closest('.list') || t.closest('.scrub')) return;
+          if (t.closest('.list')) return;
+          if (t.closest('.sheet-video')) return; // 原生控件需要手势
           e.preventDefault();
       }, { passive: false });
   </script>
