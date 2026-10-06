@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#F1F2ED">
+  <title>Video</title>
+  <style>
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent;
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
+          -webkit-text-size-adjust: none;
+      }
+
+      :root {
+          color-scheme: light;
+          --f-default: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                       'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+
+          --c-bg: #F1F2ED;
+          --c-text: #000000;
+          --c-surface: #DCDDD8;
+          --c-border: #D0D1CC;
+          --c-border-soft: rgba(0, 0, 0, 0.10);
+          --c-veil: 241, 242, 237;
+          --c-chip: rgba(0, 0, 0, 0.07);
+          --c-chip-strong: rgba(0, 0, 0, 0.10);
+          --c-scroll-thumb: #C8C9C4;
+          --c-shadow: rgba(0, 0, 0, 0.14);
+          --c-sheet-shadow: rgba(0, 0, 0, 0.28);
+          --c-backdrop: rgba(0, 0, 0, 0.55);
+
+          --c-accent: #3BD16F;
+          --c-accent-glow: rgba(59, 209, 111, 0.22);
+          --c-danger: #E5484D;
+
+          --safe-top: env(safe-area-inset-top, 0px);
+          --safe-bottom: env(safe-area-inset-bottom, 0px);
+          --safe-left: env(safe-area-inset-left, 0px);
+          --safe-right: env(safe-area-inset-right, 0px);
+      }
+
+      html.dark {
+          color-scheme: dark;
+          --c-bg: #000000;
+          --c-text: #FFFFFF;
+          --c-surface: #0A0A0A;
+          --c-border: #222222;
+          --c-border-soft: rgba(255, 255, 255, 0.14);
+          --c-veil: 0, 0, 0;
+          --c-chip: rgba(255, 255, 255, 0.13);
+          --c-chip-strong: rgba(255, 255, 255, 0.18);
+          --c-scroll-thumb: #333333;
+          --c-shadow: rgba(0, 0, 0, 0.65);
+          --c-sheet-shadow: rgba(0, 0, 0, 0.75);
+          --c-backdrop: rgba(0, 0, 0, 0.68);
+      }
+
+      html, body {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+      }
+
+      html {
+          background-color: var(--c-bg);
+          transition: background-color 0.25s ease;
+      }
+
+      body {
+          position: fixed;
+          inset: 0;
+          background: var(--c-bg);
+          color: var(--c-text);
+          font-family: var(--f-default);
+          font-weight: 700;
+          overflow: hidden;
+          transition: background-color 0.25s ease, color 0.25s ease;
+      }
+
+      body.modal-open {
+          overflow: hidden;
+      }
+
+      /* ==========================================================
+         布局
+         ========================================================== */
+      .layout {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          padding:
+              calc(var(--safe-top) + 22px)
+              calc(var(--safe-right) + 16px)
+              /* ★ 底部预留更多空间，避免被父页面 Back 按钮遮挡 */
+              calc(var(--safe-bottom) + 104px)
+              calc(var(--safe-left) + 16px);
+      }
+
+      /* ===== 顶部 ===== */
+      .head {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 10px;
+          min-height: 0;
+      }
+      .head-left {
+          min-width: 0;
+          flex: 1 1 auto;
+      }
+      .title {
+          font-size: clamp(30px, 9vw, 40px);
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          line-height: 1;
+          white-space: nowrap;
+      }
+      .subtitle {
+          margin-top: 9px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 1.2px;
+          text-transform: uppercase;
+          opacity: 0.45;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+      }
+
+      .head-actions {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding-bottom: 2px;
+      }
+      .pill {
+          padding: 11px 18px;
+          border-radius: 999px;
+          border: 1px solid var(--c-border-soft);
+          background: var(--c-chip);
+          color: var(--c-text);
+          font-family: var(--f-default);
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.4px;
+          text-transform: uppercase;
+          line-height: 1;
+          white-space: nowrap;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.25s ease, border-color 0.25s ease,
+                      transform 0.2s ease, color 0.25s ease, opacity 0.25s ease;
+      }
+      .pill:active {
+          transform: scale(0.94);
+      }
+
+      /* ===== 主体 ===== */
+      .body {
+          position: relative;
+          flex: 1 1 auto;
+          min-height: 0;
+      }
+
+      .list-view {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          border-radius: 22px;
+          transition: background-color 0.25s ease;
+      }
+
+      /* ==========================================================
+         空状态
+         ========================================================== */
+      .empty {
+          flex: 1 1 auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          padding: 26px;
+          text-align: center;
+          cursor: pointer;
+          border-radius: 22px;
+          transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      .empty-ring {
+          width: 78px;
+          height: 78px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--c-chip);
+          border: 1px solid var(--c-border-soft);
+          color: var(--c-text);
+          opacity: 0.9;
+          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                      background-color 0.25s ease;
+      }
+      .empty:active .empty-ring {
+          transform: scale(0.92);
+      }
+      .empty-ring svg {
+          width: 30px;
+          height: 30px;
+      }
+      .empty-title {
+          font-size: 17px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+      }
+      .empty-sub {
+          font-size: 12.5px;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          opacity: 0.45;
+      }
+
+      /* ==========================================================
+         视频列表
+         ========================================================== */
+      .list {
+          display: none;
+          flex: 1 1 auto;
+          min-height: 0;
+          flex-direction: column;
+          gap: 9px;
+          padding: 2px 2px 6px;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          scrollbar-width: thin;
+          scrollbar-color: var(--c-scroll-thumb) transparent;
+      }
+      .list::-webkit-scrollbar {
+          width: 4px;
+      }
+      .list::-webkit-scrollbar-thumb {
+          background: var(--c-scroll-thumb);
+          border-radius: 999px;
+      }
+      .list-view.has-items .empty {
+          display: none;
+      }
+      .list-view.has-items .list {
+          display: flex;
+      }
+
+      .list-item {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          padding: 13px 15px;
+          border-radius: 16px;
+          background: var(--c-surface);
+          border: 1px solid var(--c-border);
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.2s ease, transform 0.18s ease,
+                      border-color 0.25s ease;
+          animation: itemIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .list-item:active {
+          transform: scale(0.985);
+          background: var(--c-border);
+      }
+      .list-item.active {
+          background: var(--c-chip);
+          border-color: var(--c-border-soft);
+      }
+
+      @keyframes itemIn {
+          0% {
+              opacity: 0;
+              transform: translateY(12px);
+              filter: blur(3px);
+          }
+          100% {
+              opacity: 1;
+              transform: translateY(0);
+              filter: blur(0);
+          }
+      }
+
+      /* ===== 缩略图（首帧） ===== */
+      .item-thumb {
+          flex: 0 0 auto;
+          position: relative;
+          width: 64px;
+          height: 40px;
+          border-radius: 10px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--c-chip);
+          border: 1px solid var(--c-border-soft);
+          color: var(--c-text);
+          transition: border-color 0.25s ease, background-color 0.25s ease;
+      }
+      .item-thumb > svg {
+          width: 16px;
+          height: 16px;
+          opacity: 0.55;
+      }
+      .item-thumb img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          opacity: 0;
+          background: #000;
+          transition: opacity 0.32s ease;
+      }
+      .item-thumb img.ready {
+          opacity: 1;
+      }
+      .list-item.active .item-thumb {
+          border-color: var(--c-accent);
+      }
+
+      .item-info {
+          flex: 1 1 auto;
+          min-width: 0;
+      }
+      .item-name {
+          font-size: 15px;
+          font-weight: 700;
+          line-height: 1.25;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+      .item-meta {
+          margin-top: 3px;
+          font-size: 11.5px;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+          opacity: 0.42;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+
+      /* ==========================================================
+         ★ Modal 状态栏（顶部滑入）
+         —— 迁移到页面上方，避开父页面底部的 Back 按钮
+         ========================================================== */
+
+      /* 背景遮罩 */
+      .sheet-backdrop {
+          position: fixed;
+          inset: 0;
+          background: var(--c-backdrop);
+          -webkit-backdrop-filter: blur(6px) saturate(120%);
+          backdrop-filter: blur(6px) saturate(120%);
+          opacity: 0;
+          pointer-events: none;
+          z-index: 90;
+          transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .sheet-backdrop.show {
+          opacity: 1;
+          pointer-events: auto;
+      }
+
+      /* ★ 顶部 Modal —— 从上方滑入 */
+      .sheet {
+          position: fixed;
+          left: 0;
+          right: 0;
+          top: 0;
+          bottom: auto;
+          /* 高度受屏幕高度限制，并避开父页面 Back 按钮区域 */
+          height: min(70vh, 580px);
+          max-height: calc(100dvh - var(--safe-bottom) - 120px);
+          background: var(--c-bg);
+          /* ★ 圆角改为下方两个角 */
+          border-radius: 0 0 26px 26px;
+          /* ★ 底边作为视觉分隔 */
+          border-bottom: 1px solid var(--c-border-soft);
+          /* ★ 阴影方向朝下 */
+          box-shadow: 0 14px 48px var(--c-sheet-shadow);
+          /* ★ 初始从上方隐藏 */
+          transform: translateY(-100%);
+          transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                      background-color 0.25s ease;
+          z-index: 91;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          /* ★ 顶部预留安全区 */
+          padding-top: var(--safe-top);
+          will-change: transform;
+      }
+      .sheet.show {
+          transform: translateY(0);
+      }
+
+      /* 拖动把手 —— 视觉提示位于顶部 */
+      .sheet-grabber {
+          flex: 0 0 auto;
+          width: 40px;
+          height: 4px;
+          border-radius: 999px;
+          background: var(--c-text);
+          opacity: 0.16;
+          margin: 8px auto 2px;
+          transition: opacity 0.25s ease, background-color 0.25s ease;
+      }
+
+      /* ===== 状态栏 ===== */
+      .sheet-status {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 16px 14px;
+          /* ★ 状态栏下方作为分隔 */
+          border-bottom: 1px solid var(--c-border-soft);
+          transition: border-color 0.25s ease;
+      }
+
+      .status-close {
+          flex: 0 0 auto;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: none;
+          background: var(--c-chip);
+          color: var(--c-text);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.2s ease, transform 0.2s ease,
+                      color 0.25s ease;
+      }
+      .status-close:active {
+          transform: scale(0.9);
+          background: var(--c-chip-strong);
+      }
+      .status-close svg {
+          width: 15px;
+          height: 15px;
+          display: block;
+      }
+
+      .status-info {
+          flex: 1 1 auto;
+          min-width: 0;
+      }
+      .status-label {
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          opacity: 0.4;
+          line-height: 1.2;
+          transition: opacity 0.25s ease;
+      }
+      .status-title {
+          margin-top: 3px;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 0.1px;
+          line-height: 1.25;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+
+      /* 状态指示胶囊 */
+      .status-indicator {
+          flex: 0 0 auto;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          background: var(--c-chip);
+          border: 1px solid transparent;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+          color: var(--c-text);
+          white-space: nowrap;
+          transition: background-color 0.25s ease, border-color 0.25s ease,
+                      color 0.25s ease, opacity 0.25s ease;
+      }
+      .indicator-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: currentColor;
+          opacity: 0.35;
+          transition: background-color 0.25s ease, opacity 0.25s ease,
+                      box-shadow 0.25s ease;
+      }
+      .status-indicator.playing {
+          border-color: var(--c-border-soft);
+      }
+      .status-indicator.playing .indicator-dot {
+          background: var(--c-accent);
+          opacity: 1;
+          box-shadow: 0 0 0 3px var(--c-accent-glow);
+          animation: pulse 1.9s ease-in-out infinite;
+      }
+      .status-indicator.error .indicator-dot {
+          background: var(--c-danger);
+          opacity: 1;
+      }
+
+      @keyframes pulse {
+          0%, 100% { box-shadow: 0 0 0 3px var(--c-accent-glow); }
+          50%      { box-shadow: 0 0 0 6px rgba(59, 209, 111, 0.08); }
+      }
+
+      /* ===== 视频容器（系统控件） ===== */
+      .sheet-video {
+          flex: 1 1 auto;
+          min-height: 0;
+          background: #000;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+      }
+      .sheet-video video {
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: contain;
+          background: #000;
+          outline: none;
+      }
+
+      /* ===== 提示气泡 ===== */
+      #toast {
+          position: fixed;
+          left: 50%;
+          bottom: calc(var(--safe-bottom) + 26px);
+          transform: translate(-50%, 14px);
+          padding: 12px 20px;
+          border-radius: 999px;
+          background: rgba(var(--c-veil), 0.9);
+          -webkit-backdrop-filter: blur(14px) saturate(150%);
+          backdrop-filter: blur(14px) saturate(150%);
+          border: 1px solid var(--c-border-soft);
+          color: var(--c-text);
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+          white-space: nowrap;
+          z-index: 999;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      #toast.show {
+          opacity: 1;
+          transform: translate(-50%, 0);
+      }
+
+      /* ===== 隐藏 input ===== */
+      #folderInput,
+      #fileInput {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 0;
+          height: 0;
+          opacity: 0;
+          pointer-events: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+          .empty,
+          .list-view,
+          .list-item,
+          .sheet,
+          .sheet-backdrop,
+          #toast {
+              transition: none;
+              animation: none;
+          }
+      }
+  </style>
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- 顶部 -->
+    <div class="head">
+      <div class="head-left">
+        <div class="title">Video</div>
+        <div class="subtitle" id="fileName">No folder selected</div>
+      </div>
+      <div class="head-actions">
+        <button class="pill" id="pickBtn" type="button">Folder</button>
+      </div>
+    </div>
+
+    <!-- 列表 -->
+    <div class="body">
+      <div class="list-view" id="listView">
+        <div class="empty" id="listEmpty">
+          <div class="empty-ring">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <path d="M3 7.4A1.9 1.9 0 0 1 4.9 5.5h3.6l1.9 2.2h7.7A1.9 1.9 0 0 1 20 9.6v7.5a1.9 1.9 0 0 1-1.9 1.9H4.9A1.9 1.9 0 0 1 3 17.1z"/>
+            </svg>
+          </div>
+          <div class="empty-title" id="emptyTitle">Choose a folder</div>
+          <div class="empty-sub" id="emptySub">All videos inside will be listed</div>
+        </div>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       ★ Modal 状态栏 + 内嵌系统控件视频（迁移到页面上方）
+       ========================================================== -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+  <div class="sheet" id="playerSheet" role="dialog" aria-modal="true">
+    <!-- 拖动把手 -->
+    <div class="sheet-grabber"></div>
+
+    <!-- 状态栏 -->
+    <div class="sheet-status">
+      <button class="status-close" id="sheetClose" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+
+      <div class="status-info">
+        <div class="status-label">Now Playing</div>
+        <div class="status-title" id="sheetTitle">—</div>
+      </div>
+
+      <div class="status-indicator" id="sheetIndicator">
+        <span class="indicator-dot"></span>
+        <span class="indicator-text">Ready</span>
+      </div>
+    </div>
+
+    <!-- 视频：浏览器原生控件 -->
+    <div class="sheet-video">
+      <video id="nativeVideo" controls playsinline webkit-playsinline preload="metadata"></video>
+    </div>
+  </div>
+
+  <!-- 文件夹选择（支持的浏览器） -->
+  <input type="file" id="folderInput" webkitdirectory directory multiple>
+  <!-- 多文件选择（iOS 等兜底） -->
+  <input type="file" id="fileInput" accept="video/*" multiple>
+
+  <div id="toast"></div>
+
+  <script>
+      /* ==========================================================
+         元素引用
+         ========================================================== */
+      const els = {
+          fileName:    document.getElementById('fileName'),
+
+          listView:    document.getElementById('listView'),
+          list:        document.getElementById('list'),
+          listEmpty:   document.getElementById('listEmpty'),
+          emptyTitle:  document.getElementById('emptyTitle'),
+          emptySub:    document.getElementById('emptySub'),
+
+          pickBtn:     document.getElementById('pickBtn'),
+          folderInput: document.getElementById('folderInput'),
+          fileInput:   document.getElementById('fileInput'),
+
+          /* Modal */
+          sheetBackdrop: document.getElementById('sheetBackdrop'),
+          playerSheet:   document.getElementById('playerSheet'),
+          sheetClose:    document.getElementById('sheetClose'),
+          sheetTitle:    document.getElementById('sheetTitle'),
+          sheetIndicator:document.getElementById('sheetIndicator'),
+          nativeVideo:   document.getElementById('nativeVideo'),
+
+          toast:       document.getElementById('toast')
+      };
+
+      /* ==========================================================
+         主题桥接
+         ========================================================== */
+      const Theme = {
+          locked: false,
+
+          systemTheme: function () {
+              return (window.matchMedia &&
+                      window.matchMedia('(prefers-color-scheme: dark)').matches)
+                  ? 'dark' : 'light';
+          },
+
+          apply: function (theme) {
+              const dark = theme === 'dark';
+              document.documentElement.classList.toggle('dark', dark);
+
+              let meta = document.querySelector('meta[name="theme-color"]');
+              if (!meta) {
+                  meta = document.createElement('meta');
+                  meta.setAttribute('name', 'theme-color');
+                  document.head.appendChild(meta);
+              }
+              meta.setAttribute('content', dark ? '#000000' : '#F1F2ED');
+          },
+
+          init: function () {
+              let urlTheme = null;
+              try {
+                  urlTheme = new URLSearchParams(location.search).get('theme');
+              } catch (err) { /* ignore */ }
+
+              if (urlTheme === 'dark' || urlTheme === 'light') {
+                  this.locked = true;
+                  this.apply(urlTheme);
+              } else {
+                  this.apply(this.systemTheme());
+              }
+
+              window.addEventListener('message', (e) => {
+                  const d = e.data;
+                  if (d && d.type === 'ti-theme' &&
+                      (d.theme === 'dark' || d.theme === 'light')) {
+                      this.locked = true;
+                      this.apply(d.theme);
+                  }
+              });
+
+              const mq = window.matchMedia('(prefers-color-scheme: dark)');
+              const onChange = () => {
+                  if (!this.locked) this.apply(this.systemTheme());
+              };
+              if (mq.addEventListener) {
+                  mq.addEventListener('change', onChange);
+              } else if (mq.addListener) {
+                  mq.addListener(onChange);
+              }
+          }
+      };
+
+      /* ==========================================================
+         工具
+         ========================================================== */
+      const VIDEO_EXTS = new Set([
+          'mp4', 'm4v', 'mov', 'webm', 'ogv', 'ogg', 'mkv', 'avi', 'wmv',
+          'flv', '3gp', '3g2', 'mpg', 'mpeg', 'mpe', 'm2v', 'ts', 'm2ts',
+          'mts', 'divx', 'vob', 'f4v', 'asf', 'rm', 'rmvb'
+      ]);
+
+      function isVideoFile(file) {
+          if (!file) return false;
+          const type = file.type || '';
+          if (type.indexOf('video/') === 0) return true;
+          const name = file.name || '';
+          const dot = name.lastIndexOf('.');
+          if (dot < 0) return false;
+          return VIDEO_EXTS.has(name.slice(dot + 1).toLowerCase());
+      }
+
+      function fmtSize(bytes) {
+          if (!bytes || bytes < 0) return '0 B';
+          const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+          let i = 0;
+          let n = bytes;
+          while (n >= 1024 && i < units.length - 1) {
+              n /= 1024;
+              i++;
+          }
+          return (n < 10 && i > 0 ? n.toFixed(1) : Math.round(n)) + ' ' + units[i];
+      }
+
+      let toastTimer = null;
+      function toast(msg) {
+          els.toast.textContent = msg;
+          els.toast.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => {
+              els.toast.classList.remove('show');
+          }, 2200);
+      }
+
+      const SUPPORTS_DIRECTORY = (function () {
+          try {
+              const input = document.createElement('input');
+              return 'webkitdirectory' in input || 'directory' in input;
+          } catch (err) {
+              return false;
+          }
+      })();
+
+      /* ==========================================================
+         ★ 首帧缩略图
+         ========================================================== */
+
+      /* dataURL 缓存：同一文件夹反复切换时不必重复解码 */
+      const PosterCache = {
+          map: new Map(),
+          MAX: 240,
+          key: function (item) { return item.path + '|' + item.size; },
+          get: function (item) { return this.map.get(this.key(item)) || null; },
+          set: function (item, url) {
+              if (this.map.size >= this.MAX) {
+                  const first = this.map.keys().next();
+                  if (!first.done) this.map.delete(first.value);
+              }
+              this.map.set(this.key(item), url);
+          }
+      };
+
+      /**
+       * 从本地视频文件抓取一帧，返回 jpeg dataURL
+       * - 缩放到最长边 320，减小体积
+       * - 首帧过暗（黑场 / 淡入）时自动换时间点重试
+       */
+      function grabPoster(file) {
+          return new Promise((resolve) => {
+              const blobUrl = URL.createObjectURL(file);
+              const video = document.createElement('video');
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+              let settled = false;
+              let timer = null;
+              let times = [];
+              let ti = 0;
+              let seeking = false;
+
+              const finish = (val) => {
+                  if (settled) return;
+                  settled = true;
+                  clearTimeout(timer);
+                  video.removeEventListener('loadedmetadata', onMeta);
+                  video.removeEventListener('loadeddata', onLoadedData);
+                  video.removeEventListener('seeked', onSeeked);
+                  video.removeEventListener('error', onError);
+                  video.removeAttribute('src');
+                  try { video.load(); } catch (e) { /* ignore */ }
+                  URL.revokeObjectURL(blobUrl);
+                  resolve(val);
+              };
+
+              /* ---- 绘制当前帧 ---- */
+              function drawFrame() {
+                  const w = video.videoWidth;
+                  const h = video.videoHeight;
+                  if (!w || !h) return null;
+
+                  const scale = Math.min(1, 320 / Math.max(w, h));
+                  const cw = Math.max(1, Math.round(w * scale));
+                  const ch = Math.max(1, Math.round(h * scale));
+
+                  canvas.width = cw;
+                  canvas.height = ch;
+                  ctx.drawImage(video, 0, 0, cw, ch);
+
+                  let url;
+                  try {
+                      url = canvas.toDataURL('image/jpeg', 0.72);
+                  } catch (e) {
+                      return null;
+                  }
+
+                  /* 稀疏采样估算亮度，用于识别黑帧 */
+                  let brightness = 255;
+                  try {
+                      const data = ctx.getImageData(0, 0, cw, ch).data;
+                      let sum = 0;
+                      let n = 0;
+                      for (let i = 0; i < data.length; i += 68) {
+                          sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+                          n++;
+                      }
+                      brightness = n ? sum / n : 0;
+                  } catch (e) { /* ignore */ }
+
+                  return { url: url, brightness: brightness };
+              }
+
+              /* ---- 抓到一帧后的判定 ---- */
+              function handleFrame() {
+                  const res = drawFrame();
+                  if (!res) return finish(null);
+
+                  if (res.brightness < 10 && ti < times.length) {
+                      seeking = true;
+                      video.currentTime = times[ti++];
+                      return;
+                  }
+                  finish(res.url);
+              }
+
+              function onSeeked() {
+                  seeking = false;
+                  handleFrame();
+              }
+
+              function onLoadedData() {
+                  if (seeking) return;
+                  handleFrame();
+              }
+
+              function onError() { finish(null); }
+
+              function onMeta() {
+                  const dur = (isFinite(video.duration) && video.duration > 0)
+                      ? video.duration : 0;
+
+                  if (dur > 3) {
+                      times = [0.2, Math.min(dur * 0.15, 2), Math.min(dur * 0.4, 4)];
+                  } else if (dur > 0.6) {
+                      times = [0.2];
+                  } else {
+                      times = [];
+                  }
+
+                  if (times.length) {
+                      const t = times[ti++];
+                      if (Math.abs(video.currentTime - t) > 0.001) {
+                          seeking = true;
+                          video.currentTime = t;
+                          return;
+                      }
+                  }
+
+                  /* 没有可 seek 的时间点：等当前帧可用 */
+                  if (video.readyState >= 2) {
+                      requestAnimationFrame(() => {
+                          if (!settled) onLoadedData();
+                      });
+                  }
+              }
+
+              timer = setTimeout(() => finish(null), 12000);
+
+              video.addEventListener('loadedmetadata', onMeta, { once: true });
+              video.addEventListener('loadeddata', onLoadedData);
+              video.addEventListener('seeked', onSeeked);
+              video.addEventListener('error', onError);
+
+              video.muted = true;
+              video.defaultMuted = true;
+              video.playsInline = true;
+              video.setAttribute('playsinline', '');
+              video.setAttribute('webkit-playsinline', '');
+              video.preload = 'auto';
+              video.src = blobUrl;
+          });
+      }
+
+      /* 串行队列：一次只解码一个，避免大量 video 元素抢资源 */
+      const Thumbnailer = {
+          queue: [],
+          busy: false,
+          token: 0,
+
+          reset: function () {
+              this.token++;
+              this.queue.length = 0;
+          },
+
+          enqueue: function (item, img) {
+              if (!item || !img) return;
+
+              const cached = PosterCache.get(item);
+              if (cached) {
+                  this.apply(img, cached);
+                  return;
+              }
+
+              this.queue.push({ item: item, img: img, token: this.token });
+              this.pump();
+          },
+
+          pump: async function () {
+              if (this.busy) return;
+              this.busy = true;
+              try {
+                  while (this.queue.length) {
+                      const job = this.queue.shift();
+                      if (job.token !== this.token) continue;
+                      if (!job.img.isConnected) continue;
+
+                      let url = null;
+                      try {
+                          url = await grabPoster(job.item.file);
+                      } catch (e) {
+                          url = null;
+                      }
+
+                      if (job.token !== this.token) continue;
+                      if (!url) continue;
+
+                      PosterCache.set(job.item, url);
+                      if (job.img.isConnected) this.apply(job.img, url);
+                  }
+              } finally {
+                  this.busy = false;
+              }
+          },
+
+          apply: function (img, url) {
+              img.src = url;
+              img.classList.add('ready');
+          }
+      };
+
+      /* ==========================================================
+         ★ Modal 状态栏播放器（顶部滑入）
+         —— 内嵌浏览器原生控件（controls 属性）
+         ========================================================== */
+      const SheetPlayer = {
+          _url: null,
+          _index: -1,
+          _autoNext: true,
+          _nextTimer: null,
+
+          init: function () {
+              const video = els.nativeVideo;
+
+              els.sheetClose.addEventListener('click', () => this.close());
+              els.sheetBackdrop.addEventListener('click', () => this.close());
+
+              /* ---- 视频状态 → 状态栏指示器 ---- */
+              video.addEventListener('loadstart', () => {
+                  this.setStatus('loading', 'Loading');
+              });
+              video.addEventListener('loadedmetadata', () => {
+                  this.setStatus('ready', 'Ready');
+              });
+              video.addEventListener('play', () => {
+                  this.setStatus('playing', 'Playing');
+              });
+              video.addEventListener('pause', () => {
+                  if (video.ended) return;
+                  this.setStatus('paused', 'Paused');
+              });
+              video.addEventListener('waiting', () => {
+                  this.setStatus('loading', 'Buffering');
+              });
+              video.addEventListener('playing', () => {
+                  this.setStatus('playing', 'Playing');
+              });
+              video.addEventListener('ended', () => {
+                  this.setStatus('ended', 'Ended');
+                  this.playNext();
+              });
+              video.addEventListener('error', () => {
+                  if (!video.src) return;
+                  this.setStatus('error', 'Error');
+                  toast('无法播放此视频');
+              });
+
+              /* ---- Esc 关闭 ---- */
+              window.addEventListener('keydown', (e) => {
+                  if (e.code === 'Escape' &&
+                      els.playerSheet.classList.contains('show')) {
+                      this.close();
+                  }
+              });
+          },
+
+          /* ---------- 打开 Modal ---------- */
+          open: function (item, index) {
+              const video = els.nativeVideo;
+              this._index = (typeof index === 'number') ? index : -1;
+
+              // 释放旧资源
+              if (this._url) {
+                  URL.revokeObjectURL(this._url);
+                  this._url = null;
+              }
+
+              // 新资源
+              this._url = URL.createObjectURL(item.file);
+              video.src = this._url;
+              video.load();
+
+              // 状态栏信息
+              els.sheetTitle.textContent = item.name || '未命名视频';
+              this.setStatus('loading', 'Loading');
+
+              // 显示 Modal（从顶部滑入）
+              els.sheetBackdrop.classList.add('show');
+              els.playerSheet.classList.add('show');
+              document.body.classList.add('modal-open');
+
+              // 尝试自动播放
+              const p = video.play();
+              if (p && typeof p.catch === 'function') {
+                  p.catch(() => {
+                      // 被拦截则停在就绪状态
+                      this.setStatus('ready', 'Tap play');
+                  });
+              }
+          },
+
+          /* ---------- 关闭 Modal ---------- */
+          close: function () {
+              const video = els.nativeVideo;
+
+              this._autoNext = false;
+              clearTimeout(this._nextTimer);
+
+              try {
+                  video.pause();
+                  video.removeAttribute('src');
+                  video.load();
+              } catch (err) { /* ignore */ }
+
+              if (this._url) {
+                  URL.revokeObjectURL(this._url);
+                  this._url = null;
+              }
+
+              this._index = -1;
+
+              els.sheetBackdrop.classList.remove('show');
+              els.playerSheet.classList.remove('show');
+              document.body.classList.remove('modal-open');
+
+              this.setStatus('idle', 'Ready');
+          },
+
+          /* ---------- 自动播放下一个 ---------- */
+          playNext: function () {
+              if (!this._autoNext) return;
+              if (this._index < 0) return;
+              if (!els.playerSheet.classList.contains('show')) return;
+
+              const next = this._index + 1;
+              if (next >= Library.items.length) return;
+
+              clearTimeout(this._nextTimer);
+              this._nextTimer = setTimeout(() => {
+                  if (!els.playerSheet.classList.contains('show')) return;
+                  Library.play(next);
+              }, 700);
+          },
+
+          /* ---------- 状态指示器 ---------- */
+          setStatus: function (state, text) {
+              const ind = els.sheetIndicator;
+              ind.classList.toggle('playing', state === 'playing');
+              ind.classList.toggle('error', state === 'error');
+
+              const label = ind.querySelector('.indicator-text');
+              if (label) label.textContent = text;
+          }
+      };
+
+      /* ==========================================================
+         媒体库
+         ========================================================== */
+      const Library = {
+          items: [],
+          currentIndex: -1,
+          _io: null,
+
+          init: function () {
+              if (!SUPPORTS_DIRECTORY) {
+                  els.pickBtn.textContent = 'Files';
+              }
+
+              els.pickBtn.addEventListener('click', () => this.pick());
+              els.listEmpty.addEventListener('click', () => this.pick());
+
+              els.folderInput.addEventListener('change', (e) => {
+                  const files = Array.from(e.target.files || []);
+                  e.target.value = '';
+                  if (!files.length) return;
+                  this.build(files);
+              });
+
+              els.fileInput.addEventListener('change', (e) => {
+                  const files = Array.from(e.target.files || []);
+                  e.target.value = '';
+                  if (!files.length) return;
+                  this.build(files);
+              });
+
+              this.bindDrop();
+          },
+
+          pick: function () {
+              if (SUPPORTS_DIRECTORY) {
+                  els.folderInput.click();
+              } else {
+                  els.fileInput.click();
+              }
+          },
+
+          /* ---------- 拖拽（桌面端） ---------- */
+          bindDrop: function () {
+              window.addEventListener('dragover', (e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+              });
+
+              window.addEventListener('drop', async (e) => {
+                  e.preventDefault();
+
+                  const dt = e.dataTransfer;
+                  if (!dt) return;
+
+                  const entries = [];
+                  if (dt.items && dt.items.length) {
+                      for (let i = 0; i < dt.items.length; i++) {
+                          const it = dt.items[i];
+                          const entry = it.webkitGetAsEntry && it.webkitGetAsEntry();
+                          if (entry) entries.push(entry);
+                      }
+                  }
+
+                  if (entries.length) {
+                      const files = [];
+                      for (let i = 0; i < entries.length; i++) {
+                          await this.walkEntry(entries[i], files);
+                      }
+                      if (files.length) {
+                          this.build(files);
+                      } else {
+                          toast('未找到视频文件');
+                      }
+                  } else if (dt.files && dt.files.length) {
+                      this.build(Array.from(dt.files));
+                  }
+              });
+          },
+
+          walkEntry: async function (entry, out) {
+              if (!entry) return;
+
+              if (entry.isFile) {
+                  const file = await new Promise((resolve) => {
+                      entry.file(
+                          (f) => {
+                              try {
+                                  Object.defineProperty(f, '_relPath', {
+                                      value: entry.fullPath || ('/' + f.name),
+                                      writable: true
+                                  });
+                              } catch (err) { /* ignore */ }
+                              resolve(f);
+                          },
+                          () => resolve(null)
+                      );
+                  });
+                  if (file) out.push(file);
+                  return;
+              }
+
+              if (entry.isDirectory) {
+                  const reader = entry.createReader();
+                  const children = await new Promise((resolve) => {
+                      const all = [];
+                      const read = () => {
+                          reader.readEntries(
+                              (batch) => {
+                                  if (!batch.length) return resolve(all);
+                                  for (let i = 0; i < batch.length; i++) all.push(batch[i]);
+                                  read();
+                              },
+                              () => resolve(all)
+                          );
+                      };
+                      read();
+                  });
+                  for (let i = 0; i < children.length; i++) {
+                      await this.walkEntry(children[i], out);
+                  }
+              }
+          },
+
+          /* ---------- 构建列表 ---------- */
+          build: function (fileList) {
+              const raw = Array.from(fileList || []);
+              const items = [];
+
+              for (let i = 0; i < raw.length; i++) {
+                  const f = raw[i];
+                  if (!isVideoFile(f)) continue;
+
+                  const relPath = f.webkitRelativePath || f._relPath || f.name || '';
+                  const cleanPath = String(relPath).replace(/^\/+/, '');
+                  const lastSlash = cleanPath.lastIndexOf('/');
+                  const folder = lastSlash > 0 ? cleanPath.slice(0, lastSlash) : '';
+
+                  items.push({
+                      file: f,
+                      name: f.name || '未命名视频',
+                      folder: folder,
+                      size: f.size || 0,
+                      path: cleanPath
+                  });
+              }
+
+              if (!items.length) {
+                  els.listView.classList.remove('has-items');
+                  els.emptyTitle.textContent = 'No videos found';
+                  els.emptySub.textContent = 'Try choosing another folder';
+                  els.fileName.textContent = 'No videos found';
+                  this.items = [];
+                  this.currentIndex = -1;
+                  SheetPlayer.close();
+                  toast('未找到视频文件');
+                  return;
+              }
+
+              els.emptyTitle.textContent = 'Choose a folder';
+              els.emptySub.textContent = 'All videos inside will be listed';
+
+              items.sort((a, b) =>
+                  a.path.localeCompare(b.path, undefined, {
+                      numeric: true,
+                      sensitivity: 'base'
+                  })
+              );
+
+              this.items = items;
+              this.currentIndex = -1;
+
+              /* ★ 先让 .list 可见，IntersectionObserver 才能正确计算可见性 */
+              els.listView.classList.add('has-items');
+              els.fileName.textContent =
+                  items.length + ' video' + (items.length > 1 ? 's' : '');
+
+              this.render();
+
+              SheetPlayer.close();
+              els.list.scrollTop = 0;
+
+              toast('已加载 ' + items.length + ' 个视频');
+          },
+
+          /* ---------- 渲染列表（带首帧缩略图） ---------- */
+          render: function () {
+              els.list.innerHTML = '';
+
+              if (this._io) {
+                  this._io.disconnect();
+                  this._io = null;
+              }
+              Thumbnailer.reset();
+
+              const frag = document.createDocumentFragment();
+
+              this.items.forEach((item, index) => {
+                  const row = document.createElement('div');
+                  row.className = 'list-item';
+                  row.dataset.index = String(index);
+                  row.style.animationDelay = Math.min(index * 32, 320) + 'ms';
+
+                  /* --- 缩略图：占位三角 + 首帧图片 --- */
+                  const thumb = document.createElement('div');
+                  thumb.className = 'item-thumb';
+                  thumb.innerHTML =
+                      '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+                      '<path d="M8 5.2v13.6c0 .8.9 1.3 1.6.9l11.3-6.8c.6-.4.6-1.4 0-1.8L9.6 4.3C8.9 3.9 8 4.4 8 5.2z"/>' +
+                      '</svg>';
+
+                  const img = document.createElement('img');
+                  img.alt = '';
+                  img.decoding = 'async';
+                  thumb.appendChild(img);
+
+                  /* --- 文本信息 --- */
+                  const info = document.createElement('div');
+                  info.className = 'item-info';
+
+                  const name = document.createElement('div');
+                  name.className = 'item-name';
+                  name.textContent = item.name;
+
+                  const meta = document.createElement('div');
+                  meta.className = 'item-meta';
+                  const parts = [];
+                  if (item.folder) parts.push(item.folder);
+                  parts.push(fmtSize(item.size));
+                  meta.textContent = parts.join('  ·  ');
+
+                  info.appendChild(name);
+                  info.appendChild(meta);
+                  row.appendChild(thumb);
+                  row.appendChild(info);
+
+                  /* 把抓帧所需的数据挂在元素上 */
+                  row.__thumb = { item: item, img: img };
+
+                  row.addEventListener('click', () => this.play(index));
+
+                  frag.appendChild(row);
+              });
+
+              els.list.appendChild(frag);
+              this.observeThumbs();
+          },
+
+          /* ---------- 只为可见项抓首帧 ---------- */
+          observeThumbs: function () {
+              const rows = els.list.querySelectorAll('.list-item');
+
+              if (!('IntersectionObserver' in window)) {
+                  rows.forEach((row) => {
+                      const t = row.__thumb;
+                      if (t) Thumbnailer.enqueue(t.item, t.img);
+                  });
+                  return;
+              }
+
+              const io = new IntersectionObserver((entries) => {
+                  for (let i = 0; i < entries.length; i++) {
+                      const en = entries[i];
+                      if (!en.isIntersecting) continue;
+                      io.unobserve(en.target);
+                      const t = en.target.__thumb;
+                      if (t) Thumbnailer.enqueue(t.item, t.img);
+                  }
+              }, {
+                  root: els.list,
+                  rootMargin: '320px 0px',
+                  threshold: 0.01
+              });
+
+              this._io = io;
+              rows.forEach((row) => io.observe(row));
+          },
+
+          /* ---------- 点击列表 → 打开顶部 Modal ---------- */
+          play: function (index) {
+              if (index < 0 || index >= this.items.length) return;
+
+              const item = this.items[index];
+              this.currentIndex = index;
+
+              this.highlight(index);
+              this.scrollIntoView(index);
+
+              // 重新启用自动续播
+              SheetPlayer._autoNext = true;
+
+              SheetPlayer.open(item, index);
+          },
+
+          highlight: function (index) {
+              const rows = els.list.querySelectorAll('.list-item');
+              for (let i = 0; i < rows.length; i++) {
+                  rows[i].classList.toggle('active', i === index);
+              }
+          },
+
+          scrollIntoView: function (index) {
+              const rows = els.list.querySelectorAll('.list-item');
+              const row = rows[index];
+              if (!row || !row.scrollIntoView) return;
+              try {
+                  row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              } catch (err) {
+                  row.scrollIntoView();
+              }
+          }
+      };
+
+      /* ==========================================================
+         启动
+         ========================================================== */
+      function init() {
+          Theme.init();
+          SheetPlayer.init();
+          Library.init();
+      }
+
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+      } else {
+          init();
+      }
+
+      // 阻止整页橡皮筋滚动（保留列表可滚动）
+      window.addEventListener('touchmove', (e) => {
+          const t = e.target;
+          if (!t || !t.closest) return;
+          if (t.closest('.list')) return;
+          if (t.closest('.sheet-video')) return; // 原生控件需要手势
+          e.preventDefault();
+      }, { passive: false });
+  </script>
+</body>
+</html>
