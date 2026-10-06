@@ -100,10 +100,9 @@
           gap: 14px;
           padding:
               calc(var(--safe-top) + 22px)
-              calc(var(--safe-right) + 14px)
-              /* ★ 底部预留更多空间，避免被父页面 Back 按钮遮挡 */
+              calc(var(--safe-right) + 16px)
               calc(var(--safe-bottom) + 104px)
-              calc(var(--safe-left) + 14px);
+              calc(var(--safe-left) + 16px);
       }
 
       /* ===== 顶部 ===== */
@@ -234,13 +233,16 @@
       }
 
       /* ==========================================================
-         ★ 视频瀑布流（双列）
+         ★ 视频列表 —— 双列瀑布流
          ========================================================== */
       .list {
           display: none;
           flex: 1 1 auto;
           min-height: 0;
-          padding: 2px 2px 10px;
+          /* ★ 双列瀑布流 */
+          columns: 2;
+          column-gap: 10px;
+          padding: 2px 2px 6px;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
@@ -261,49 +263,41 @@
           display: block;
       }
 
-      /* 两列容器 */
-      .waterfall {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-      }
-      .waterfall-col {
-          flex: 1 1 0;
-          min-width: 0;
+      /* ===== 卡片：竖版（缩略图在上、信息在下） ===== */
+      .list-item {
+          position: relative;
           display: flex;
           flex-direction: column;
-          gap: 10px;
-      }
-
-      /* ===== 卡片 ===== */
-      .v-card {
-          position: relative;
-          display: block;
           width: 100%;
-          border-radius: 14px;
-          overflow: hidden;
+          margin: 0 0 10px;
+          padding: 0;
+          border-radius: 16px;
           background: var(--c-surface);
           border: 1px solid var(--c-border);
+          overflow: hidden;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
+          /* ★ 防止被拆到两列 */
+          break-inside: avoid;
+          -webkit-column-break-inside: avoid;
+          page-break-inside: avoid;
           transition: background-color 0.2s ease, transform 0.18s ease,
-                      border-color 0.25s ease, box-shadow 0.25s ease;
+                      border-color 0.25s ease;
           animation: itemIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
-      .v-card:active {
-          transform: scale(0.975);
-          background: var(--c-border);
+      .list-item:active {
+          transform: scale(0.98);
       }
-      .v-card.active {
+      .list-item.active {
           border-color: var(--c-accent);
-          box-shadow: 0 0 0 2px var(--c-accent-glow);
+          background: var(--c-chip);
       }
 
       @keyframes itemIn {
           0% {
               opacity: 0;
               transform: translateY(12px);
-              filter: blur(2px);
+              filter: blur(3px);
           }
           100% {
               opacity: 1;
@@ -312,102 +306,73 @@
           }
       }
 
-      /* ===== 缩略图区域（比例由 --pt 控制，抓帧后更新） ===== */
-      .v-thumb {
+      /* ===== 缩略图：占满卡片宽度，比例由视频决定 ===== */
+      .item-thumb {
           position: relative;
           width: 100%;
-          height: 0;
-          padding-top: var(--pt, 56.25%);
+          aspect-ratio: 16 / 9;      /* 默认比例，抓帧后由 JS 覆盖 */
+          min-height: 72px;
+          max-height: 300px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background: var(--c-chip);
+          color: var(--c-text);
           overflow: hidden;
-          transition: padding-top 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-                      background-color 0.25s ease;
+          transition: background-color 0.25s ease;
       }
-      .v-thumb img {
+      .item-thumb > svg {
+          width: 22px;
+          height: 22px;
+          opacity: 0.4;
+      }
+      .item-thumb img {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
           display: block;
-          background: #000;
           opacity: 0;
-          transition: opacity 0.42s ease;
+          background: #000;
+          transition: opacity 0.32s ease;
       }
-      .v-thumb img.ready {
+      .item-thumb img.ready {
           opacity: 1;
       }
 
-      .v-placeholder {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--c-text);
-          opacity: 0.22;
-          pointer-events: none;
-          transition: opacity 0.35s ease;
+      /* ===== 信息区 ===== */
+      .item-info {
+          padding: 9px 11px 11px;
+          min-width: 0;
       }
-      .v-placeholder svg {
-          width: 26px;
-          height: 26px;
-      }
-      .v-thumb.has-img .v-placeholder {
-          opacity: 0;
-      }
-
-      /* 时长角标 */
-      .v-badge {
-          position: absolute;
-          right: 7px;
-          bottom: 7px;
-          display: none;
-          padding: 3px 7px;
-          border-radius: 7px;
-          background: rgba(0, 0, 0, 0.62);
-          -webkit-backdrop-filter: blur(6px) saturate(140%);
-          backdrop-filter: blur(6px) saturate(140%);
-          color: #FFFFFF;
-          font-size: 10px;
+      .item-name {
+          font-size: 13px;
           font-weight: 700;
-          letter-spacing: 0.4px;
-          line-height: 1.2;
-          pointer-events: none;
-      }
-
-      /* 卡片文字 */
-      .v-meta {
-          padding: 10px 11px 11px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-      }
-      .v-name {
-          font-size: 12.5px;
-          font-weight: 700;
-          line-height: 1.35;
-          letter-spacing: 0.1px;
+          line-height: 1.3;
+          /* ★ 最多两行 */
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
           word-break: break-word;
       }
-      .v-sub {
-          font-size: 10px;
+      .item-meta {
+          margin-top: 4px;
+          font-size: 10.5px;
           font-weight: 700;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          opacity: 0.4;
+          letter-spacing: 0.2px;
+          opacity: 0.42;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
       }
 
       /* ==========================================================
-         ★ Modal 状态栏（顶部滑入）
+         Modal 状态栏（顶部滑入）
          ========================================================== */
+
+      /* 背景遮罩 */
       .sheet-backdrop {
           position: fixed;
           inset: 0;
@@ -424,6 +389,7 @@
           pointer-events: auto;
       }
 
+      /* 顶部 Modal */
       .sheet {
           position: fixed;
           left: 0;
@@ -461,6 +427,7 @@
           transition: opacity 0.25s ease, background-color 0.25s ease;
       }
 
+      /* ===== 状态栏 ===== */
       .sheet-status {
           flex: 0 0 auto;
           display: flex;
@@ -567,6 +534,7 @@
           50%      { box-shadow: 0 0 0 6px rgba(59, 209, 111, 0.08); }
       }
 
+      /* ===== 视频容器 ===== */
       .sheet-video {
           flex: 1 1 auto;
           min-height: 0;
@@ -628,8 +596,7 @@
       @media (prefers-reduced-motion: reduce) {
           .empty,
           .list-view,
-          .v-card,
-          .v-thumb,
+          .list-item,
           .sheet,
           .sheet-backdrop,
           #toast {
@@ -654,7 +621,7 @@
       </div>
     </div>
 
-    <!-- 瀑布流列表 -->
+    <!-- 列表 -->
     <div class="body">
       <div class="list-view" id="listView">
         <div class="empty" id="listEmpty">
@@ -673,7 +640,9 @@
     </div>
   </div>
 
-  <!-- Modal 状态栏 + 内嵌系统控件视频 -->
+  <!-- ==========================================================
+       Modal 状态栏 + 内嵌系统控件视频
+       ========================================================== -->
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
   <div class="sheet" id="playerSheet" role="dialog" aria-modal="true">
@@ -825,18 +794,6 @@
           return (n < 10 && i > 0 ? n.toFixed(1) : Math.round(n)) + ' ' + units[i];
       }
 
-      function fmtTime(sec) {
-          if (!isFinite(sec) || sec <= 0) return '';
-          sec = Math.floor(sec);
-          const h = Math.floor(sec / 3600);
-          const m = Math.floor((sec % 3600) / 60);
-          const s = sec % 60;
-          const pad = (n) => (n < 10 ? '0' + n : '' + n);
-          return h > 0
-              ? h + ':' + pad(m) + ':' + pad(s)
-              : m + ':' + pad(s);
-      }
-
       let toastTimer = null;
       function toast(msg) {
           els.toast.textContent = msg;
@@ -860,7 +817,7 @@
          ★ 首帧缩略图
          ========================================================== */
 
-      /* 缓存：避免反复选择同一文件夹时重复解码 */
+      /* 缓存：{ url, width, height } */
       const PosterCache = {
           map: new Map(),
           MAX: 240,
@@ -876,8 +833,8 @@
       };
 
       /**
-       * 抓取视频一帧
-       * @returns {Promise<{url:string,w:number,h:number,duration:number}|null>}
+       * 抓取视频首帧
+       * @returns {Promise<{url:string,width:number,height:number}|null>}
        */
       function grabPoster(file) {
           return new Promise((resolve) => {
@@ -891,7 +848,6 @@
               let times = [];
               let ti = 0;
               let seeking = false;
-              let meta = { w: 0, h: 0, duration: 0 };
 
               const finish = (val) => {
                   if (settled) return;
@@ -912,11 +868,7 @@
                   const h = video.videoHeight;
                   if (!w || !h) return null;
 
-                  meta.w = w;
-                  meta.h = h;
-                  meta.duration = isFinite(video.duration) ? video.duration : 0;
-
-                  const scale = Math.min(1, 320 / Math.max(w, h));
+                  const scale = Math.min(1, 360 / Math.max(w, h));
                   const cw = Math.max(1, Math.round(w * scale));
                   const ch = Math.max(1, Math.round(h * scale));
 
@@ -926,12 +878,11 @@
 
                   let url;
                   try {
-                      url = canvas.toDataURL('image/jpeg', 0.74);
+                      url = canvas.toDataURL('image/jpeg', 0.72);
                   } catch (e) {
                       return null;
                   }
 
-                  /* 稀疏采样估算亮度，识别黑帧 */
                   let brightness = 255;
                   try {
                       const data = ctx.getImageData(0, 0, cw, ch).data;
@@ -944,7 +895,12 @@
                       brightness = n ? sum / n : 0;
                   } catch (e) { /* ignore */ }
 
-                  return { url: url, brightness: brightness };
+                  return {
+                      url: url,
+                      brightness: brightness,
+                      width: cw,
+                      height: ch
+                  };
               }
 
               function handleFrame() {
@@ -956,13 +912,7 @@
                       video.currentTime = times[ti++];
                       return;
                   }
-
-                  finish({
-                      url: res.url,
-                      w: meta.w,
-                      h: meta.h,
-                      duration: meta.duration
-                  });
+                  finish(res);
               }
 
               function onSeeked() {
@@ -1022,7 +972,7 @@
           });
       }
 
-      /* 串行队列：一次只解码一个，避免抢占资源 */
+      /* 串行队列 */
       const Thumbnailer = {
           queue: [],
           busy: false,
@@ -1033,16 +983,16 @@
               this.queue.length = 0;
           },
 
-          enqueue: function (item, refs) {
-              if (!item || !refs || !refs.img) return;
+          enqueue: function (item, img) {
+              if (!item || !img) return;
 
               const cached = PosterCache.get(item);
               if (cached) {
-                  this.apply(refs, cached);
+                  this.apply(img, cached);
                   return;
               }
 
-              this.queue.push({ item: item, refs: refs, token: this.token });
+              this.queue.push({ item: item, img: img, token: this.token });
               this.pump();
           },
 
@@ -1053,7 +1003,7 @@
                   while (this.queue.length) {
                       const job = this.queue.shift();
                       if (job.token !== this.token) continue;
-                      if (!job.refs.img.isConnected) continue;
+                      if (!job.img.isConnected) continue;
 
                       let data = null;
                       try {
@@ -1063,42 +1013,30 @@
                       }
 
                       if (job.token !== this.token) continue;
-                      if (!data) continue;
+                      if (!data || !data.url) continue;
 
                       PosterCache.set(job.item, data);
-                      if (job.refs.img.isConnected) this.apply(job.refs, data);
+                      if (job.img.isConnected) this.apply(job.img, data);
                   }
               } finally {
                   this.busy = false;
               }
           },
 
-          apply: function (refs, data) {
-              const thumb = refs.thumb;
+          /* ★ 应用缩略图，并按视频真实比例设置容器 */
+          apply: function (img, data) {
+              img.src = data.url;
+              img.classList.add('ready');
 
-              /* 按真实宽高比更新缩略图占位高度 → 形成瀑布流错落 */
-              if (data.w && data.h) {
-                  const pt = (data.h / data.w) * 100;
-                  const clamped = Math.max(42, Math.min(pt, 190));
-                  thumb.style.setProperty('--pt', clamped + '%');
+              const thumb = img.parentElement;
+              if (thumb && data.width && data.height) {
+                  thumb.style.aspectRatio = data.width + ' / ' + data.height;
               }
-
-              if (data.duration > 0) {
-                  const t = fmtTime(data.duration);
-                  if (t) {
-                      refs.badge.textContent = t;
-                      refs.badge.style.display = 'block';
-                  }
-              }
-
-              refs.img.src = data.url;
-              refs.img.classList.add('ready');
-              thumb.classList.add('has-img');
           }
       };
 
       /* ==========================================================
-         Modal 状态栏播放器（顶部滑入）
+         Modal 状态栏播放器
          ========================================================== */
       const SheetPlayer = {
           _url: null,
@@ -1229,17 +1167,12 @@
       };
 
       /* ==========================================================
-         媒体库（双列瀑布流）
+         媒体库
          ========================================================== */
       const Library = {
           items: [],
           currentIndex: -1,
           _io: null,
-
-          /* 卡片文字区高度折算成宽度比例，用于初始列分配 */
-          META_RATIO: 0.34,
-          /* 默认宽高比（16:9 → h/w = 0.5625） */
-          DEFAULT_AR: 0.5625,
 
           init: function () {
               if (!SUPPORTS_DIRECTORY) {
@@ -1274,7 +1207,6 @@
               }
           },
 
-          /* ---------- 拖拽（桌面端） ---------- */
           bindDrop: function () {
               window.addEventListener('dragover', (e) => {
                   e.preventDefault();
@@ -1356,7 +1288,6 @@
               }
           },
 
-          /* ---------- 构建列表 ---------- */
           build: function (fileList) {
               const raw = Array.from(fileList || []);
               const items = [];
@@ -1404,7 +1335,6 @@
               this.items = items;
               this.currentIndex = -1;
 
-              /* 先让 .list 可见，IntersectionObserver 才能正确计算可见性 */
               els.listView.classList.add('has-items');
               els.fileName.textContent =
                   items.length + ' video' + (items.length > 1 ? 's' : '');
@@ -1417,7 +1347,7 @@
               toast('已加载 ' + items.length + ' 个视频');
           },
 
-          /* ---------- 渲染瀑布流 ---------- */
+          /* ---------- 渲染双列瀑布流卡片 ---------- */
           render: function () {
               els.list.innerHTML = '';
 
@@ -1427,112 +1357,66 @@
               }
               Thumbnailer.reset();
 
-              /* 两列容器 */
-              const colL = document.createElement('div');
-              colL.className = 'waterfall-col';
-              const colR = document.createElement('div');
-              colR.className = 'waterfall-col';
-
-              const wrap = document.createElement('div');
-              wrap.className = 'waterfall';
-              wrap.appendChild(colL);
-              wrap.appendChild(colR);
-
-              const cards = [];
-              const ar0 = this.DEFAULT_AR;
+              const frag = document.createDocumentFragment();
 
               this.items.forEach((item, index) => {
-                  const card = document.createElement('div');
-                  card.className = 'v-card';
-                  card.dataset.index = String(index);
-                  card.style.animationDelay = Math.min(index * 24, 260) + 'ms';
+                  const row = document.createElement('div');
+                  row.className = 'list-item';
+                  row.dataset.index = String(index);
+                  row.style.animationDelay = Math.min(index * 28, 300) + 'ms';
 
-                  /* --- 缩略图 --- */
+                  /* --- 缩略图容器 --- */
                   const thumb = document.createElement('div');
-                  thumb.className = 'v-thumb';
-                  thumb.style.setProperty('--pt', (ar0 * 100).toFixed(2) + '%');
-
-                  const img = document.createElement('img');
-                  img.alt = '';
-                  img.decoding = 'async';
-
-                  const ph = document.createElement('div');
-                  ph.className = 'v-placeholder';
-                  ph.innerHTML =
+                  thumb.className = 'item-thumb';
+                  thumb.innerHTML =
                       '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
                       '<path d="M8 5.2v13.6c0 .8.9 1.3 1.6.9l11.3-6.8c.6-.4.6-1.4 0-1.8L9.6 4.3C8.9 3.9 8 4.4 8 5.2z"/>' +
                       '</svg>';
 
-                  const badge = document.createElement('div');
-                  badge.className = 'v-badge';
-
+                  const img = document.createElement('img');
+                  img.alt = '';
+                  img.decoding = 'async';
                   thumb.appendChild(img);
-                  thumb.appendChild(ph);
-                  thumb.appendChild(badge);
 
-                  /* --- 文字 --- */
-                  const meta = document.createElement('div');
-                  meta.className = 'v-meta';
+                  /* --- 信息区 --- */
+                  const info = document.createElement('div');
+                  info.className = 'item-info';
 
                   const name = document.createElement('div');
-                  name.className = 'v-name';
+                  name.className = 'item-name';
                   name.textContent = item.name;
 
-                  const sub = document.createElement('div');
-                  sub.className = 'v-sub';
+                  const meta = document.createElement('div');
+                  meta.className = 'item-meta';
                   const parts = [];
                   if (item.folder) parts.push(item.folder);
                   parts.push(fmtSize(item.size));
-                  sub.textContent = parts.join(' · ');
+                  meta.textContent = parts.join('  ·  ');
 
-                  meta.appendChild(name);
-                  meta.appendChild(sub);
+                  info.appendChild(name);
+                  info.appendChild(meta);
 
-                  card.appendChild(thumb);
-                  card.appendChild(meta);
+                  row.appendChild(thumb);
+                  row.appendChild(info);
 
-                  card.__refs = {
-                      item: item,
-                      thumb: thumb,
-                      img: img,
-                      badge: badge
-                  };
+                  row.__thumb = { item: item, img: img };
 
-                  card.addEventListener('click', () => this.play(index));
+                  row.addEventListener('click', () => this.play(index));
 
-                  cards.push({ el: card, ar: ar0 });
+                  frag.appendChild(row);
               });
 
-              /* ---- 分配到较矮的一列 ---- */
-              let hL = 0;
-              let hR = 0;
-              const META = this.META_RATIO;
-
-              for (let i = 0; i < cards.length; i++) {
-                  const c = cards[i];
-                  const h = c.ar + META;
-
-                  if (hL <= hR) {
-                      colL.appendChild(c.el);
-                      hL += h;
-                  } else {
-                      colR.appendChild(c.el);
-                      hR += h;
-                  }
-              }
-
-              els.list.appendChild(wrap);
+              els.list.appendChild(frag);
               this.observeThumbs();
           },
 
-          /* ---------- 只为可见卡片抓首帧 ---------- */
           observeThumbs: function () {
-              const cards = els.list.querySelectorAll('.v-card');
+              const rows = els.list.querySelectorAll('.list-item');
 
               if (!('IntersectionObserver' in window)) {
-                  cards.forEach((card) => {
-                      const refs = card.__refs;
-                      if (refs) Thumbnailer.enqueue(refs.item, refs);
+                  rows.forEach((row) => {
+                      const t = row.__thumb;
+                      if (t) Thumbnailer.enqueue(t.item, t.img);
                   });
                   return;
               }
@@ -1541,11 +1425,9 @@
                   for (let i = 0; i < entries.length; i++) {
                       const en = entries[i];
                       if (!en.isIntersecting) continue;
-
                       io.unobserve(en.target);
-
-                      const refs = en.target.__refs;
-                      if (refs) Thumbnailer.enqueue(refs.item, refs);
+                      const t = en.target.__thumb;
+                      if (t) Thumbnailer.enqueue(t.item, t.img);
                   }
               }, {
                   root: els.list,
@@ -1554,10 +1436,9 @@
               });
 
               this._io = io;
-              cards.forEach((card) => io.observe(card));
+              rows.forEach((row) => io.observe(row));
           },
 
-          /* ---------- 点击卡片 → 打开播放器 ---------- */
           play: function (index) {
               if (index < 0 || index >= this.items.length) return;
 
@@ -1573,22 +1454,20 @@
           },
 
           highlight: function (index) {
-              const cards = els.list.querySelectorAll('.v-card');
-              for (let i = 0; i < cards.length; i++) {
-                  const c = cards[i];
-                  c.classList.toggle('active', Number(c.dataset.index) === index);
+              const rows = els.list.querySelectorAll('.list-item');
+              for (let i = 0; i < rows.length; i++) {
+                  rows[i].classList.toggle('active', i === index);
               }
           },
 
           scrollIntoView: function (index) {
-              const card = els.list.querySelector(
-                  '.v-card[data-index="' + index + '"]'
-              );
-              if (!card || !card.scrollIntoView) return;
+              const rows = els.list.querySelectorAll('.list-item');
+              const row = rows[index];
+              if (!row || !row.scrollIntoView) return;
               try {
-                  card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                  row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
               } catch (err) {
-                  card.scrollIntoView();
+                  row.scrollIntoView();
               }
           }
       };
@@ -1608,7 +1487,7 @@
           init();
       }
 
-      // 阻止整页橡皮筋滚动（保留列表与视频区可滚动）
+      // 阻止整页橡皮筋滚动（保留列表与视频可滚动）
       window.addEventListener('touchmove', (e) => {
           const t = e.target;
           if (!t || !t.closest) return;
