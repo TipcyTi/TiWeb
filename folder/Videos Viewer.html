@@ -105,7 +105,6 @@
               calc(var(--safe-left) + 16px);
       }
 
-      /* ===== 顶部 ===== */
       .head {
           flex: 0 0 auto;
           display: flex;
@@ -167,7 +166,6 @@
           transform: scale(0.94);
       }
 
-      /* ===== 主体 ===== */
       .body {
           position: relative;
           flex: 1 1 auto;
@@ -233,7 +231,7 @@
       }
 
       /* ==========================================================
-         视频列表 —— 双列瀑布流（JS 分列）
+         双列瀑布流
          ========================================================== */
       .list {
           display: none;
@@ -271,7 +269,6 @@
           gap: 10px;
       }
 
-      /* ===== 卡片 ===== */
       .list-item {
           position: relative;
           display: flex;
@@ -308,16 +305,15 @@
           }
       }
 
-      /* ===== 缩略图：padding-top 撑高，兼容性最好 ===== */
+      /* ===== 缩略图：padding-top 占位 + 平滑过渡 ===== */
       .item-thumb {
           position: relative;
           width: 100%;
-          /* 默认 16:9，抓帧成功后按视频真实比例替换 */
-          padding-top: 56.25%;
+          padding-top: 56.25%;   /* 默认 16:9，抓帧后按真实比例覆盖 */
           background: var(--c-chip);
           overflow: hidden;
-          /* 高亮过渡只作用于背景色，高度变化不做过渡以免卡顿 */
-          transition: background-color 0.25s ease;
+          /* ★ 高度平滑过渡，避免异步抓帧后卡片突然弹跳 */
+          transition: padding-top 0.25s ease, background-color 0.25s ease;
       }
       .item-thumb > svg {
           position: absolute;
@@ -339,13 +335,12 @@
           display: block;
           opacity: 0;
           background: #000;
-          transition: opacity 0.28s ease;
+          transition: opacity 0.32s ease;
       }
       .item-thumb img.ready {
           opacity: 1;
       }
 
-      /* ===== 信息区 ===== */
       .item-info {
           padding: 9px 11px 11px;
           min-width: 0;
@@ -372,9 +367,8 @@
       }
 
       /* ==========================================================
-         Modal 状态栏（顶部滑入）
+         Modal 状态栏
          ========================================================== */
-
       .sheet-backdrop {
           position: fixed;
           inset: 0;
@@ -594,6 +588,7 @@
           .empty,
           .list-view,
           .list-item,
+          .item-thumb,
           .sheet,
           .sheet-backdrop,
           #toast {
@@ -606,8 +601,6 @@
 <body>
 
   <div class="layout">
-
-    <!-- 顶部 -->
     <div class="head">
       <div class="head-left">
         <div class="title">Video</div>
@@ -618,7 +611,6 @@
       </div>
     </div>
 
-    <!-- 列表 -->
     <div class="body">
       <div class="list-view" id="listView">
         <div class="empty" id="listEmpty">
@@ -807,14 +799,29 @@
           }
       })();
 
+      /* WebP 支持检测（减小缩略图体积） */
+      const SUPPORTS_WEBP = (function () {
+          try {
+              const c = document.createElement('canvas');
+              c.width = 1;
+              c.height = 1;
+              return c.toDataURL('image/webp').indexOf('image/webp') === 5;
+          } catch (e) {
+              return false;
+          }
+      })();
+
+      const POSTER_MIME = SUPPORTS_WEBP ? 'image/webp' : 'image/jpeg';
+      const POSTER_QUALITY = 0.72;
+      const POSTER_MAX_EDGE = 360;
+
       /* ==========================================================
-         ★ 首帧抓取（修复版）
+         ★ 首帧抓取（支持取消）
          ========================================================== */
 
-      /* 缓存：{ url, width, height } */
       const PosterCache = {
           map: new Map(),
-          MAX: 200,
+          MAX: 240,
           key: function (item) { return item.path + '|' + item.size; },
           get: function (item) { return this.map.get(this.key(item)) || null; },
           set: function (item, data) {
@@ -827,14 +834,12 @@
       };
 
       /**
-       * 抓取视频首帧。
-       * 修复点：
-       *  - seek 用独立监听 + 800ms 兜底超时，避免 seeked 不触发导致卡死
-       *  - 硬超时缩到 8s，防止单个坏文件拖垮队列
-       *  - seek 目标点强制 < duration - 0.05，避免越界
-       *  - 用 requestAnimationFrame 保证画面已解码再 drawImage
+       * 抓取视频首帧
+       * @param {File} file
+       * @param {Function} [shouldCancel] 返回 true 时放弃当前任务
+       * @returns {Promise<{url:string,width:number,height:number}|null>}
        */
-      function grabPoster(file) {
+      function grabPoster(file, shouldCancel) {
           return new Promise((resolve) => {
               const blobUrl = URL.createObjectURL(file);
               const video = document.createElement('video');
@@ -844,21 +849,19 @@
               let settled = false;
               let times = [];
               let ti = 0;
-              let seekTimer = null;
 
-              const HARD_TIMEOUT = 8000;
-              const SEEK_TIMEOUT = 800;
+              const hardTimer = setTimeout(() => finish(null), 12000);
 
-              const hardTimer = setTimeout(() => finish(null), HARD_TIMEOUT);
+              function cancelled() {
+                  return !!(shouldCancel && shouldCancel());
+              }
 
               function finish(val) {
                   if (settled) return;
                   settled = true;
                   clearTimeout(hardTimer);
-                  clearTimeout(seekTimer);
                   video.removeEventListener('loadedmetadata', onMeta);
                   video.removeEventListener('loadeddata', onLoadedData);
-                  video.removeEventListener('seeked', onSeeked);
                   video.removeEventListener('error', onError);
                   video.removeAttribute('src');
                   try { video.load(); } catch (e) { /* ignore */ }
@@ -866,12 +869,13 @@
                   resolve(val);
               }
 
+              /* --- 抓帧 --- */
               function drawFrame() {
                   const w = video.videoWidth;
                   const h = video.videoHeight;
                   if (!w || !h) return null;
 
-                  const scale = Math.min(1, 360 / Math.max(w, h));
+                  const scale = Math.min(1, POSTER_MAX_EDGE / Math.max(w, h));
                   const cw = Math.max(1, Math.round(w * scale));
                   const ch = Math.max(1, Math.round(h * scale));
 
@@ -885,12 +889,15 @@
 
                   let url;
                   try {
-                      url = canvas.toDataURL('image/jpeg', 0.72);
+                      url = canvas.toDataURL(POSTER_MIME, POSTER_QUALITY);
                   } catch (e) {
-                      return null;
+                      try {
+                          url = canvas.toDataURL('image/jpeg', POSTER_QUALITY);
+                      } catch (e2) {
+                          return null;
+                      }
                   }
 
-                  /* 稀疏采样判断是否黑帧 */
                   let brightness = 255;
                   try {
                       const data = ctx.getImageData(0, 0, cw, ch).data;
@@ -911,9 +918,25 @@
                   };
               }
 
-              /* 抓到一帧后判断是否需要重试 */
-              function captureCurrent() {
+              /* --- 等待浏览器真正渲染出当前帧 --- */
+              function waitForFrame(cb) {
+                  if ('requestVideoFrameCallback' in video) {
+                      try {
+                          video.requestVideoFrameCallback(function () { cb(); });
+                          return;
+                      } catch (e) { /* fallthrough */ }
+                  }
+                  /* 双 rAF 更稳：确保已经过一次合成 */
+                  requestAnimationFrame(function () {
+                      requestAnimationFrame(function () { cb(); });
+                  });
+              }
+
+              /* --- 抓帧 + 黑帧重试 --- */
+              function captureThenMaybeRetry() {
                   if (settled) return;
+                  if (cancelled()) return finish(null);
+
                   const res = drawFrame();
                   if (!res) return finish(null);
 
@@ -924,34 +947,20 @@
                   finish(res);
               }
 
-              /* 带兜底超时的 seek */
+              /* --- 带超时兜底的 seek --- */
               function seekTo(t) {
-                  if (settled) return;
-
-                  /* 已经在目标位置且画面就绪：直接抓帧 */
-                  if (Math.abs(video.currentTime - t) < 0.01 &&
-                      video.readyState >= 2) {
-                      captureCurrent();
-                      return;
-                  }
-
-                  let seekDone = false;
+                  let done = false;
                   const onDone = () => {
-                      if (seekDone || settled) return;
-                      seekDone = true;
-                      clearTimeout(seekTimer);
-                      seekTimer = null;
+                      if (done || settled) return;
+                      done = true;
+                      clearTimeout(fallback);
                       video.removeEventListener('seeked', onSeeked);
-                      /* 用 rAF 确保解码后的帧已绘制 */
-                      requestAnimationFrame(() => {
-                          requestAnimationFrame(() => {
-                              if (!settled) captureCurrent();
-                          });
-                      });
+                      if (cancelled()) return finish(null);
+                      waitForFrame(captureThenMaybeRetry);
                   };
                   const onSeeked = () => onDone();
+                  const fallback = setTimeout(onDone, 1500);
 
-                  seekTimer = setTimeout(onDone, SEEK_TIMEOUT);
                   video.addEventListener('seeked', onSeeked, { once: true });
 
                   try {
@@ -961,20 +970,27 @@
                   }
               }
 
+              /* --- metadata 就绪 --- */
               function onMeta() {
+                  if (settled) return;
+                  if (cancelled()) return finish(null);
+
+                  /* 有些损坏文件 metadata 里没有尺寸 */
+                  if (!video.videoWidth || !video.videoHeight) {
+                      return finish(null);
+                  }
+
                   const dur = (isFinite(video.duration) && video.duration > 0)
                       ? video.duration : 0;
 
-                  const safe = (v) => Math.max(0, Math.min(v, dur - 0.05));
-
                   if (dur > 3) {
                       times = [
-                          safe(0.2),
-                          safe(dur * 0.15),
-                          safe(dur * 0.4)
+                          Math.min(0.2, dur * 0.05),
+                          Math.min(dur * 0.15, 2),
+                          Math.min(dur * 0.4, 4)
                       ];
                   } else if (dur > 0.6) {
-                      times = [safe(dur * 0.3)];
+                      times = [dur * 0.3];
                   } else {
                       times = [];
                   }
@@ -986,14 +1002,16 @@
 
                   /* 极短视频：等首帧可用后直接抓 */
                   if (video.readyState >= 2) {
-                      requestAnimationFrame(captureCurrent);
+                      waitForFrame(captureThenMaybeRetry);
                   } else {
                       video.addEventListener('loadeddata', onLoadedData, { once: true });
                   }
               }
 
               function onLoadedData() {
-                  requestAnimationFrame(captureCurrent);
+                  if (settled) return;
+                  if (cancelled()) return finish(null);
+                  waitForFrame(captureThenMaybeRetry);
               }
 
               function onError() { finish(null); }
@@ -1006,25 +1024,35 @@
               video.playsInline = true;
               video.setAttribute('playsinline', '');
               video.setAttribute('webkit-playsinline', '');
-              video.preload = 'auto';
+              /* ★ metadata 即可：seek 时浏览器会按需拉取片段 */
+              video.preload = 'metadata';
               video.src = blobUrl;
           });
       }
 
       /* ==========================================================
-         ★ 缩略图调度器（并发 + 无闪烁）
+         ★ 缩略图调度器
+         - 并发计数而非 busy 标志，避免 reset 后 pump 被吞
+         - generation 取消旧任务
+         - paused 让播放器优先使用解码器
          ========================================================== */
       const Thumbnailer = {
           queue: [],
-          active: 0,
-          token: 0,
-          /* 2 路并发：既能加速，又不会让低端机过热 */
-          CONCURRENCY: 2,
+          running: 0,
+          maxConcurrent: 2,
+          generation: 0,
+          paused: false,
 
           reset: function () {
-              this.token++;
+              this.generation++;
               this.queue.length = 0;
-              /* 运行中的任务不会被强杀，但结果会因为 token 不匹配被丢弃 */
+          },
+
+          pause: function () { this.paused = true; },
+          resume: function () {
+              if (!this.paused) return;
+              this.paused = false;
+              this.pump();
           },
 
           enqueue: function (item, img) {
@@ -1036,79 +1064,57 @@
                   return;
               }
 
-              this.queue.push({ item: item, img: img, token: this.token });
+              this.queue.push({ item: item, img: img, gen: this.generation });
               this.pump();
           },
 
           pump: function () {
-              while (this.active < this.CONCURRENCY && this.queue.length) {
+              if (this.paused) return;
+
+              while (this.running < this.maxConcurrent && this.queue.length) {
                   const job = this.queue.shift();
-                  if (job.token !== this.token) continue;
+                  if (job.gen !== this.generation) continue;
                   if (!job.img.isConnected) continue;
 
-                  this.active++;
-                  this.run(job).then(() => {
-                      this.active--;
-                      this.pump();
-                  }, () => {
-                      this.active--;
-                      this.pump();
-                  });
+                  this.running++;
+                  this._run(job);
               }
           },
 
-          run: async function (job) {
-              let data = null;
-              try {
-                  data = await grabPoster(job.item.file);
-              } catch (e) {
-                  data = null;
-              }
+          _run: function (job) {
+              const gen = job.gen;
+              const shouldCancel = () => gen !== this.generation;
 
-              if (job.token !== this.token) return;
-              if (!data || !data.url) return;
-
-              PosterCache.set(job.item, data);
-              if (job.img.isConnected) this.apply(job.img, data);
+              grabPoster(job.item.file, shouldCancel).then((data) => {
+                  if (gen !== this.generation) return;
+                  if (!data || !data.url) return;
+                  PosterCache.set(job.item, data);
+                  if (job.img.isConnected) this.apply(job.img, data);
+              }).catch(() => {
+                  /* 静默失败，保留占位图标 */
+              }).finally(() => {
+                  this.running--;
+                  this.pump();
+              });
           },
 
-          /**
-           * 应用缩略图。
-           * 修复点：
-           *  - 图片解码完成（load 事件）后才切换高度和透明度，
-           *    避免先看到空白再看到图片的闪烁
-           *  - 高度变化与图片显示在同一帧发生，视觉上无抖动
-           */
+          /* 先等图片解码完成，再改容器比例 + 淡入，避免空白淡入和跳动 */
           apply: function (img, data) {
-              if (!img || !data || !data.url) return;
-
               const thumb = img.parentElement;
-              const hasSize = !!(data.width && data.height);
+              if (!thumb) return;
 
-              const reveal = () => {
-                  if (thumb && hasSize) {
+              img.onload = function () {
+                  if (!img.isConnected) return;
+                  if (data.width && data.height) {
                       const ratio = (data.height / data.width) * 100;
-                      /* 限幅：防止极端比例把卡片撑爆 */
-                      const clamped = Math.max(30, Math.min(ratio, 200));
-                      thumb.style.paddingTop = clamped + '%';
+                      thumb.style.paddingTop = ratio.toFixed(4) + '%';
                   }
                   img.classList.add('ready');
               };
-
-              /* 避免重复挂监听 */
-              img.onload = null;
-              img.onerror = null;
-
-              img.addEventListener('load', reveal, { once: true });
-              img.addEventListener('error', function () {
-                  /* 解码失败：隐藏 img，保留占位图标 */
-                  img.style.display = 'none';
-              }, { once: true });
-
+              img.onerror = function () {
+                  /* 保留占位三角图标 */
+              };
               img.src = data.url;
-
-              /* dataURL 可能同步完成解码 */
-              if (img.complete && img.naturalWidth > 0) reveal();
           }
       };
 
@@ -1168,6 +1174,9 @@
               const video = els.nativeVideo;
               this._index = (typeof index === 'number') ? index : -1;
 
+              /* ★ 播放时暂停缩略图抓取，把解码器让给播放 */
+              Thumbnailer.pause();
+
               if (this._url) {
                   URL.revokeObjectURL(this._url);
                   this._url = null;
@@ -1216,6 +1225,9 @@
               document.body.classList.remove('modal-open');
 
               this.setStatus('idle', 'Ready');
+
+              /* ★ 恢复缩略图抓取 */
+              Thumbnailer.resume();
           },
 
           playNext: function () {
@@ -1424,7 +1436,6 @@
               toast('已加载 ' + items.length + ' 个视频');
           },
 
-          /* ---------- 渲染：JS 交替分列 ---------- */
           render: function () {
               els.list.innerHTML = '';
 
@@ -1511,7 +1522,8 @@
                   }
               }, {
                   root: els.list,
-                  rootMargin: '400px 0px',
+                  /* 一屏半左右，避免一次性抓太多 */
+                  rootMargin: '200px 0px',
                   threshold: 0.01
               });
 
