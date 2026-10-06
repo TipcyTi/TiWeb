@@ -233,15 +233,15 @@
       }
 
       /* ==========================================================
-         ★ 视频列表 —— 双列瀑布流
+         ★ 视频列表 —— 双列瀑布流（JS 分列，避免 CSS columns 重排）
          ========================================================== */
       .list {
           display: none;
           flex: 1 1 auto;
           min-height: 0;
-          /* ★ 双列瀑布流 */
-          columns: 2;
-          column-gap: 10px;
+          flex-direction: row;
+          align-items: flex-start;
+          gap: 10px;
           padding: 2px 2px 6px;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
@@ -260,27 +260,30 @@
           display: none;
       }
       .list-view.has-items .list {
-          display: block;
+          display: flex;
       }
 
-      /* ===== 卡片：竖版（缩略图在上、信息在下） ===== */
+      /* ★ 单列容器（左 / 右） */
+      .list-col {
+          flex: 1 1 0;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+      }
+
+      /* ===== 卡片：竖版 ===== */
       .list-item {
           position: relative;
           display: flex;
           flex-direction: column;
           width: 100%;
-          margin: 0 0 10px;
-          padding: 0;
           border-radius: 16px;
           background: var(--c-surface);
           border: 1px solid var(--c-border);
           overflow: hidden;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
-          /* ★ 防止被拆到两列 */
-          break-inside: avoid;
-          -webkit-column-break-inside: avoid;
-          page-break-inside: avoid;
           transition: background-color 0.2s ease, transform 0.18s ease,
                       border-color 0.25s ease;
           animation: itemIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -306,29 +309,30 @@
           }
       }
 
-      /* ===== 缩略图：占满卡片宽度，比例由视频决定 ===== */
+      /* ===== 缩略图：用 padding-top 占位，兼容性优于 aspect-ratio ===== */
       .item-thumb {
           position: relative;
           width: 100%;
-          aspect-ratio: 16 / 9;      /* 默认比例，抓帧后由 JS 覆盖 */
-          min-height: 72px;
-          max-height: 300px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          /* 默认 16:9，JS 抓到帧后按真实比例覆盖 */
+          padding-top: 56.25%;
           background: var(--c-chip);
-          color: var(--c-text);
           overflow: hidden;
           transition: background-color 0.25s ease;
       }
       .item-thumb > svg {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           width: 22px;
           height: 22px;
           opacity: 0.4;
+          pointer-events: none;
       }
       .item-thumb img {
           position: absolute;
-          inset: 0;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
@@ -350,7 +354,6 @@
           font-size: 13px;
           font-weight: 700;
           line-height: 1.3;
-          /* ★ 最多两行 */
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -372,7 +375,6 @@
          Modal 状态栏（顶部滑入）
          ========================================================== */
 
-      /* 背景遮罩 */
       .sheet-backdrop {
           position: fixed;
           inset: 0;
@@ -389,7 +391,6 @@
           pointer-events: auto;
       }
 
-      /* 顶部 Modal */
       .sheet {
           position: fixed;
           left: 0;
@@ -427,7 +428,6 @@
           transition: opacity 0.25s ease, background-color 0.25s ease;
       }
 
-      /* ===== 状态栏 ===== */
       .sheet-status {
           flex: 0 0 auto;
           display: flex;
@@ -534,7 +534,6 @@
           50%      { box-shadow: 0 0 0 6px rgba(59, 209, 111, 0.08); }
       }
 
-      /* ===== 视频容器 ===== */
       .sheet-video {
           flex: 1 1 auto;
           min-height: 0;
@@ -554,7 +553,6 @@
           outline: none;
       }
 
-      /* ===== 提示气泡 ===== */
       #toast {
           position: fixed;
           left: 50%;
@@ -581,7 +579,6 @@
           transform: translate(-50%, 0);
       }
 
-      /* ===== 隐藏 input ===== */
       #folderInput,
       #fileInput {
           position: fixed;
@@ -640,9 +637,6 @@
     </div>
   </div>
 
-  <!-- ==========================================================
-       Modal 状态栏 + 内嵌系统控件视频
-       ========================================================== -->
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
   <div class="sheet" id="playerSheet" role="dialog" aria-modal="true">
@@ -814,10 +808,9 @@
       })();
 
       /* ==========================================================
-         ★ 首帧缩略图
+         ★ 首帧抓取（带 seek 超时兜底）
          ========================================================== */
 
-      /* 缓存：{ url, width, height } */
       const PosterCache = {
           map: new Map(),
           MAX: 240,
@@ -832,10 +825,6 @@
           }
       };
 
-      /**
-       * 抓取视频首帧
-       * @returns {Promise<{url:string,width:number,height:number}|null>}
-       */
       function grabPoster(file) {
           return new Promise((resolve) => {
               const blobUrl = URL.createObjectURL(file);
@@ -844,24 +833,22 @@
               const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
               let settled = false;
-              let timer = null;
               let times = [];
               let ti = 0;
-              let seeking = false;
 
-              const finish = (val) => {
+              const hardTimer = setTimeout(() => finish(null), 12000);
+
+              function finish(val) {
                   if (settled) return;
                   settled = true;
-                  clearTimeout(timer);
+                  clearTimeout(hardTimer);
                   video.removeEventListener('loadedmetadata', onMeta);
-                  video.removeEventListener('loadeddata', onLoadedData);
-                  video.removeEventListener('seeked', onSeeked);
                   video.removeEventListener('error', onError);
                   video.removeAttribute('src');
                   try { video.load(); } catch (e) { /* ignore */ }
                   URL.revokeObjectURL(blobUrl);
                   resolve(val);
-              };
+              }
 
               function drawFrame() {
                   const w = video.videoWidth;
@@ -903,64 +890,79 @@
                   };
               }
 
-              function handleFrame() {
+              /* 抓帧；若黑帧且还有备用时间点则继续 seek */
+              function captureThenMaybeRetry() {
+                  if (settled) return;
                   const res = drawFrame();
                   if (!res) return finish(null);
 
                   if (res.brightness < 10 && ti < times.length) {
-                      seeking = true;
-                      video.currentTime = times[ti++];
+                      seekTo(times[ti++]);
                       return;
                   }
                   finish(res);
               }
 
-              function onSeeked() {
-                  seeking = false;
-                  handleFrame();
-              }
+              /* 带超时兜底的 seek */
+              function seekTo(t) {
+                  let done = false;
+                  const onDone = () => {
+                      if (done || settled) return;
+                      done = true;
+                      clearTimeout(fallback);
+                      video.removeEventListener('seeked', onSeeked);
+                      requestAnimationFrame(() => {
+                          if (!settled) captureThenMaybeRetry();
+                      });
+                  };
+                  const onSeeked = () => onDone();
+                  const fallback = setTimeout(onDone, 1500);
 
-              function onLoadedData() {
-                  if (seeking) return;
-                  handleFrame();
-              }
+                  video.addEventListener('seeked', onSeeked, { once: true });
 
-              function onError() { finish(null); }
+                  try {
+                      video.currentTime = t;
+                  } catch (e) {
+                      onDone();
+                  }
+              }
 
               function onMeta() {
                   const dur = (isFinite(video.duration) && video.duration > 0)
                       ? video.duration : 0;
 
                   if (dur > 3) {
-                      times = [0.2, Math.min(dur * 0.15, 2), Math.min(dur * 0.4, 4)];
+                      times = [
+                          Math.min(0.2, dur * 0.05),
+                          Math.min(dur * 0.15, 2),
+                          Math.min(dur * 0.4, 4)
+                      ];
                   } else if (dur > 0.6) {
-                      times = [0.2];
+                      times = [dur * 0.3];
                   } else {
                       times = [];
                   }
 
                   if (times.length) {
-                      const t = times[ti++];
-                      if (Math.abs(video.currentTime - t) > 0.001) {
-                          seeking = true;
-                          video.currentTime = t;
-                          return;
-                      }
+                      seekTo(times[ti++]);
+                      return;
                   }
 
+                  /* 极短视频：等首帧可用后直接抓 */
                   if (video.readyState >= 2) {
-                      requestAnimationFrame(() => {
-                          if (!settled) onLoadedData();
-                      });
+                      requestAnimationFrame(captureThenMaybeRetry);
+                  } else {
+                      video.addEventListener('loadeddata', function once() {
+                          video.removeEventListener('loadeddata', once);
+                          requestAnimationFrame(captureThenMaybeRetry);
+                      }, { once: true });
                   }
               }
 
-              timer = setTimeout(() => finish(null), 12000);
+              function onError() { finish(null); }
 
               video.addEventListener('loadedmetadata', onMeta, { once: true });
-              video.addEventListener('loadeddata', onLoadedData);
-              video.addEventListener('seeked', onSeeked);
-              video.addEventListener('error', onError);
+              video.addEventListener('error', onError, { once: true });
 
               video.muted = true;
               video.defaultMuted = true;
@@ -1023,14 +1025,15 @@
               }
           },
 
-          /* ★ 应用缩略图，并按视频真实比例设置容器 */
+          /* 应用缩略图，并按真实比例设置占位高度 */
           apply: function (img, data) {
               img.src = data.url;
               img.classList.add('ready');
 
               const thumb = img.parentElement;
               if (thumb && data.width && data.height) {
-                  thumb.style.aspectRatio = data.width + ' / ' + data.height;
+                  const ratio = data.height / data.width * 100;
+                  thumb.style.paddingTop = ratio + '%';
               }
           }
       };
@@ -1347,7 +1350,7 @@
               toast('已加载 ' + items.length + ' 个视频');
           },
 
-          /* ---------- 渲染双列瀑布流卡片 ---------- */
+          /* ---------- 渲染：JS 交替分列 ---------- */
           render: function () {
               els.list.innerHTML = '';
 
@@ -1357,7 +1360,10 @@
               }
               Thumbnailer.reset();
 
-              const frag = document.createDocumentFragment();
+              const colA = document.createElement('div');
+              colA.className = 'list-col';
+              const colB = document.createElement('div');
+              colB.className = 'list-col';
 
               this.items.forEach((item, index) => {
                   const row = document.createElement('div');
@@ -1365,7 +1371,6 @@
                   row.dataset.index = String(index);
                   row.style.animationDelay = Math.min(index * 28, 300) + 'ms';
 
-                  /* --- 缩略图容器 --- */
                   const thumb = document.createElement('div');
                   thumb.className = 'item-thumb';
                   thumb.innerHTML =
@@ -1378,7 +1383,6 @@
                   img.decoding = 'async';
                   thumb.appendChild(img);
 
-                  /* --- 信息区 --- */
                   const info = document.createElement('div');
                   info.className = 'item-info';
 
@@ -1400,13 +1404,15 @@
                   row.appendChild(info);
 
                   row.__thumb = { item: item, img: img };
-
                   row.addEventListener('click', () => this.play(index));
 
-                  frag.appendChild(row);
+                  /* ★ 交替分列 */
+                  (index % 2 === 0 ? colA : colB).appendChild(row);
               });
 
-              els.list.appendChild(frag);
+              els.list.appendChild(colA);
+              els.list.appendChild(colB);
+
               this.observeThumbs();
           },
 
@@ -1453,21 +1459,27 @@
               SheetPlayer.open(item, index);
           },
 
+          /* ★ 用 dataset.index 匹配，避免分列后 DOM 顺序错位 */
           highlight: function (index) {
               const rows = els.list.querySelectorAll('.list-item');
               for (let i = 0; i < rows.length; i++) {
-                  rows[i].classList.toggle('active', i === index);
+                  rows[i].classList.toggle(
+                      'active',
+                      Number(rows[i].dataset.index) === index
+                  );
               }
           },
 
           scrollIntoView: function (index) {
               const rows = els.list.querySelectorAll('.list-item');
-              const row = rows[index];
-              if (!row || !row.scrollIntoView) return;
-              try {
-                  row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-              } catch (err) {
-                  row.scrollIntoView();
+              for (let i = 0; i < rows.length; i++) {
+                  if (Number(rows[i].dataset.index) !== index) continue;
+                  try {
+                      rows[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                  } catch (err) {
+                      rows[i].scrollIntoView();
+                  }
+                  return;
               }
           }
       };
@@ -1487,7 +1499,6 @@
           init();
       }
 
-      // 阻止整页橡皮筋滚动（保留列表与视频可滚动）
       window.addEventListener('touchmove', (e) => {
           const t = e.target;
           if (!t || !t.closest) return;
