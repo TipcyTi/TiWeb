@@ -188,7 +188,7 @@
          空状态
          ========================================================== */
       .empty {
-          flex: 1 1 auto;
+          flex:( 1 1 auto;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -211,7 +211,7 @@
           border: 1px solid var(--c-border-soft);
           color: var(--c-text);
           opacity: 0.9;
-          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+          transition: transform 0.3s cubic-bezier0.22, 1, 0.36, 1),
                       background-color 0.25s ease;
       }
       .empty:active .empty-ring {
@@ -234,15 +234,17 @@
       }
 
       /* ==========================================================
-         视频列表
+         ★ 双列瀑布流列表
          ========================================================== */
       .list {
           display: none;
           flex: 1 1 auto;
           min-height: 0;
-          flex-direction: column;
-          gap: 9px;
-          padding: 2px 2px 6px;
+          /* ★ 横向两列 */
+          flex-direction: row;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 2px 2px 8px;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
@@ -263,63 +265,74 @@
           display: flex;
       }
 
+      /* 每一列 */
+      .list-col {
+          flex: 1 1 0;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+      }
+
+      /* 卡片：缩略图在上，文字在下 */
       .list-item {
           flex: 0 0 auto;
           display: flex;
-          align-items: center;
-          gap: 13px;
-          padding: 13px 15px;
+          flex-direction: column;
+          padding: 0;
           border-radius: 16px;
           background: var(--c-surface);
           border: 1px solid var(--c-border);
+          overflow: hidden;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           transition: background-color 0.2s ease, transform 0.18s ease,
-                      border-color 0.25s ease;
-          animation: itemIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+                      border-color 0.25s ease, box-shadow 0.25s ease;
+          animation: itemIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+          will-change: transform;
       }
       .list-item:active {
-          transform: scale(0.985);
-          background: var(--c-border);
+          transform: scale(0.975);
       }
       .list-item.active {
-          background: var(--c-chip);
-          border-color: var(--c-border-soft);
+          border-color: var(--c-accent);
+          box-shadow: 0 0 0 1px var(--c-accent),
+                      0 8px 22px var(--c-accent-glow);
       }
 
       @keyframes itemIn {
           0% {
               opacity: 0;
-              transform: translateY(12px);
+              transform: translateY(14px) scale(0.97);
               filter: blur(3px);
           }
           100% {
               opacity: 1;
-              transform: translateY(0);
+              transform: translateY(0) scale(1);
               filter: blur(0);
           }
       }
 
       /* ===== 缩略图（首帧） ===== */
       .item-thumb {
-          flex: 0 0 auto;
           position: relative;
-          width: 64px;
-          height: 40px;
-          border-radius: 10px;
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          min-height: 64px;
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           background: var(--c-chip);
-          border: 1px solid var(--c-border-soft);
           color: var(--c-text);
-          transition: border-color 0.25s ease, background-color 0.25s ease;
+          border-bottom: 1px solid var(--c-border-soft);
+          /* ★ 抓帧后按视频真实比例平滑过渡 */
+          transition: aspect-ratio 0.3s ease, border-color 0.25s ease;
       }
       .item-thumb > svg {
-          width: 16px;
-          height: 16px;
-          opacity: 0.55;
+          width: 18px;
+          height: 18px;
+          opacity: 0.5;
       }
       .item-thumb img {
           position: absolute;
@@ -330,30 +343,45 @@
           display: block;
           opacity: 0;
           background: #000;
-          transition: opacity 0.32s ease;
+          transition: opacity 0.34s ease;
       }
       .item-thumb img.ready {
           opacity: 1;
       }
-      .list-item.active .item-thumb {
-          border-color: var(--c-accent);
+
+      /* 播放态角标 */
+      .item-thumb::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.28), transparent 46%);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          pointer-events: none;
+      }
+      .list-item.active .item-thumb::after {
+          opacity: 1;
       }
 
       .item-info {
-          flex: 1 1 auto;
           min-width: 0;
+          padding: 9px 11px 11px;
       }
       .item-name {
-          font-size: 15px;
+          font-size: 13px;
           font-weight: 700;
-          line-height: 1.25;
-          white-space: nowrap;
+          line-height: 1.32;
+          letter-spacing: 0.1px;
+          /* ★ 最多两行 */
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
+          word-break: break-word;
       }
       .item-meta {
-          margin-top: 3px;
-          font-size: 11.5px;
+          margin-top: 5px;
+          font-size: 10.5px;
           font-weight: 700;
           letter-spacing: 0.3px;
           opacity: 0.42;
@@ -364,7 +392,6 @@
 
       /* ==========================================================
          ★ Modal 状态栏（顶部滑入）
-         —— 迁移到页面上方，避开父页面底部的 Back 按钮
          ========================================================== */
 
       /* 背景遮罩 */
@@ -391,17 +418,12 @@
           right: 0;
           top: 0;
           bottom: auto;
-          /* 高度受屏幕高度限制，并避开父页面 Back 按钮区域 */
           height: min(70vh, 580px);
           max-height: calc(100dvh - var(--safe-bottom) - 120px);
           background: var(--c-bg);
-          /* ★ 圆角改为下方两个角 */
           border-radius: 0 0 26px 26px;
-          /* ★ 底边作为视觉分隔 */
           border-bottom: 1px solid var(--c-border-soft);
-          /* ★ 阴影方向朝下 */
           box-shadow: 0 14px 48px var(--c-sheet-shadow);
-          /* ★ 初始从上方隐藏 */
           transform: translateY(-100%);
           transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
                       background-color 0.25s ease;
@@ -409,7 +431,6 @@
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          /* ★ 顶部预留安全区 */
           padding-top: var(--safe-top);
           will-change: transform;
       }
@@ -417,7 +438,7 @@
           transform: translateY(0);
       }
 
-      /* 拖动把手 —— 视觉提示位于顶部 */
+      /* 拖动把手 */
       .sheet-grabber {
           flex: 0 0 auto;
           width: 40px;
@@ -436,7 +457,6 @@
           align-items: center;
           gap: 12px;
           padding: 10px 16px 14px;
-          /* ★ 状态栏下方作为分隔 */
           border-bottom: 1px solid var(--c-border-soft);
           transition: border-color 0.25s ease;
       }
@@ -601,6 +621,7 @@
           .empty,
           .list-view,
           .list-item,
+          .item-thumb,
           .sheet,
           .sheet-backdrop,
           #toast {
@@ -645,15 +666,13 @@
   </div>
 
   <!-- ==========================================================
-       ★ Modal 状态栏 + 内嵌系统控件视频（迁移到页面上方）
+       ★ Modal 状态栏 + 内嵌系统控件视频
        ========================================================== -->
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
   <div class="sheet" id="playerSheet" role="dialog" aria-modal="true">
-    <!-- 拖动把手 -->
     <div class="sheet-grabber"></div>
 
-    <!-- 状态栏 -->
     <div class="sheet-status">
       <button class="status-close" id="sheetClose" type="button" aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -673,15 +692,12 @@
       </div>
     </div>
 
-    <!-- 视频：浏览器原生控件 -->
     <div class="sheet-video">
       <video id="nativeVideo" controls playsinline webkit-playsinline preload="metadata"></video>
     </div>
   </div>
 
-  <!-- 文件夹选择（支持的浏览器） -->
   <input type="file" id="folderInput" webkitdirectory directory multiple>
-  <!-- 多文件选择（iOS 等兜底） -->
   <input type="file" id="fileInput" accept="video/*" multiple>
 
   <div id="toast"></div>
@@ -703,7 +719,6 @@
           folderInput: document.getElementById('folderInput'),
           fileInput:   document.getElementById('fileInput'),
 
-          /* Modal */
           sheetBackdrop: document.getElementById('sheetBackdrop'),
           playerSheet:   document.getElementById('playerSheet'),
           sheetClose:    document.getElementById('sheetClose'),
@@ -736,7 +751,7 @@
                   meta.setAttribute('name', 'theme-color');
                   document.head.appendChild(meta);
               }
-              meta.setAttribute('content', dark ? '#000000' : '#F1F2ED');
+',              meta.setAttribute('content', dark ? '#000000' : '#F1F2ED');
           },
 
           init: function () {
@@ -779,7 +794,7 @@
       const VIDEO_EXTS = new Set([
           'mp4', 'm4v', 'mov', 'webm', 'ogv', 'ogg', 'mkv', 'avi', 'wmv',
           'flv', '3gp', '3g2', 'mpg', 'mpeg', 'mpe', 'm2v', 'ts', 'm2ts',
-          'mts', 'divx', 'vob', 'f4v', 'asf', 'rm', 'rmvb'
+          'mts', 'divx', 'vob 'f4v', 'asf', 'rm', 'rmvb'
       ]);
 
       function isVideoFile(file) {
@@ -827,25 +842,24 @@
          ★ 首帧缩略图
          ========================================================== */
 
-      /* dataURL 缓存：同一文件夹反复切换时不必重复解码 */
+      /* 缓存：{ url, ratio }，同一文件夹反复切换时不必重复解码 */
       const PosterCache = {
           map: new Map(),
           MAX: 240,
           key: function (item) { return item.path + '|' + item.size; },
           get: function (item) { return this.map.get(this.key(item)) || null; },
-          set: function (item, url) {
+          set: function (item, data) {
               if (this.map.size >= this.MAX) {
                   const first = this.map.keys().next();
                   if (!first.done) this.map.delete(first.value);
               }
-              this.map.set(this.key(item), url);
+              this.map.set(this.key(item), data);
           }
       };
 
       /**
-       * 从本地视频文件抓取一帧，返回 jpeg dataURL
-       * - 缩放到最长边 320，减小体积
-       * - 首帧过暗（黑场 / 淡入）时自动换时间点重试
+       * 从本地视频文件抓取一帧
+       * @returns {Promise<{url:string, ratio:number}|null>}
        */
       function grabPoster(file) {
           return new Promise((resolve) => {
@@ -908,10 +922,13 @@
                       brightness = n ? sum / n : 0;
                   } catch (e) { /* ignore */ }
 
-                  return { url: url, brightness: brightness };
+                  return {
+                      url: url,
+                      brightness: brightness,
+                      ratio: w / h
+                  };
               }
 
-              /* ---- 抓到一帧后的判定 ---- */
               function handleFrame() {
                   const res = drawFrame();
                   if (!res) return finish(null);
@@ -921,7 +938,7 @@
                       video.currentTime = times[ti++];
                       return;
                   }
-                  finish(res.url);
+                  finish({ url: res.url, ratio: res.ratio });
               }
 
               function onSeeked() {
@@ -957,7 +974,6 @@
                       }
                   }
 
-                  /* 没有可 seek 的时间点：等当前帧可用 */
                   if (video.readyState >= 2) {
                       requestAnimationFrame(() => {
                           if (!settled) onLoadedData();
@@ -993,16 +1009,21 @@
               this.queue.length = 0;
           },
 
-          enqueue: function (item, img) {
+          enqueue: function (item, img, thumb) {
               if (!item || !img) return;
 
               const cached = PosterCache.get(item);
               if (cached) {
-                  this.apply(img, cached);
+                  this.apply(img, thumb, cached);
                   return;
               }
 
-              this.queue.push({ item: item, img: img, token: this.token });
+              this.queue.push({
+                  item: item,
+                  img: img,
+                  thumb: thumb,
+                  token: this.token
+              });
               this.pump();
           },
 
@@ -1015,33 +1036,43 @@
                       if (job.token !== this.token) continue;
                       if (!job.img.isConnected) continue;
 
-                      let url = null;
+                      let data = null;
                       try {
-                          url = await grabPoster(job.item.file);
+                          data = await grabPoster(job.item.file);
                       } catch (e) {
-                          url = null;
+                          data = null;
                       }
 
                       if (job.token !== this.token) continue;
-                      if (!url) continue;
+                      if (!data) continue;
 
-                      PosterCache.set(job.item, url);
-                      if (job.img.isConnected) this.apply(job.img, url);
+                      PosterCache.set(job.item, data);
+                      if (job.img.isConnected) {
+                          this.apply(job.img, job.thumb, data);
+                      }
                   }
               } finally {
                   this.busy = false;
               }
           },
 
-          apply: function (img, url) {
-              img.src = url;
+          /* 应用封面：设置图片 + 按真实比例调整缩略图高度 */
+          apply: function (img, thumb, data) {
+              if (!data) return;
+
+              if (thumb && data.ratio) {
+                  /* 限制比例范围，避免极端比例把卡片拉得太长 */
+                  const r = Math.min(1.45, Math.max(0.72, data.ratio));
+                  thumb.style.aspectRatio = String(r);
+              }
+
+              img.src = data.url;
               img.classList.add('ready');
           }
       };
 
       /* ==========================================================
-         ★ Modal 状态栏播放器（顶部滑入）
-         —— 内嵌浏览器原生控件（controls 属性）
+         Modal 状态栏播放器（顶部滑入）
          ========================================================== */
       const SheetPlayer = {
           _url: null,
@@ -1055,7 +1086,6 @@
               els.sheetClose.addEventListener('click', () => this.close());
               els.sheetBackdrop.addEventListener('click', () => this.close());
 
-              /* ---- 视频状态 → 状态栏指示器 ---- */
               video.addEventListener('loadstart', () => {
                   this.setStatus('loading', 'Loading');
               });
@@ -1085,7 +1115,6 @@
                   toast('无法播放此视频');
               });
 
-              /* ---- Esc 关闭 ---- */
               window.addEventListener('keydown', (e) => {
                   if (e.code === 'Escape' &&
                       els.playerSheet.classList.contains('show')) {
@@ -1094,42 +1123,34 @@
               });
           },
 
-          /* ---------- 打开 Modal ---------- */
           open: function (item, index) {
               const video = els.nativeVideo;
               this._index = (typeof index === 'number') ? index : -1;
 
-              // 释放旧资源
               if (this._url) {
                   URL.revokeObjectURL(this._url);
                   this._url = null;
               }
 
-              // 新资源
               this._url = URL.createObjectURL(item.file);
               video.src = this._url;
               video.load();
 
-              // 状态栏信息
               els.sheetTitle.textContent = item.name || '未命名视频';
               this.setStatus('loading', 'Loading');
 
-              // 显示 Modal（从顶部滑入）
               els.sheetBackdrop.classList.add('show');
               els.playerSheet.classList.add('show');
               document.body.classList.add('modal-open');
 
-              // 尝试自动播放
               const p = video.play();
               if (p && typeof p.catch === 'function') {
                   p.catch(() => {
-                      // 被拦截则停在就绪状态
                       this.setStatus('ready', 'Tap play');
                   });
               }
           },
 
-          /* ---------- 关闭 Modal ---------- */
           close: function () {
               const video = els.nativeVideo;
 
@@ -1156,7 +1177,6 @@
               this.setStatus('idle', 'Ready');
           },
 
-          /* ---------- 自动播放下一个 ---------- */
           playNext: function () {
               if (!this._autoNext) return;
               if (this._index < 0) return;
@@ -1172,7 +1192,6 @@
               }, 700);
           },
 
-          /* ---------- 状态指示器 ---------- */
           setStatus: function (state, text) {
               const ind = els.sheetIndicator;
               ind.classList.toggle('playing', state === 'playing');
@@ -1184,12 +1203,19 @@
       };
 
       /* ==========================================================
-         媒体库
+         ★ 媒体库（双列瀑布流）
          ========================================================== */
       const Library = {
           items: [],
           currentIndex: -1,
           _io: null,
+          _lastWidth: 0,
+
+          /* 瀑布流参数 */
+          COL_GAP: 10,
+          DEFAULT_RATIO: 16 / 9,
+          INFO_H: 64,       // 卡片文字区估算高度
+          ROW_GAP: 10,
 
           init: function () {
               if (!SUPPORTS_DIRECTORY) {
@@ -1214,6 +1240,7 @@
               });
 
               this.bindDrop();
+              this.bindResize();
           },
 
           pick: function () {
@@ -1222,6 +1249,25 @@
               } else {
                   els.fileInput.click();
               }
+          },
+
+          /* ---------- 窗口尺寸变化 → 重新分列 ---------- */
+          bindResize: function () {
+              let timer = null;
+              window.addEventListener('resize', () => {
+                  clearTimeout(timer);
+                  timer = setTimeout(() => {
+                      if (!this.items.length) return;
+                      if (!els.listView.classList.contains('has-items')) return;
+
+                      const w = Math.round(els.list.clientWidth);
+                      if (!w || w === this._lastWidth) return;
+
+                      const st = els.list.scrollTop;
+                      this.render();
+                      els.list.scrollTop = st;
+                  }, 200);
+              });
           },
 
           /* ---------- 拖拽（桌面端） ---------- */
@@ -1354,7 +1400,7 @@
               this.items = items;
               this.currentIndex = -1;
 
-              /* ★ 先让 .list 可见，IntersectionObserver 才能正确计算可见性 */
+              /* ★ 先让 .list 可见，才能量到宽度、观察可见性 */
               els.listView.classList.add('has-items');
               els.fileName.textContent =
                   items.length + ' video' + (items.length > 1 ? 's' : '');
@@ -1367,7 +1413,7 @@
               toast('已加载 ' + items.length + ' 个视频');
           },
 
-          /* ---------- 渲染列表（带首帧缩略图） ---------- */
+          /* ---------- 渲染：两列瀑布流 ---------- */
           render: function () {
               els.list.innerHTML = '';
 
@@ -1377,15 +1423,35 @@
               }
               Thumbnailer.reset();
 
-              const frag = document.createDocumentFragment();
+              const colA = document.createElement('div');
+              colA.className = 'list-col';
+              const colB = document.createElement('div');
+              colB.className = 'list-col';
+
+              const cols = [colA, colB];
+              const heights = [0, 0];
+              const counts = [0, 0];
+
+              /* 估算每列宽度，用于分列时的高度预估 */
+              const listWidth = els.list.clientWidth || 360;
+              this._lastWidth = listWidth;
+
+              const colWidth = Math.max(
+                  80,
+                  (listWidth - this.COL_GAP) / 2
+              );
+              const estThumbH = colWidth / this.DEFAULT_RATIO;
+              const estCardH = estThumbH + this.INFO_H;
+
+              const fragA = document.createDocumentFragment();
+              const fragB = document.createDocumentFragment();
 
               this.items.forEach((item, index) => {
                   const row = document.createElement('div');
                   row.className = 'list-item';
                   row.dataset.index = String(index);
-                  row.style.animationDelay = Math.min(index * 32, 320) + 'ms';
 
-                  /* --- 缩略图：占位三角 + 首帧图片 --- */
+                  /* --- 缩略图 --- */
                   const thumb = document.createElement('div');
                   thumb.className = 'item-thumb';
                   thumb.innerHTML =
@@ -1398,7 +1464,7 @@
                   img.decoding = 'async';
                   thumb.appendChild(img);
 
-                  /* --- 文本信息 --- */
+                  /* --- 信息区 --- */
                   const info = document.createElement('div');
                   info.className = 'item-info';
 
@@ -1418,15 +1484,33 @@
                   row.appendChild(thumb);
                   row.appendChild(info);
 
-                  /* 把抓帧所需的数据挂在元素上 */
-                  row.__thumb = { item: item, img: img };
+                  /* 挂载抓帧所需引用 */
+                  row.__thumb = { item: item, img: img, thumb: thumb };
 
                   row.addEventListener('click', () => this.play(index));
 
-                  frag.appendChild(row);
+                  /* --- 分列：放入当前较矮的一列 --- */
+                  const target = heights[0] <= heights[1] ? 0 : 1;
+                  if (target === 0) {
+                      fragA.appendChild(row);
+                  } else {
+                      fragB.appendChild(row);
+                  }
+
+                  heights[target] += estCardH + this.ROW_GAP;
+
+                  /* 交错入场动画：按列内序号 */
+                  row.style.animationDelay =
+                      Math.min(counts[target] * 36, 300) + 'ms';
+                  counts[target]++;
               });
 
-              els.list.appendChild(frag);
+              colA.appendChild(fragA);
+              colB.appendChild(fragB);
+
+              els.list.appendChild(colA);
+              els.list.appendChild(colB);
+
               this.observeThumbs();
           },
 
@@ -1437,7 +1521,7 @@
               if (!('IntersectionObserver' in window)) {
                   rows.forEach((row) => {
                       const t = row.__thumb;
-                      if (t) Thumbnailer.enqueue(t.item, t.img);
+                      if (t) Thumbnailer.enqueue(t.item, t.img, t.thumb);
                   });
                   return;
               }
@@ -1448,11 +1532,11 @@
                       if (!en.isIntersecting) continue;
                       io.unobserve(en.target);
                       const t = en.target.__thumb;
-                      if (t) Thumbnailer.enqueue(t.item, t.img);
+                      if (t) Thumbnailer.enqueue(t.item, t.img, t.thumb);
                   }
               }, {
                   root: els.list,
-                  rootMargin: '320px 0px',
+                  rootMargin: '400px 0px',
                   threshold: 0.01
               });
 
@@ -1460,7 +1544,7 @@
               rows.forEach((row) => io.observe(row));
           },
 
-          /* ---------- 点击列表 → 打开顶部 Modal ---------- */
+          /* ---------- 点击卡片 → 打开顶部 Modal ---------- */
           play: function (index) {
               if (index < 0 || index >= this.items.length) return;
 
@@ -1470,7 +1554,6 @@
               this.highlight(index);
               this.scrollIntoView(index);
 
-              // 重新启用自动续播
               SheetPlayer._autoNext = true;
 
               SheetPlayer.open(item, index);
@@ -1515,7 +1598,7 @@
           const t = e.target;
           if (!t || !t.closest) return;
           if (t.closest('.list')) return;
-          if (t.closest('.sheet-video')) return; // 原生控件需要手势
+          if (t.closest('.sheet-video')) return;
           e.preventDefault();
       }, { passive: false });
   </script>
