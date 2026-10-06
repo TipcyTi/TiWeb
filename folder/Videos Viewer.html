@@ -184,6 +184,62 @@
       }
 
       /* ==========================================================
+         ★ 列表顶部渐变模糊过渡
+         ========================================================== */
+      .list-fade {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 56px;
+          pointer-events: none;
+          z-index: 5;
+          border-radius: 22px 22px 0 0;
+          overflow: hidden;
+          opacity: 0;
+          transition: opacity 0.32s ease;
+      }
+      .list-view.has-items .list-fade {
+          opacity: 1;
+      }
+      /* 模糊层：越靠顶部越模糊 */
+      .list-fade::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          -webkit-backdrop-filter: blur(7px) saturate(140%);
+          backdrop-filter: blur(7px) saturate(140%);
+          -webkit-mask-image: linear-gradient(
+              to bottom,
+              #000 0%,
+              rgba(0, 0, 0, 0.65) 40%,
+              rgba(0, 0, 0, 0.2) 72%,
+              transparent 100%
+          );
+          mask-image: linear-gradient(
+              to bottom,
+              #000 0%,
+              rgba(0, 0, 0, 0.65) 40%,
+              rgba(0, 0, 0, 0.2) 72%,
+              transparent 100%
+          );
+      }
+      /* 颜色层：把滚上去的内容逐步“融”进背景 */
+      .list-fade::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+              to bottom,
+              rgba(var(--c-veil), 1) 0%,
+              rgba(var(--c-veil), 0.82) 28%,
+              rgba(var(--c-veil), 0.42) 62%,
+              rgba(var(--c-veil), 0.10) 84%,
+              rgba(var(--c-veil), 0) 100%
+          );
+      }
+
+      /* ==========================================================
          空状态
          ========================================================== */
       .empty {
@@ -233,7 +289,7 @@
       }
 
       /* ==========================================================
-         ★ 视频列表 —— 双列瀑布流（JS 分列，避免 CSS columns 重排）
+         视频列表 —— 双列瀑布流
          ========================================================== */
       .list {
           display: none;
@@ -263,7 +319,6 @@
           display: flex;
       }
 
-      /* ★ 单列容器（左 / 右） */
       .list-col {
           flex: 1 1 0;
           min-width: 0;
@@ -272,7 +327,7 @@
           gap: 10px;
       }
 
-      /* ===== 卡片：竖版 ===== */
+      /* ===== 卡片 ===== */
       .list-item {
           position: relative;
           display: flex;
@@ -309,11 +364,11 @@
           }
       }
 
-      /* ===== 缩略图：用 padding-top 占位，兼容性优于 aspect-ratio ===== */
+      /* ===== 缩略图 ===== */
       .item-thumb {
           position: relative;
           width: 100%;
-          /* 默认 16:9，JS 抓到帧后按真实比例覆盖 */
+          /* 默认 16:9，抓帧完成后按真实比例覆盖 */
           padding-top: 56.25%;
           background: var(--c-chip);
           overflow: hidden;
@@ -339,7 +394,9 @@
           display: block;
           opacity: 0;
           background: #000;
-          transition: opacity 0.32s ease;
+          /* 用 transform 做淡入，避免某些设备上 opacity 动画抖动 */
+          transition: opacity 0.34s ease;
+          will-change: opacity;
       }
       .item-thumb img.ready {
           opacity: 1;
@@ -372,7 +429,7 @@
       }
 
       /* ==========================================================
-         Modal 状态栏（顶部滑入）
+         Modal（顶部滑入）+ 状态栏下方渐变过渡
          ========================================================== */
 
       .sheet-backdrop {
@@ -428,14 +485,38 @@
           transition: opacity 0.25s ease, background-color 0.25s ease;
       }
 
+      /* ===== 状态栏 ===== */
       .sheet-status {
+          position: relative;
           flex: 0 0 auto;
           display: flex;
           align-items: center;
           gap: 12px;
           padding: 10px 16px 14px;
-          border-bottom: 1px solid var(--c-border-soft);
-          transition: border-color 0.25s ease;
+          /* 移除硬边 border，改用渐变过渡，视觉更柔和 */
+          z-index: 2;
+      }
+      /* ★ 状态栏下方的渐变模糊过渡，把视频区域柔和地“接”进状态栏 */
+      .sheet-status::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 100%;
+          height: 28px;
+          pointer-events: none;
+          background: linear-gradient(
+              to bottom,
+              rgba(var(--c-veil), 0.92) 0%,
+              rgba(var(--c-veil), 0.55) 40%,
+              rgba(var(--c-veil), 0.18) 72%,
+              rgba(var(--c-veil), 0) 100%
+          );
+          -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+          -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+          z-index: -1;
       }
 
       .status-close {
@@ -534,6 +615,7 @@
           50%      { box-shadow: 0 0 0 6px rgba(59, 209, 111, 0.08); }
       }
 
+      /* ===== 视频容器 ===== */
       .sheet-video {
           flex: 1 1 auto;
           min-height: 0;
@@ -543,6 +625,8 @@
           align-items: center;
           justify-content: center;
           overflow: hidden;
+          /* 视频区域顶部留一点点内边距，让过渡更自然 */
+          padding-top: 6px;
       }
       .sheet-video video {
           width: 100%;
@@ -553,6 +637,7 @@
           outline: none;
       }
 
+      /* ===== 提示气泡 ===== */
       #toast {
           position: fixed;
           left: 50%;
@@ -594,6 +679,7 @@
           .empty,
           .list-view,
           .list-item,
+          .list-fade,
           .sheet,
           .sheet-backdrop,
           #toast {
@@ -621,6 +707,9 @@
     <!-- 列表 -->
     <div class="body">
       <div class="list-view" id="listView">
+        <!-- ★ 顶部渐变模糊过渡层 -->
+        <div class="list-fade" aria-hidden="true"></div>
+
         <div class="empty" id="listEmpty">
           <div class="empty-ring">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -632,6 +721,7 @@
           <div class="empty-title" id="emptyTitle">Choose a folder</div>
           <div class="empty-sub" id="emptySub">All videos inside will be listed</div>
         </div>
+
         <div class="list" id="list"></div>
       </div>
     </div>
@@ -808,8 +898,14 @@
       })();
 
       /* ==========================================================
-         ★ 首帧抓取（带 seek 超时兜底）
+         ★ 首帧抓取
+         —— 修复：
+         1) 增加 generation 令牌，快速切换文件夹时旧任务自动中止
+         2) 抓帧失败/超时统一走 finish，避免 Promise 悬挂
+         3) seek 用超时兜底，防止某些浏览器不触发 seeked
          ========================================================== */
+
+      let THUMB_GEN = 0;   // 全局代际，切换文件夹时自增，旧任务据此中止
 
       const PosterCache = {
           map: new Map(),
@@ -825,7 +921,7 @@
           }
       };
 
-      function grabPoster(file) {
+      function grabPoster(file, myGen) {
           return new Promise((resolve) => {
               const blobUrl = URL.createObjectURL(file);
               const video = document.createElement('video');
@@ -835,6 +931,10 @@
               let settled = false;
               let times = [];
               let ti = 0;
+              let seekTimer = null;
+
+              const isStale = () =>
+                  (typeof myGen === 'number') && myGen !== THUMB_GEN;
 
               const hardTimer = setTimeout(() => finish(null), 12000);
 
@@ -842,6 +942,7 @@
                   if (settled) return;
                   settled = true;
                   clearTimeout(hardTimer);
+                  clearTimeout(seekTimer);
                   video.removeEventListener('loadedmetadata', onMeta);
                   video.removeEventListener('error', onError);
                   video.removeAttribute('src');
@@ -890,9 +991,10 @@
                   };
               }
 
-              /* 抓帧；若黑帧且还有备用时间点则继续 seek */
               function captureThenMaybeRetry() {
                   if (settled) return;
+                  if (isStale()) return finish(null);
+
                   const res = drawFrame();
                   if (!res) return finish(null);
 
@@ -903,22 +1005,27 @@
                   finish(res);
               }
 
-              /* 带超时兜底的 seek */
               function seekTo(t) {
+                  if (settled) return;
+                  if (isStale()) return finish(null);
+
                   let done = false;
+
+                  const onSeeked = () => onDone();
+
                   const onDone = () => {
                       if (done || settled) return;
                       done = true;
-                      clearTimeout(fallback);
+                      clearTimeout(seekTimer);
                       video.removeEventListener('seeked', onSeeked);
+                      /* 用 rAF 确保解码画面已经可用于 drawImage */
                       requestAnimationFrame(() => {
                           if (!settled) captureThenMaybeRetry();
                       });
                   };
-                  const onSeeked = () => onDone();
-                  const fallback = setTimeout(onDone, 1500);
 
                   video.addEventListener('seeked', onSeeked, { once: true });
+                  seekTimer = setTimeout(onDone, 1500);
 
                   try {
                       video.currentTime = t;
@@ -928,6 +1035,8 @@
               }
 
               function onMeta() {
+                  if (isStale()) return finish(null);
+
                   const dur = (isFinite(video.duration) && video.duration > 0)
                       ? video.duration : 0;
 
@@ -948,7 +1057,6 @@
                       return;
                   }
 
-                  /* 极短视频：等首帧可用后直接抓 */
                   if (video.readyState >= 2) {
                       requestAnimationFrame(captureThenMaybeRetry);
                   } else {
@@ -974,14 +1082,19 @@
           });
       }
 
-      /* 串行队列 */
+      /* ==========================================================
+         ★ 缩略图串行队列
+         —— 修复：
+         1) reset 时自增 THUMB_GEN，旧任务在下一个异步点自动中止
+         2) apply 用 onload + rAF 保证图像解码完成后再淡入
+            （之前直接加 .ready 会在部分设备上出现黑闪）
+         ========================================================== */
       const Thumbnailer = {
           queue: [],
           busy: false,
-          token: 0,
 
           reset: function () {
-              this.token++;
+              THUMB_GEN++;
               this.queue.length = 0;
           },
 
@@ -994,7 +1107,11 @@
                   return;
               }
 
-              this.queue.push({ item: item, img: img, token: this.token });
+              this.queue.push({
+                  item: item,
+                  img: img,
+                  gen: THUMB_GEN
+              });
               this.pump();
           },
 
@@ -1004,17 +1121,18 @@
               try {
                   while (this.queue.length) {
                       const job = this.queue.shift();
-                      if (job.token !== this.token) continue;
+
+                      if (job.gen !== THUMB_GEN) continue;
                       if (!job.img.isConnected) continue;
 
                       let data = null;
                       try {
-                          data = await grabPoster(job.item.file);
+                          data = await grabPoster(job.item.file, job.gen);
                       } catch (e) {
                           data = null;
                       }
 
-                      if (job.token !== this.token) continue;
+                      if (job.gen !== THUMB_GEN) continue;
                       if (!data || !data.url) continue;
 
                       PosterCache.set(job.item, data);
@@ -1025,15 +1143,33 @@
               }
           },
 
-          /* 应用缩略图，并按真实比例设置占位高度 */
+          /* 应用缩略图 */
           apply: function (img, data) {
-              img.src = data.url;
-              img.classList.add('ready');
+              if (!img || !img.isConnected) return;
+              if (!data || !data.url) return;
 
+              /* 先按真实比例改占位高度 */
               const thumb = img.parentElement;
               if (thumb && data.width && data.height) {
-                  const ratio = data.height / data.width * 100;
+                  const ratio = (data.height / data.width) * 100;
                   thumb.style.paddingTop = ratio + '%';
+              }
+
+              /* 防止重复触发淡入 */
+              let shown = false;
+              const show = () => {
+                  if (shown) return;
+                  shown = true;
+                  if (img.isConnected) img.classList.add('ready');
+              };
+
+              img.onload = () => requestAnimationFrame(show);
+              img.onerror = show;
+              img.src = data.url;
+
+              /* dataURL 场景：complete 可能同步为 true，用 rAF 兜底 */
+              if (img.complete && img.naturalWidth > 0) {
+                  requestAnimationFrame(show);
               }
           }
       };
@@ -1406,7 +1542,6 @@
                   row.__thumb = { item: item, img: img };
                   row.addEventListener('click', () => this.play(index));
 
-                  /* ★ 交替分列 */
                   (index % 2 === 0 ? colA : colB).appendChild(row);
               });
 
@@ -1459,7 +1594,6 @@
               SheetPlayer.open(item, index);
           },
 
-          /* ★ 用 dataset.index 匹配，避免分列后 DOM 顺序错位 */
           highlight: function (index) {
               const rows = els.list.querySelectorAll('.list-item');
               for (let i = 0; i < rows.length; i++) {
