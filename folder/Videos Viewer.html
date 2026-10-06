@@ -89,9 +89,6 @@
           overflow: hidden;
       }
 
-      /* ==========================================================
-         布局
-         ========================================================== */
       .layout {
           position: fixed;
           inset: 0;
@@ -305,14 +302,14 @@
           }
       }
 
-      /* ===== 缩略图：padding-top 占位 + 平滑过渡 ===== */
+      /* ===== 缩略图容器 ===== */
       .item-thumb {
           position: relative;
           width: 100%;
           padding-top: 56.25%;   /* 默认 16:9，抓帧后按真实比例覆盖 */
           background: var(--c-chip);
           overflow: hidden;
-          /* ★ 高度平滑过渡，避免异步抓帧后卡片突然弹跳 */
+          /* 高度平滑过渡，避免异步抓帧后卡片突然弹跳 */
           transition: padding-top 0.25s ease, background-color 0.25s ease;
       }
       .item-thumb > svg {
@@ -335,7 +332,9 @@
           display: block;
           opacity: 0;
           background: #000;
-          transition: opacity 0.32s ease;
+          /* ★ 用 transform 触发合成层，避免过渡期间的抖动 */
+          transform: translateZ(0);
+          transition: opacity 0.28s ease;
       }
       .item-thumb img.ready {
           opacity: 1;
@@ -799,7 +798,6 @@
           }
       })();
 
-      /* WebP 支持检测（减小缩略图体积） */
       const SUPPORTS_WEBP = (function () {
           try {
               const c = document.createElement('canvas');
@@ -816,7 +814,7 @@
       const POSTER_MAX_EDGE = 360;
 
       /* ==========================================================
-         ★ 首帧抓取（支持取消）
+         首帧抓取
          ========================================================== */
 
       const PosterCache = {
@@ -834,10 +832,9 @@
       };
 
       /**
-       * 抓取视频首帧
+       * 抓取首帧
        * @param {File} file
-       * @param {Function} [shouldCancel] 返回 true 时放弃当前任务
-       * @returns {Promise<{url:string,width:number,height:number}|null>}
+       * @param {Function} [shouldCancel]
        */
       function grabPoster(file, shouldCancel) {
           return new Promise((resolve) => {
@@ -863,13 +860,14 @@
                   video.removeEventListener('loadedmetadata', onMeta);
                   video.removeEventListener('loadeddata', onLoadedData);
                   video.removeEventListener('error', onError);
-                  video.removeAttribute('src');
-                  try { video.load(); } catch (e) { /* ignore */ }
+                  try {
+                      video.removeAttribute('src');
+                      video.load();
+                  } catch (e) { /* ignore */ }
                   URL.revokeObjectURL(blobUrl);
                   resolve(val);
               }
 
-              /* --- 抓帧 --- */
               function drawFrame() {
                   const w = video.videoWidth;
                   const h = video.videoHeight;
@@ -910,29 +908,43 @@
                       brightness = n ? sum / n : 0;
                   } catch (e) { /* ignore */ }
 
-                  return {
-                      url: url,
-                      brightness: brightness,
-                      width: cw,
-                      height: ch
-                  };
+                  return { url: url, brightness: brightness, width: cw, height: ch };
               }
 
-              /* --- 等待浏览器真正渲染出当前帧 --- */
+              /* ★ requestVideoFrameCallback 挂起兜底 */
               function waitForFrame(cb) {
+                  let called = false;
+                  const call = function () {
+                      if (called) return;
+                      called = true;
+                      cb();
+                  };
+
                   if ('requestVideoFrameCallback' in video) {
+                      let id = null;
                       try {
-                          video.requestVideoFrameCallback(function () { cb(); });
-                          return;
-                      } catch (e) { /* fallthrough */ }
+                          id = video.requestVideoFrameCallback(call);
+                      } catch (e) {
+                          id = null;
+                      }
+                      /* 400ms 内没触发就用 rAF */
+                      setTimeout(function () {
+                          if (called) return;
+                          if (id !== null && 'cancelVideoFrameCallback' in video) {
+                              try { video.cancelVideoFrameCallback(id); } catch (e) { /* ignore */ }
+                          }
+                          requestAnimationFrame(function () {
+                              requestAnimationFrame(call);
+                          });
+                      }, 400);
+                      return;
                   }
-                  /* 双 rAF 更稳：确保已经过一次合成 */
+
                   requestAnimationFrame(function () {
-                      requestAnimationFrame(function () { cb(); });
+                      requestAnimationFrame(call);
                   });
               }
 
-              /* --- 抓帧 + 黑帧重试 --- */
               function captureThenMaybeRetry() {
                   if (settled) return;
                   if (cancelled()) return finish(null);
@@ -947,10 +959,9 @@
                   finish(res);
               }
 
-              /* --- 带超时兜底的 seek --- */
               function seekTo(t) {
                   let done = false;
-                  const onDone = () => {
+                  const onDone = function () {
                       if (done || settled) return;
                       done = true;
                       clearTimeout(fallback);
@@ -958,7 +969,7 @@
                       if (cancelled()) return finish(null);
                       waitForFrame(captureThenMaybeRetry);
                   };
-                  const onSeeked = () => onDone();
+                  const onSeeked = function () { onDone(); };
                   const fallback = setTimeout(onDone, 1500);
 
                   video.addEventListener('seeked', onSeeked, { once: true });
@@ -970,12 +981,10 @@
                   }
               }
 
-              /* --- metadata 就绪 --- */
               function onMeta() {
                   if (settled) return;
                   if (cancelled()) return finish(null);
 
-                  /* 有些损坏文件 metadata 里没有尺寸 */
                   if (!video.videoWidth || !video.videoHeight) {
                       return finish(null);
                   }
@@ -1000,7 +1009,6 @@
                       return;
                   }
 
-                  /* 极短视频：等首帧可用后直接抓 */
                   if (video.readyState >= 2) {
                       waitForFrame(captureThenMaybeRetry);
                   } else {
@@ -1024,17 +1032,13 @@
               video.playsInline = true;
               video.setAttribute('playsinline', '');
               video.setAttribute('webkit-playsinline', '');
-              /* ★ metadata 即可：seek 时浏览器会按需拉取片段 */
               video.preload = 'metadata';
               video.src = blobUrl;
           });
       }
 
       /* ==========================================================
-         ★ 缩略图调度器
-         - 并发计数而非 busy 标志，避免 reset 后 pump 被吞
-         - generation 取消旧任务
-         - paused 让播放器优先使用解码器
+         缩略图调度器
          ========================================================== */
       const Thumbnailer = {
           queue: [],
@@ -1042,10 +1046,12 @@
           maxConcurrent: 2,
           generation: 0,
           paused: false,
+          seen: new Set(),
 
           reset: function () {
               this.generation++;
               this.queue.length = 0;
+              this.seen.clear();
           },
 
           pause: function () { this.paused = true; },
@@ -1057,6 +1063,9 @@
 
           enqueue: function (item, img) {
               if (!item || !img) return;
+              /* ★ 去重，防止同一图片被重复入队 */
+              if (this.seen.has(img)) return;
+              this.seen.add(img);
 
               const cached = PosterCache.get(item);
               if (cached) {
@@ -1082,39 +1091,68 @@
           },
 
           _run: function (job) {
+              const self = this;
               const gen = job.gen;
-              const shouldCancel = () => gen !== this.generation;
+              const shouldCancel = function () { return gen !== self.generation; };
 
-              grabPoster(job.item.file, shouldCancel).then((data) => {
-                  if (gen !== this.generation) return;
-                  if (!data || !data.url) return;
-                  PosterCache.set(job.item, data);
-                  if (job.img.isConnected) this.apply(job.img, data);
-              }).catch(() => {
-                  /* 静默失败，保留占位图标 */
-              }).finally(() => {
-                  this.running--;
-                  this.pump();
-              });
+              grabPoster(job.item.file, shouldCancel)
+                  .then(function (data) {
+                      if (gen !== self.generation) return;
+                      if (!data || !data.url) return;   /* 失败不缓存，允许重试 */
+                      PosterCache.set(job.item, data);
+                      if (job.img.isConnected) self.apply(job.img, data);
+                  })
+                  .catch(function () { /* 静默 */ })
+                  .then(function () {
+                      self.running--;
+                      self.pump();
+                  });
           },
 
-          /* 先等图片解码完成，再改容器比例 + 淡入，避免空白淡入和跳动 */
+          /* ★ apply 完整重写：先改比例，等图片真正解码后淡入 */
           apply: function (img, data) {
               const thumb = img.parentElement;
               if (!thumb) return;
 
-              img.onload = function () {
+              /* 1. 先调整容器比例 */
+              if (data.width && data.height) {
+                  const ratio = (data.height / data.width) * 100;
+                  thumb.style.paddingTop = ratio.toFixed(4) + '%';
+              }
+
+              const reveal = function () {
                   if (!img.isConnected) return;
-                  if (data.width && data.height) {
-                      const ratio = (data.height / data.width) * 100;
-                      thumb.style.paddingTop = ratio.toFixed(4) + '%';
-                  }
                   img.classList.add('ready');
               };
-              img.onerror = function () {
-                  /* 保留占位三角图标 */
-              };
+
+              /* 2. 已在加载同一张图：直接复用现有回调 */
+              if (img.dataset.posterSrc === data.url) {
+                  if (img.complete && img.naturalWidth > 0) reveal();
+                  else img.addEventListener('load', reveal, { once: true });
+                  return;
+              }
+              img.dataset.posterSrc = data.url;
+
+              /* 3. 清空旧监听，防止内存泄漏 */
+              img.onload = null;
+              img.onerror = null;
+
+              /* 4. 监听加载完成 */
+              img.addEventListener('load', function handler() {
+                  img.removeEventListener('error', handler);
+                  reveal();
+              }, { once: true });
+
+              img.addEventListener('error', function handler() {
+                  img.removeEventListener('error', handler);
+                  /* 图片加载失败：保留 SVG 占位，不显示 ready */
+              }, { once: true });
+
+              /* 5. 赋值 dataURL */
               img.src = data.url;
+
+              /* 6. 双保险：某些浏览器缓存命中会同步触发 complete */
+              if (img.complete && img.naturalWidth > 0) reveal();
           }
       };
 
@@ -1174,7 +1212,7 @@
               const video = els.nativeVideo;
               this._index = (typeof index === 'number') ? index : -1;
 
-              /* ★ 播放时暂停缩略图抓取，把解码器让给播放 */
+              /* 播放时暂停缩略图抓取 */
               Thumbnailer.pause();
 
               if (this._url) {
@@ -1226,7 +1264,7 @@
 
               this.setStatus('idle', 'Ready');
 
-              /* ★ 恢复缩略图抓取 */
+              /* 恢复缩略图抓取 */
               Thumbnailer.resume();
           },
 
@@ -1466,7 +1504,7 @@
                   const img = document.createElement('img');
                   img.alt = '';
                   img.decoding = 'async';
-                  img.loading = 'lazy';
+                  /* ★ 不再用 loading="lazy"，避免与 IntersectionObserver 冲突 */
                   thumb.appendChild(img);
 
                   const info = document.createElement('div');
@@ -1522,7 +1560,6 @@
                   }
               }, {
                   root: els.list,
-                  /* 一屏半左右，避免一次性抓太多 */
                   rootMargin: '200px 0px',
                   threshold: 0.01
               });
