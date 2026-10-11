@@ -31,9 +31,8 @@
 
           --c-bg: #F1F2ED;
           --c-text: #000000;
-          --c-text-soft: #1A;
-1A1A;
-          --          --c-img-btnc-modal-bg: #E8E9E4;
+          --c-text-soft: #1A1A1A;
+          --c-modal-bg: #E8E9E4;
           --c-border: #D0D1CC;
           --c-surface: #DCDDD8;
           --c-surface-border: #C8C9C4;
@@ -42,7 +41,8 @@
           --c-btn-gray: #B0B1AC;
           --c-btn-gray-hover: #A8A9A4;
           --c-preview: #D8D9D4;
-          --c-img-btn: #D0D1CC-hover: #B8B9B4;
+          --c-img-btn: #D0D1CC;
+          --c-img-btn-hover: #B8B9B4;
           --c-veil: 241, 242, 237;
           --c-scroll-thumb: #C8C9C4;
           --c-switch-track: rgba(0, 0, 0, 0.18);
@@ -906,7 +906,7 @@
       }
 
       /* ==========================================================
-         ★ 页面承载 —— 进入 / 退出 双向动画（性能优化版）
+         ★ 页面承载 —— 进入 / 退出 双向动画
          ========================================================== */
       #page-view {
           display: none;
@@ -921,18 +921,14 @@
           transform: translate3d(0, 0, 0);
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
-          contain: layout paint;
       }
       #page-view.active {
           display: block;
           animation: pageViewIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
       #page-view.active.closing {
-          animation: pageViewOut 0.26s cubic-bezier(0.4, 0, 1, 1) both;
+          animation: pageViewOut 0.28s cubic-bezier(0.4, 0, 1, 1) both;
           pointer-events: none;
-      }
-      #page-view.is-gesturing {
-          will-change: transform, opacity;
       }
 
       @keyframes pageViewIn {
@@ -940,8 +936,8 @@
           100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
       }
       @keyframes pageViewOut {
-          0%   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-          100% { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.985); }
+          0%   { opacity: 1; transform: translate3d(0, 0, 0); }
+          100% { opacity: 0; transform: translate3d(0, 100%, 0); }
       }
 
       /* 页面切换期间，屏蔽顶栏的高价 backdrop-filter 重算 */
@@ -1179,7 +1175,7 @@
       };
 
       /* ==========================================================
-         ★ 主题同步器 —— 把当前主题推送给 iframe
+         ★ 主题同步器
          ========================================================== */
       const ThemeBridge = {
           isDark: function() {
@@ -1200,9 +1196,7 @@
                       type: 'ti-theme',
                       theme: this.isDark() ? 'dark' : 'light'
                   }, '*');
-              } catch (err) {
-                  // 跨域时静默失败
-              }
+              } catch (err) {}
           }
       };
 
@@ -1505,14 +1499,15 @@
       };
 
       /* ==========================================================
-         ★ 页面列表 + iframe 主题同步 + 手势返回（性能优化版）
+         ★ 页面列表 + iframe 主题同步 + 手势返回
+         ★ 逻辑：右侧滑动屏幕左边缘 → 直接触发返回动画，不跟手
          ========================================================== */
       const Pages = {
           loaded: false,
           files: [],
-          PAGE_EXIT_MS: 260,
+          PAGE_EXIT_MS: 280,
           _exiting: false,
-          _touch: null,
+          _swipe: null,
 
           init: function() {
               DOM.pagesToggle.addEventListener('click', () => this.showList());
@@ -1523,10 +1518,10 @@
 
               DOM.stage.addEventListener('load', () => {
                   if (DOM.pageView.classList.contains('active')) ThemeBridge.push();
-                  this.bindGesture();
+                  this.bindSwipe();
               });
 
-              // 系统返回键 / iOS 边缘右滑 兜底
+              // 系统返回键 / iOS 边缘滑动兜底
               window.addEventListener('popstate', () => {
                   if (this._exiting) return;
                   if (!DOM.pageView.classList.contains('active')) return;
@@ -1534,82 +1529,46 @@
               });
           },
 
-          /* ---------- 左边缘右滑返回（跟手） ---------- */
-          bindGesture: function() {
+          /* ---------- 左边缘右滑 → 立即返回 ---------- */
+          bindSwipe: function() {
               let doc;
               try { doc = DOM.stage.contentDocument; } catch (e) { return; }
-              if (!doc || doc._tiGestureBound) return;
-              doc._tiGestureBound = true;
+              if (!doc || doc._tiSwipeBound) return;
+              doc._tiSwipeBound = true;
 
-              const EDGE = 30;      // 只有从左侧 30px 内开始才算
-              const TRIGGER = 80;   // 松手超过这个位移就返回
+              const EDGE = 40;         // 左侧 40px 内起手才算
+              const TRIGGER = 60;      // 向右滑超过 60px 就触发返回
 
               doc.addEventListener('touchstart', (e) => {
                   if (e.touches.length !== 1) return;
                   const t = e.touches[0];
                   if (t.clientX > EDGE) return;
-                  this._touch = { startX: t.clientX, startY: t.clientY, dx: 0, active: false };
+                  this._swipe = { x: t.clientX, y: t.clientY, fired: false };
               }, { passive: true });
 
               doc.addEventListener('touchmove', (e) => {
-                  const s = this._touch;
-                  if (!s) return;
+                  const s = this._swipe;
+                  if (!s || s.fired) return;
                   const t = e.touches[0];
-                  const dx = t.clientX - s.startX;
-                  const dy = t.clientY - s.startY;
+                  const dx = t.clientX - s.x;
+                  const dy = t.clientY - s.y;
 
-                  if (!s.active) {
-                      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-                      if (Math.abs(dy) > Math.abs(dx)) { this._touch = null; return; }
-                      s.active = true;
-                      DOM.pageView.style.animation = 'none';
-                      DOM.pageView.style.transition = 'none';
-                      DOM.pageView.classList.add('is-gesturing');
-                      document.body.classList.add('paging');
-                  }
-
-                  s.dx = Math.max(0, dx);
-                  // ★ 只改 transform，不再每帧改 opacity
-                  DOM.pageView.style.transform = `translate3d(${s.dx}px, 0, 0)`;
-
-                  if (e.cancelable) e.preventDefault();
-              }, { passive: false });
-
-              const end = () => {
-                  const s = this._touch;
-                  this._touch = null;
-                  if (!s || !s.active) {
-                      DOM.pageView.style.transform = '';
-                      DOM.pageView.style.transition = '';
-                      DOM.pageView.style.animation = '';
-                      DOM.pageView.classList.remove('is-gesturing');
-                      document.body.classList.remove('paging');
+                  // 纵向滑动优先放行，不抢滚动
+                  if (Math.abs(dy) > Math.abs(dx)) {
+                      this._swipe = null;
                       return;
                   }
-                  if (s.dx > TRIGGER) {
-                      this.goHome({ startDx: s.dx });
-                  } else {
-                      // 弹回：双 rAF 启动，避免掉帧
-                      DOM.pageView.style.transition =
-                          'transform 220ms cubic-bezier(0.22,1,0.36,1)';
-                      requestAnimationFrame(() => {
-                          requestAnimationFrame(() => {
-                              DOM.pageView.style.transform = 'translate3d(0, 0, 0)';
-                          });
-                      });
-                      clearTimeout(DOM.pageView._bounceTimer);
-                      DOM.pageView._bounceTimer = setTimeout(() => {
-                          DOM.pageView.style.transition = '';
-                          DOM.pageView.style.animation = '';
-                          DOM.pageView.style.transform = '';
-                          DOM.pageView.classList.remove('is-gesturing');
-                          document.body.classList.remove('paging');
-                      }, 240);
+                  // 向右滑过阈值 → 立即触发返回
+                  if (dx >= TRIGGER) {
+                      s.fired = true;
+                      this._swipe = null;
+                      this.goHome();
                   }
-              };
+              }, { passive: true });
 
-              doc.addEventListener('touchend', end, { passive: true });
-              doc.addEventListener('touchcancel', end, { passive: true });
+              const clear = () => { this._swipe = null; };
+              doc.addEventListener('touchend', clear, { passive: true });
+              doc.addEventListener('touchcancel', clear, { passive: true });
           },
 
           showList: async function() {
@@ -1660,9 +1619,7 @@
           open: function(name) {
               this.hideList();
 
-              // 清掉可能残留的手势内联样式
               DOM.pageView.classList.remove('closing');
-              DOM.pageView.classList.remove('is-gesturing');
               DOM.pageView.style.transform = '';
               DOM.pageView.style.opacity = '';
               DOM.pageView.style.transition = '';
@@ -1672,61 +1629,37 @@
               const rawURL = 'folder/' + encodeURIComponent(name);
               DOM.stage.src = ThemeBridge.decorateURL(rawURL);
 
-              // ★ 压一条历史，让系统返回键和边缘滑动都能回来
+              // 压一条历史，让系统返回键和边缘滑动都能兜底
               history.pushState({ tiPage: true }, '', location.href);
 
               DOM.pageView.classList.add('active');
           },
 
-          goHome: function(options) {
-              options = options || {};
+          goHome: function() {
               if (this._exiting) return;
               if (!DOM.pageView.classList.contains('active')) return;
               this._exiting = true;
 
-              const startDx = options.startDx;
-              let duration;
+              // 隐藏最贵的 backdrop-filter 层
+              document.body.classList.add('paging');
 
-              if (startDx != null) {
-                  // 手势触发：保持 is-gesturing，顺着手势滑出去
-                  const remaining = window.innerWidth - startDx;
-                  duration = Math.max(180, Math.min(320, remaining * 0.35));
-                  DOM.pageView.style.animation = 'none';
-                  DOM.pageView.style.transition =
-                      `transform ${duration}ms cubic-bezier(0.22,1,0.36,1), opacity ${duration}ms ease`;
-                  requestAnimationFrame(() => {
-                      requestAnimationFrame(() => {
-                          DOM.pageView.style.transform =
-                              `translate3d(${window.innerWidth}px, 0, 0)`;
-                          DOM.pageView.style.opacity = '0';
-                      });
-                  });
-              } else {
-                  // 系统返回键触发：走原淡出动画
-                  document.body.classList.add('paging');
-                  duration = this.PAGE_EXIT_MS;
-                  DOM.pageView.style.animation = '';
-                  DOM.pageView.classList.add('closing');
-              }
+              DOM.pageView.style.animation = '';
+              DOM.pageView.classList.add('closing');
 
-              // 让历史记录同步回退（popstate 会被 _exiting 挡住）
               if (history.state && history.state.tiPage) history.back();
 
               clearTimeout(DOM.pageView._exitTimer);
               DOM.pageView._exitTimer = setTimeout(() => {
                   DOM.pageView.classList.remove('active');
                   DOM.pageView.classList.remove('closing');
-                  DOM.pageView.classList.remove('is-gesturing');
                   DOM.pageView.style.transform = '';
                   DOM.pageView.style.opacity = '';
                   DOM.pageView.style.transition = '';
                   DOM.pageView.style.animation = '';
                   document.body.classList.remove('paging');
                   this._exiting = false;
-
-                  // ★ 关键：不销毁 iframe，只隐藏
-                  //   下次打开同一页 → 秒开，滚动位置/状态全保留
-              }, duration);
+                  // iframe 不销毁，下次打开秒开
+              }, this.PAGE_EXIT_MS);
           }
       };
 
