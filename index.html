@@ -350,9 +350,6 @@
           background: transparent;
           display: none;
 
-          /* ★ 关键修复：用 filter: drop-shadow() 替代 box-shadow
-             drop-shadow 跟随元素的【渲染轮廓】（即圆形边缘），
-             不会在圆角盒子的底部抗锯齿接缝处产生残留白点 */
           filter:
               drop-shadow(0 0 3px rgba(0, 0, 0, 0.35))
               drop-shadow(0 0 10px rgba(0, 0, 0, 0.28))
@@ -377,8 +374,6 @@
           object-fit: cover;
           display: block;
 
-          /* ★ 裁剪完全交给父容器；图片自身不加圆角、不做 scale
-             scale(1.02) 会在圆形底部引入亚像素色差，是白点的来源之一 */
           border-radius: 0;
           transform: none;
           -webkit-transform: none;
@@ -981,42 +976,6 @@
       html.dark #stage {
           color-scheme: dark;
       }
-
-      /* ==========================================================
-         ★ 返回按钮 —— 底部居中，长条形，半透明模糊
-         ========================================================== */
-      #back-button {
-          position: fixed;
-          bottom: calc(var(--safe-area-inset-bottom) + var(--corner-gap));
-          left: calc(var(--safe-area-inset-left) + var(--corner-gap));
-          right: calc(var(--safe-area-inset-right) + var(--corner-gap));
-          top: auto;
-          width: auto;
-          height: 72px;
-          border: 1px solid var(--c-mode-border);
-          border-radius: 999px;
-          background: rgba(var(--c-veil), 0.55);
-          -webkit-backdrop-filter: blur(14px) saturate(140%);
-          backdrop-filter: blur(14px) saturate(140%);
-          color: var(--c-text);
-          font-family: var(--f-default);
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: 0.2px;
-          line-height: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          cursor: pointer;
-          z-index: calc(var(--z-pageview) + 10);
-          -webkit-tap-highlight-color: transparent;
-          transition: background-color 0.25s ease, color 0.25s ease,
-                      border-color 0.25s ease, transform 0.2s ease;
-      }
-      #back-button:active {
-          transform: scale(0.985);
-          background-color: rgba(var(--c-veil), 0.75);
-      }
   </style>
 </head>
 <body class="no-scroll">
@@ -1082,7 +1041,6 @@
 
   <div id="page-view">
       <iframe id="stage" title="page"></iframe>
-      <button id="back-button">Back</button>
   </div>
 
   <!-- Pages 弹窗 -->
@@ -1199,7 +1157,6 @@
           pageList: document.getElementById('pageList'),
           pageView: document.getElementById('page-view'),
           stage: document.getElementById('stage'),
-          backButton: document.getElementById('back-button'),
           bgMarker: document.getElementById('bg-marker'),
           buttonTextInput: document.getElementById('buttonTextInput'),
           themeToggle: document.getElementById('theme-toggle'),
@@ -1228,7 +1185,6 @@
 
       /* ==========================================================
          ★ 主题同步器 —— 把当前主题推送给 iframe
-         双保险：URL 参数（首屏）+ postMessage（动态切换）
          ========================================================== */
       const ThemeBridge = {
           isDark: function() {
@@ -1554,28 +1510,101 @@
       };
 
       /* ==========================================================
-         ★ 页面列表 + iframe 主题同步
+         ★ 页面列表 + iframe 主题同步 + 手势返回
          ========================================================== */
       const Pages = {
           loaded: false,
           files: [],
           PAGE_EXIT_MS: 260,
+          _exiting: false,
+          _touch: null,
 
           init: function() {
               DOM.pagesToggle.addEventListener('click', () => this.showList());
               DOM.pageListClose.addEventListener('click', () => this.hideList());
-              DOM.backButton.addEventListener('click', () => this.goHome());
               DOM.pageListOverlay.addEventListener('click', (e) => {
-                  if (e.target === DOM.pageListOverlay) {
-                      this.hideList();
-                  }
+                  if (e.target === DOM.pageListOverlay) this.hideList();
               });
 
               DOM.stage.addEventListener('load', () => {
-                  if (DOM.pageView.classList.contains('active')) {
-                      ThemeBridge.push();
-                  }
+                  if (DOM.pageView.classList.contains('active')) ThemeBridge.push();
+                  this.bindGesture();
               });
+
+              // 系统返回键 / iOS 边缘右滑 兜底
+              window.addEventListener('popstate', () => {
+                  if (this._exiting) return;
+                  if (!DOM.pageView.classList.contains('active')) return;
+                  this.goHome();
+              });
+          },
+
+          /* ---------- 左边缘右滑返回（跟手） ---------- */
+          bindGesture: function() {
+              let doc;
+              try { doc = DOM.stage.contentDocument; } catch (e) { return; }
+              if (!doc || doc._tiGestureBound) return;
+              doc._tiGestureBound = true;
+
+              const EDGE = 30;      // 只有从左侧 30px 内开始才算
+              const TRIGGER = 80;   // 松手超过这个位移就返回
+
+              doc.addEventListener('touchstart', (e) => {
+                  if (e.touches.length !== 1) return;
+                  const t = e.touches[0];
+                  if (t.clientX > EDGE) return;
+                  this._touch = { startX: t.clientX, startY: t.clientY, dx: 0, active: false };
+              }, { passive: true });
+
+              doc.addEventListener('touchmove', (e) => {
+                  const s = this._touch;
+                  if (!s) return;
+                  const t = e.touches[0];
+                  const dx = t.clientX - s.startX;
+                  const dy = t.clientY - s.startY;
+
+                  if (!s.active) {
+                      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+                      if (Math.abs(dy) > Math.abs(dx)) { this._touch = null; return; }
+                      s.active = true;
+                      DOM.pageView.style.transition = 'none';
+                      DOM.pageView.style.animation = 'none';
+                  }
+
+                  s.dx = Math.max(0, dx);
+                  DOM.pageView.style.transform = `translateX(${s.dx}px)`;
+                  DOM.pageView.style.opacity = String(1 - Math.min(s.dx / window.innerWidth, 0.4));
+
+                  if (e.cancelable) e.preventDefault();
+              }, { passive: false });
+
+              const end = () => {
+                  const s = this._touch;
+                  this._touch = null;
+                  if (!s || !s.active) {
+                      DOM.pageView.style.transform = '';
+                      DOM.pageView.style.opacity = '';
+                      DOM.pageView.style.transition = '';
+                      DOM.pageView.style.animation = '';
+                      return;
+                  }
+                  if (s.dx > TRIGGER) {
+                      this.goHome({ startDx: s.dx });
+                  } else {
+                      // 不到阈值，弹回去
+                      DOM.pageView.style.transition =
+                          'transform 220ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease';
+                      DOM.pageView.style.transform = '';
+                      DOM.pageView.style.opacity = '';
+                      setTimeout(() => {
+                          DOM.pageView.style.transition = '';
+                          DOM.pageView.style.animation = '';
+                      }, 240);
+                  }
+              };
+
+              doc.addEventListener('touchend', end, { passive: true });
+              doc.addEventListener('touchcancel', end, { passive: true });
           },
 
           showList: async function() {
@@ -1625,30 +1654,66 @@
 
           open: function(name) {
               this.hideList();
+
+              // 清掉可能残留的手势内联样式
               DOM.pageView.classList.remove('closing');
+              DOM.pageView.style.transform = '';
+              DOM.pageView.style.opacity = '';
+              DOM.pageView.style.transition = '';
+              DOM.pageView.style.animation = '';
 
               const rawURL = 'folder/' + encodeURIComponent(name);
               DOM.stage.src = ThemeBridge.decorateURL(rawURL);
 
+              // ★ 压一条历史，让系统返回键和边缘滑动都能回来
+              history.pushState({ tiPage: true }, '', location.href);
+
               DOM.pageView.classList.add('active');
           },
 
-          goHome: function() {
+          goHome: function(options) {
+              options = options || {};
+              if (this._exiting) return;
               if (!DOM.pageView.classList.contains('active')) return;
-              if (DOM.pageView.classList.contains('closing')) return;
+              this._exiting = true;
 
-              DOM.pageView.classList.add('closing');
+              const startDx = options.startDx;
+              let duration;
 
-              const reduce = window.matchMedia &&
-                             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-              const delay = reduce ? 0 : this.PAGE_EXIT_MS;
+              if (startDx != null) {
+                  // 手势触发：顺着手指位置滑出去
+                  const remaining = window.innerWidth - startDx;
+                  duration = Math.max(180, Math.min(320, remaining * 0.35));
+                  DOM.pageView.style.animation = 'none';
+                  DOM.pageView.style.transition =
+                      `transform ${duration}ms cubic-bezier(0.22,1,0.36,1), opacity ${duration}ms ease`;
+                  // 强制 reflow 让 transform 生效
+                  void DOM.pageView.offsetWidth;
+                  DOM.pageView.style.transform = `translateX(${window.innerWidth}px)`;
+                  DOM.pageView.style.opacity = '0';
+              } else {
+                  // 系统返回键触发：走原淡出动画
+                  duration = this.PAGE_EXIT_MS;
+                  DOM.pageView.style.animation = '';
+                  DOM.pageView.classList.add('closing');
+              }
+
+              // 让历史记录同步回退（popstate 会被 _exiting 挡住）
+              if (history.state && history.state.tiPage) history.back();
 
               clearTimeout(DOM.pageView._exitTimer);
               DOM.pageView._exitTimer = setTimeout(() => {
                   DOM.pageView.classList.remove('active');
                   DOM.pageView.classList.remove('closing');
-                  DOM.stage.src = 'about:blank';
-              }, delay);
+                  DOM.pageView.style.transform = '';
+                  DOM.pageView.style.opacity = '';
+                  DOM.pageView.style.transition = '';
+                  DOM.pageView.style.animation = '';
+                  this._exiting = false;
+
+                  // ★ 关键：不销毁 iframe，只隐藏
+                  //   下次打开同一页 → 秒开，滚动位置/状态全保留
+              }, duration);
           }
       };
 
