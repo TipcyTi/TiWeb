@@ -350,9 +350,6 @@
           background: transparent;
           display: none;
 
-          /* ★ 关键修复：用 filter: drop-shadow() 替代 box-shadow
-             drop-shadow 跟随元素的【渲染轮廓】（即圆形边缘），
-             不会在圆角盒子的底部抗锯齿接缝处产生残留白点 */
           filter:
               drop-shadow(0 0 3px rgba(0, 0, 0, 0.35))
               drop-shadow(0 0 10px rgba(0, 0, 0, 0.28))
@@ -376,9 +373,6 @@
           height: 100%;
           object-fit: cover;
           display: block;
-
-          /* ★ 裁剪完全交给父容器；图片自身不加圆角、不做 scale
-             scale(1.02) 会在圆形底部引入亚像素色差，是白点的来源之一 */
           border-radius: 0;
           transform: none;
           -webkit-transform: none;
@@ -1166,7 +1160,7 @@
           webauthn: {
               rpName: "Ti",
               userName: "Ti",
-              userDisplayName: "'Ti'",
+              userDisplayName: "Ti",
               timeout: 60000
           }
       };
@@ -1428,9 +1422,13 @@
       };
 
       /* ==========================================================
-         ★ 认证管理
+         ★ 认证管理（已修复 Face ID 相关 Bug）
          ========================================================== */
       const AuthManager = {
+          credKey: 'webauthn_credential_id',
+          userIdKey: 'webauthn_user_id',
+          busy: false,
+
           init: function() {
               if (!window.PublicKeyCredential) {
                   DOM.authButton.disabled = true;
@@ -1439,41 +1437,92 @@
               this.checkExistingCredentials();
               DOM.authButton.addEventListener('click', () => this.startAuthentication());
           },
+
+          /* 生成或读取持久化的 16 字节 user.id
+             ★ 修复：原代码每次都是全零 Uint8Array(16)，
+             会被认证器误判为同一用户 */
+          getUserId: function() {
+              try {
+                  const stored = localStorage.getItem(this.userIdKey);
+                  if (stored) {
+                      const arr = stored.split(',').map(Number);
+                      if (arr.length === 16 &&
+                          arr.every(n => Number.isInteger(n) && n >= 0 && n <= 255)) {
+                          return new Uint8Array(arr);
+                      }
+                  }
+              } catch (e) { /* ignore */ }
+
+              const id = new Uint8Array(16);
+              crypto.getRandomValues(id);
+              try {
+                  localStorage.setItem(this.userIdKey, Array.from(id).join(','));
+              } catch (e) { /* ignore */ }
+              return id;
+          },
+
           checkExistingCredentials: function() {
               try {
-                  const savedCredentialId = localStorage.getItem('webauthn_credential_id');
-                  if (savedCredentialId) {
-                      AppState.credentialId = Uint8Array.from(savedCredentialId.split(',').map(Number));
+                  const saved = localStorage.getItem(this.credKey);
+                  if (!saved) return;
+                  const arr = saved.split(',').map(Number);
+                  if (arr.length && arr.every(n => Number.isInteger(n) && n >= 0 && n <= 255)) {
+                      AppState.credentialId = new Uint8Array(arr);
+                  } else {
+                      this.clearInvalidCredential();
                   }
               } catch (error) {
                   this.clearInvalidCredential();
               }
           },
+
           clearInvalidCredential: function() {
-              localStorage.removeItem('webauthn_credential_id');
+              localStorage.removeItem(this.credKey);
               AppState.credentialId = null;
           },
+
           resetAuthButtonState: function() {
+              this.busy = false;
               DOM.authButton.disabled = false;
               DOM.authButton.classList.remove('auth-button-loading');
           },
+
+          /* ★ 判断是否为"用户主动取消 / 超时"——这类情况不应清除凭证 */
+          isUserCancel: function(err) {
+              if (!err) return false;
+              if (err.name === 'AbortError') return true;
+              if (err.name === 'NotAllowedError') return true;
+              return false;
+          },
+
           startAuthentication: async function() {
+              if (this.busy) return;
+              this.busy = true;
+              DOM.authButton.disabled = true;
+              DOM.authButton.classList.add('auth-button-loading');
+
               try {
-                  DOM.authButton.disabled = true;
-                  DOM.authButton.classList.add('auth-button-loading');
                   if (AppState.credentialId) {
-                      await this.authenticateWithCredential();
-                  } else {
-                      await this.registerNewCredential();
+                      try {
+                          await this.authenticateWithCredential();
+                          return;
+                      } catch (err) {
+                          // ★ 用户主动取消：保留凭证，只恢复按钮
+                          if (this.isUserCancel(err)) throw err;
+                          // 其它错误（换设备 / 凭证被删 / iCloud 未同步）：清掉再注册
+                          this.clearInvalidCredential();
+                      }
                   }
+                  await this.registerNewCredential();
               } catch (error) {
-                  this.clearInvalidCredential();
                   this.resetAuthButtonState();
               }
           },
+
           registerNewCredential: async function() {
               const challenge = new Uint8Array(32);
               crypto.getRandomValues(challenge);
+
               const publicKey = {
                   challenge: challenge,
                   rp: {
@@ -1481,30 +1530,47 @@
                       name: CONFIG.webauthn.rpName
                   },
                   user: {
-                      id: new Uint8Array(16),
+                      id: this.getUserId(),
                       name: CONFIG.webauthn.userName,
                       displayName: CONFIG.webauthn.userDisplayName
                   },
                   pubKeyCredParams: [
-                      { type: "public-key", alg: -7 }
+                      { type: "public-key", alg: -7 },    // ES256
+                      { type: "public-key", alg: -257 }   // RS256 兜底
                   ],
                   authenticatorSelection: {
+                      // ★ 限定平台认证器（Face ID / Touch ID / 指纹），
+                      //   避免弹出跨设备二维码流程
+                      authenticatorAttachment: "platform",
                       userVerification: "required",
+                      // ★ 新规范字段
+                      residentKey: "preferred",
                       requireResidentKey: false
                   },
                   timeout: CONFIG.webauthn.timeout,
                   attestation: "none"
               };
+
               const credential = await navigator.credentials.create({ publicKey });
-              if (credential && credential.rawId) {
-                  AppState.credentialId = new Uint8Array(credential.rawId);
-                  localStorage.setItem('webauthn_credential_id', Array.from(AppState.credentialId).join(','));
+              if (!credential || !credential.rawId) {
+                  throw new Error('Registration failed');
               }
+
+              AppState.credentialId = new Uint8Array(credential.rawId);
+              try {
+                  localStorage.setItem(
+                      this.credKey,
+                      Array.from(AppState.credentialId).join(',')
+                  );
+              } catch (e) { /* ignore */ }
+
               this.onAuthenticationSuccess();
           },
+
           authenticateWithCredential: async function() {
               const challenge = new Uint8Array(32);
               crypto.getRandomValues(challenge);
+
               const publicKey = {
                   challenge: challenge,
                   rpId: window.location.hostname,
@@ -1512,21 +1578,25 @@
                       {
                           type: "public-key",
                           id: AppState.credentialId,
-                          transports: ["internal"]
+                          // ★ 修复：放宽 transport 限制，
+                          //   iOS 凭证可能是 internal / hybrid 混合
+                          transports: ["internal", "hybrid"]
                       }
                   ],
                   userVerification: "required",
                   timeout: CONFIG.webauthn.timeout
               };
+
               const assertion = await navigator.credentials.get({ publicKey });
-              if (assertion) {
-                  this.onAuthenticationSuccess();
-              } else {
-                  throw new Error("Authentication failed");
+              if (!assertion) {
+                  throw new Error('Authentication failed');
               }
+              this.onAuthenticationSuccess();
           },
+
           onAuthenticationSuccess: function() {
               AppState.isAuthenticated = true;
+              this.busy = false;
               UI.showContent();
           }
       };
