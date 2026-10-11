@@ -31,8 +31,9 @@
 
           --c-bg: #F1F2ED;
           --c-text: #000000;
-          --c-text-soft: #1A1A1A;
-          --c-modal-bg: #E8E9E4;
+          --c-text-soft: #1A;
+1A1A;
+          --          --c-img-btnc-modal-bg: #E8E9E4;
           --c-border: #D0D1CC;
           --c-surface: #DCDDD8;
           --c-surface-border: #C8C9C4;
@@ -41,8 +42,7 @@
           --c-btn-gray: #B0B1AC;
           --c-btn-gray-hover: #A8A9A4;
           --c-preview: #D8D9D4;
-          --c-img-btn: #D0D1CC;
-          --c-img-btn-hover: #B8B9B4;
+          --c-img-btn: #D0D1CC-hover: #B8B9B4;
           --c-veil: 241, 242, 237;
           --c-scroll-thumb: #C8C9C4;
           --c-switch-track: rgba(0, 0, 0, 0.18);
@@ -906,7 +906,7 @@
       }
 
       /* ==========================================================
-         ★ 页面承载 —— 进入 / 退出 双向动画
+         ★ 页面承载 —— 进入 / 退出 双向动画（性能优化版）
          ========================================================== */
       #page-view {
           display: none;
@@ -918,7 +918,10 @@
           z-index: var(--z-pageview);
           background: var(--c-bg);
           transition: background-color 0.25s ease;
-          will-change: opacity, transform;
+          transform: translate3d(0, 0, 0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          contain: layout paint;
       }
       #page-view.active {
           display: block;
@@ -928,30 +931,22 @@
           animation: pageViewOut 0.26s cubic-bezier(0.4, 0, 1, 1) both;
           pointer-events: none;
       }
+      #page-view.is-gesturing {
+          will-change: transform, opacity;
+      }
 
       @keyframes pageViewIn {
-          0% {
-              opacity: 0;
-              transform: translateY(20px) scale(0.985);
-              filter: blur(3px);
-          }
-          100% {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-              filter: blur(0);
-          }
+          0%   { opacity: 0; transform: translate3d(0, 20px, 0) scale(0.985); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
       }
       @keyframes pageViewOut {
-          0% {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-              filter: blur(0);
-          }
-          100% {
-              opacity: 0;
-              transform: translateY(16px) scale(0.985);
-              filter: blur(3px);
-          }
+          0%   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+          100% { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.985); }
+      }
+
+      /* 页面切换期间，屏蔽顶栏的高价 backdrop-filter 重算 */
+      body.paging #top-veil {
+          display: none;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1510,7 +1505,7 @@
       };
 
       /* ==========================================================
-         ★ 页面列表 + iframe 主题同步 + 手势返回
+         ★ 页面列表 + iframe 主题同步 + 手势返回（性能优化版）
          ========================================================== */
       const Pages = {
           loaded: false,
@@ -1567,13 +1562,15 @@
                       if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                       if (Math.abs(dy) > Math.abs(dx)) { this._touch = null; return; }
                       s.active = true;
-                      DOM.pageView.style.transition = 'none';
                       DOM.pageView.style.animation = 'none';
+                      DOM.pageView.style.transition = 'none';
+                      DOM.pageView.classList.add('is-gesturing');
+                      document.body.classList.add('paging');
                   }
 
                   s.dx = Math.max(0, dx);
-                  DOM.pageView.style.transform = `translateX(${s.dx}px)`;
-                  DOM.pageView.style.opacity = String(1 - Math.min(s.dx / window.innerWidth, 0.4));
+                  // ★ 只改 transform，不再每帧改 opacity
+                  DOM.pageView.style.transform = `translate3d(${s.dx}px, 0, 0)`;
 
                   if (e.cancelable) e.preventDefault();
               }, { passive: false });
@@ -1583,22 +1580,30 @@
                   this._touch = null;
                   if (!s || !s.active) {
                       DOM.pageView.style.transform = '';
-                      DOM.pageView.style.opacity = '';
                       DOM.pageView.style.transition = '';
                       DOM.pageView.style.animation = '';
+                      DOM.pageView.classList.remove('is-gesturing');
+                      document.body.classList.remove('paging');
                       return;
                   }
                   if (s.dx > TRIGGER) {
                       this.goHome({ startDx: s.dx });
                   } else {
-                      // 不到阈值，弹回去
+                      // 弹回：双 rAF 启动，避免掉帧
                       DOM.pageView.style.transition =
-                          'transform 220ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease';
-                      DOM.pageView.style.transform = '';
-                      DOM.pageView.style.opacity = '';
-                      setTimeout(() => {
+                          'transform 220ms cubic-bezier(0.22,1,0.36,1)';
+                      requestAnimationFrame(() => {
+                          requestAnimationFrame(() => {
+                              DOM.pageView.style.transform = 'translate3d(0, 0, 0)';
+                          });
+                      });
+                      clearTimeout(DOM.pageView._bounceTimer);
+                      DOM.pageView._bounceTimer = setTimeout(() => {
                           DOM.pageView.style.transition = '';
                           DOM.pageView.style.animation = '';
+                          DOM.pageView.style.transform = '';
+                          DOM.pageView.classList.remove('is-gesturing');
+                          document.body.classList.remove('paging');
                       }, 240);
                   }
               };
@@ -1657,10 +1662,12 @@
 
               // 清掉可能残留的手势内联样式
               DOM.pageView.classList.remove('closing');
+              DOM.pageView.classList.remove('is-gesturing');
               DOM.pageView.style.transform = '';
               DOM.pageView.style.opacity = '';
               DOM.pageView.style.transition = '';
               DOM.pageView.style.animation = '';
+              document.body.classList.remove('paging');
 
               const rawURL = 'folder/' + encodeURIComponent(name);
               DOM.stage.src = ThemeBridge.decorateURL(rawURL);
@@ -1681,18 +1688,22 @@
               let duration;
 
               if (startDx != null) {
-                  // 手势触发：顺着手指位置滑出去
+                  // 手势触发：保持 is-gesturing，顺着手势滑出去
                   const remaining = window.innerWidth - startDx;
                   duration = Math.max(180, Math.min(320, remaining * 0.35));
                   DOM.pageView.style.animation = 'none';
                   DOM.pageView.style.transition =
                       `transform ${duration}ms cubic-bezier(0.22,1,0.36,1), opacity ${duration}ms ease`;
-                  // 强制 reflow 让 transform 生效
-                  void DOM.pageView.offsetWidth;
-                  DOM.pageView.style.transform = `translateX(${window.innerWidth}px)`;
-                  DOM.pageView.style.opacity = '0';
+                  requestAnimationFrame(() => {
+                      requestAnimationFrame(() => {
+                          DOM.pageView.style.transform =
+                              `translate3d(${window.innerWidth}px, 0, 0)`;
+                          DOM.pageView.style.opacity = '0';
+                      });
+                  });
               } else {
                   // 系统返回键触发：走原淡出动画
+                  document.body.classList.add('paging');
                   duration = this.PAGE_EXIT_MS;
                   DOM.pageView.style.animation = '';
                   DOM.pageView.classList.add('closing');
@@ -1705,10 +1716,12 @@
               DOM.pageView._exitTimer = setTimeout(() => {
                   DOM.pageView.classList.remove('active');
                   DOM.pageView.classList.remove('closing');
+                  DOM.pageView.classList.remove('is-gesturing');
                   DOM.pageView.style.transform = '';
                   DOM.pageView.style.opacity = '';
                   DOM.pageView.style.transition = '';
                   DOM.pageView.style.animation = '';
+                  document.body.classList.remove('paging');
                   this._exiting = false;
 
                   // ★ 关键：不销毁 iframe，只隐藏
