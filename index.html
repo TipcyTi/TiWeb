@@ -906,7 +906,7 @@
       }
 
       /* ==========================================================
-         ★ 页面承载 —— 进入 / 退出 双向动画
+         ★ 页面承载 —— 进入动画保留，退出无动画
          ========================================================== */
       #page-view {
           display: none;
@@ -926,23 +926,10 @@
           display: block;
           animation: pageViewIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
-      #page-view.active.closing {
-          animation: pageViewOut 0.28s cubic-bezier(0.4, 0, 1, 1) both;
-          pointer-events: none;
-      }
 
       @keyframes pageViewIn {
           0%   { opacity: 0; transform: translate3d(0, 20px, 0) scale(0.985); }
           100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-      }
-      @keyframes pageViewOut {
-          0%   { opacity: 1; transform: translate3d(0, 0, 0); }
-          100% { opacity: 0; transform: translate3d(0, 100%, 0); }
-      }
-
-      /* 页面切换期间，屏蔽顶栏的高价 backdrop-filter 重算 */
-      body.paging #top-veil {
-          display: none;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -950,8 +937,7 @@
           .page-empty {
               animation: none;
           }
-          #page-view.active,
-          #page-view.active.closing {
+          #page-view.active {
               animation: none;
           }
       }
@@ -1500,12 +1486,11 @@
 
       /* ==========================================================
          ★ 页面列表 + iframe 主题同步 + 手势返回
-         ★ 逻辑：右侧滑动屏幕左边缘 → 直接触发返回动画，不跟手
+         ★ 返回逻辑：左边缘右滑 → 直接切回主页面（无过渡动画）
          ========================================================== */
       const Pages = {
           loaded: false,
           files: [],
-          PAGE_EXIT_MS: 280,
           _exiting: false,
           _swipe: null,
 
@@ -1529,7 +1514,7 @@
               });
           },
 
-          /* ---------- 左边缘右滑 → 立即返回 ---------- */
+          /* ---------- 左边缘右滑 → 直接返回主页面 ---------- */
           bindSwipe: function() {
               let doc;
               try { doc = DOM.stage.contentDocument; } catch (e) { return; }
@@ -1553,7 +1538,7 @@
                   const dx = t.clientX - s.x;
                   const dy = t.clientY - s.y;
 
-                  // 纵向滑动优先放行，不抢滚动
+                  // 纵向滑动优先放行
                   if (Math.abs(dy) > Math.abs(dx)) {
                       this._swipe = null;
                       return;
@@ -1624,7 +1609,6 @@
               DOM.pageView.style.opacity = '';
               DOM.pageView.style.transition = '';
               DOM.pageView.style.animation = '';
-              document.body.classList.remove('paging');
 
               const rawURL = 'folder/' + encodeURIComponent(name);
               DOM.stage.src = ThemeBridge.decorateURL(rawURL);
@@ -1635,31 +1619,26 @@
               DOM.pageView.classList.add('active');
           },
 
+          /* ---------- 返回主页面：直接切换，无动画 ---------- */
           goHome: function() {
               if (this._exiting) return;
               if (!DOM.pageView.classList.contains('active')) return;
               this._exiting = true;
 
-              // 隐藏最贵的 backdrop-filter 层
-              document.body.classList.add('paging');
-
+              // 移除 active → #page-view 立即 display:none
+              // 主页面（#content-container）本来就一直在下面，无需任何操作
+              DOM.pageView.classList.remove('active');
+              DOM.pageView.classList.remove('closing');
               DOM.pageView.style.animation = '';
-              DOM.pageView.classList.add('closing');
+              DOM.pageView.style.transform = '';
+              DOM.pageView.style.opacity = '';
+              DOM.pageView.style.transition = '';
 
+              // 同步历史记录
               if (history.state && history.state.tiPage) history.back();
 
-              clearTimeout(DOM.pageView._exitTimer);
-              DOM.pageView._exitTimer = setTimeout(() => {
-                  DOM.pageView.classList.remove('active');
-                  DOM.pageView.classList.remove('closing');
-                  DOM.pageView.style.transform = '';
-                  DOM.pageView.style.opacity = '';
-                  DOM.pageView.style.transition = '';
-                  DOM.pageView.style.animation = '';
-                  document.body.classList.remove('paging');
-                  this._exiting = false;
-                  // iframe 不销毁，下次打开秒开
-              }, this.PAGE_EXIT_MS);
+              // iframe 不销毁，下次打开秒开
+              this._exiting = false;
           }
       };
 
